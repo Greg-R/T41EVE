@@ -44,20 +44,25 @@ package and libraries:
 
 1.  Install TeensyDuino package using PlatformIO.  The current TeensyDuino version is 1.62.0.
     Please note that PlatformIO usually has a delay in updating to the latest package.
-5.  You will need to install the ArduinoJson library by Benoit Blanchon.  Install via
+2.  You will need to install the ArduinoJson library by Benoit Blanchon.  Install via
     the IDE Library Manager.
-6.  You will need to install the Etherkit Si5351 library.  Install via the IDE
+3.  You will need to install the Etherkit Si5351 library.  Install via the IDE
     library manager.
-7.  You will need to manually install the Open Audio Library.  The library was updated
+4.  You will need to manually install the Open Audio Library.  The library was updated
     in November, 2025.  Update this library if you have installed an older copy!  
     T41EEE.91 uses the recently developed quad I2S output class, which was recently
     added to the library:
 
 <https://github.com/chipaudette/OpenAudio_ArduinoLibrary>
 
-8.  You will need to manually install the Rotary library:
+5.  You will need to manually install the Rotary library:
 
 <https://github.com/brianlow/Rotary>
+
+6.  You will need to manually install the EVE library:
+
+<https://github.com/RudolphRiedel/EmbeddedVideoEngine>
+
 
 The file MyConfigurationFile.h includes several compiler options which add, subtract,
 or adjust parameters of some features.  Please review this file prior to compilation.
