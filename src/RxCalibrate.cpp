@@ -650,17 +650,12 @@ void RxCalibrate::MakeFFTData() {
   arm_fir_interpolate_f32(&FIR_int2_EX_Q, float_buffer_RTemp, float_buffer_R_EX, 512);
 
   //  This is the correct place in the data stream to inject the scaling for power.
-#ifdef QSE2
   powerScale = 40.0 * ConfigData.powerOutCW[ConfigData.currentBand];
-#else
-  powerScale = 30.0 * ConfigData.powerOutCW[ConfigData.currentBand];
-#endif
 
   //  192KHz effective sample rate here
   arm_scale_f32(float_buffer_L_EX, powerScale, float_buffer_L_EX, 2048);  //Scale to compensate for losses in Interpolation
   arm_scale_f32(float_buffer_R_EX, powerScale, float_buffer_R_EX, 2048);
 
-#ifdef QSE2
   if (mode == 0) {
     arm_offset_f32(float_buffer_L_EX, CalData.iDCoffsetCW[ConfigData.currentBand] + CalData.dacOffsetCW, float_buffer_L_EX, 2048);
     arm_offset_f32(float_buffer_R_EX, CalData.qDCoffsetCW[ConfigData.currentBand] + CalData.dacOffsetCW, float_buffer_R_EX, 2048);
@@ -669,7 +664,6 @@ void RxCalibrate::MakeFFTData() {
     arm_offset_f32(float_buffer_L_EX, CalData.iDCoffsetSSB[ConfigData.currentBand] + CalData.dacOffsetSSB, float_buffer_L_EX, 2048);  // Carrier suppression offset.
     arm_offset_f32(float_buffer_R_EX, CalData.qDCoffsetSSB[ConfigData.currentBand] + CalData.dacOffsetSSB, float_buffer_R_EX, 2048);
   }
-#endif
 
   Q_out_L_Ex.setBehaviour(AudioPlayQueue_F32::ORIGINAL);
   Q_out_R_Ex.setBehaviour(AudioPlayQueue_F32::ORIGINAL);

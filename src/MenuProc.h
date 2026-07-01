@@ -44,15 +44,9 @@ public:
     bool selectString{false};
     float imdAmplitudedB = 5;  // This needs to be public so EVE_Display can show it during test.
 
-#ifdef QSE2
     std::vector<std::string> IQOptions{"Freq Cal", "CW PA Cal", "CW Rec Cal", "CW Carrier Cal", "CW Xmit Cal", "SSB PA Cal",
                                        "SSB Rec Cal", "SSB Carrier Cal", "SSB Transmit Cal", "CW Radio Cal", "CW Refine Cal", "SSB Radio Cal", "SSB Refine Cal",
                                        "dBm Level Cal", "Switch Matrix Cal", "Button Repeat", "Cancel"};
-#else
-    std::vector<std::string> IQOptions = {"Freq Cal", "CW PA Cal", "CW Rec Cal", "CW Xmit Cal", "SSB PA Cal",
-                                          "SSB Rec Cal", "SSB Transmit Cal", "CW Radio Cal", "CW Refine Cal", "SSB Radio Cal", "SSB Refine Cal",
-                                          "dBm Level Cal", "Btn Cal", "Btn Repeat", "Cancel"};
-#endif
 
     void CalibrateOptions();
     void CWOptions();

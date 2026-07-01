@@ -76,33 +76,25 @@ constexpr uint32_t IMAGE_CORNER_X = 190;  // ImageWidth = 378 Therefore 800 - 37
 constexpr uint32_t IMAGE_CORNER_Y = 40;   // ImageHeight = 302 Therefore 480 - 302 = 178 / 2 = 89
 constexpr uint32_t RAY_LENGTH = 190;
 
-// Set multiplication factors for your QSD and QSE boards.  Default values here and below are for V10/V11 boards.
-
-
-// Uncomment this line for QSE2.
-#define QSE2
-
-// Uncomment this line if using an external PLL module.
-#define PLLMODULE
-
 // Customizable definitions for center and fine tune defaults and increments.  Larry K3PTO June 24, 2024
 constexpr uint32_t CENTER_TUNE_DEFAULT = 1000;  // Set to the desired default in the CENTER_TUNE_ARRAY.
 #define CENTER_TUNE_ARRAY { 1000, 10000, 100000, 1000000 }  // The number of elements is not fixed.
 constexpr uint32_t FINE_TUNE_DEFAULT = 50;  // Set to the desired default in the FINE_TUNE_ARRAY.
 #define FINE_TUNE_ARRAY { 10, 20, 50, 100, 200, 500 }  // The number of elements is not fixed.
 
-// Uncomment for the original T41 audio mute control.
-//#define UNMUTEAUDIO LOW
-//#define MUTEAUDIO   HIGH
 // Use this for external amp with mute LOW, unmute HIGH.
 #define UNMUTEAUDIO HIGH
 #define MUTEAUDIO LOW
+// Use this for external amp with mute HIGH, unmute LOW.
+//#define UNMUTEAUDIO LOW
+//#define MUTEAUDIO   HIGH
 
 // The audio amplifier gain may need to be adjusted for the best volume range.
 constexpr float32_t SPEAKERSCALE = 2.0;   // Increase or decrease this value depending on your amplifier gain.
 constexpr float32_t HEADPHONESCALE = 8.0;  // Same as for the speaker.  Adjust to your preference for volume range.
 
-constexpr float32_t RFGAINSCALE = 1000.0;  // This adjusts for RF gain differences in the QSD.  QSD should use a value of 3000.  QSD2 should use a value of 1000.0.
+constexpr float32_t RFGAINSCALE = 1000.0;  // This adjusts for RF gain differences in the QSD.
 
-constexpr float32_t FREQUENCYCAL = 100000;  // The nominal frequency calibration.  This can be set here permanently after determining the unique value for your radio.
+constexpr float32_t FREQUENCYCAL = 100000;  // The nominal frequency calibration.  This can be set here permanently
+                                            // after determining the unique value for your radio.
 

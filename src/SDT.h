@@ -474,14 +474,14 @@ struct calibration_t
   int buttonThresholdPressed = 944;  // switchValues[0] + WIGGLE_ROOM
   int buttonThresholdReleased = 964; // buttonThresholdPressed + WIGGLE_ROOM
   uint32_t buttonRepeatDelay = 400000;
-#ifdef QSE2
+
   float32_t iDCoffsetCW[NUMBER_OF_BANDS] = {0, 0, 0, 0, 0, 0, 0};
   float32_t qDCoffsetCW[NUMBER_OF_BANDS] = {0, 0, 0, 0, 0, 0, 0};
   float32_t iDCoffsetSSB[NUMBER_OF_BANDS] = {0, 0, 0, 0, 0, 0, 0};
   float32_t qDCoffsetSSB[NUMBER_OF_BANDS] = {0, 0, 0, 0, 0, 0, 0};
   float32_t dacOffsetCW = 0.0;  // The offsets may no longer be necessary.
   float32_t dacOffsetSSB = 0.0; // Leaving for now until more experience with F32.
-#endif
+
   bool CWradioCalComplete = false;
   bool SSBradioCalComplete = false;
   float32_t dBm_calibration = 50.0; // This parameter is adjusted in the calibration menu.

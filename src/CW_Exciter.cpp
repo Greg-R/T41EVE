@@ -102,10 +102,8 @@ void CW_Exciter::CW_ExciterIQData(int shaping)  //AFP 08-20-22
   arm_scale_f32(float_buffer_i, powerScale, float_buffer_i, 512);
   arm_scale_f32(float_buffer_q, powerScale, float_buffer_q, 512);
 
-#ifdef QSE2
   arm_offset_f32(float_buffer_i, CalData.iDCoffsetCW[ConfigData.currentBand] + CalData.dacOffsetCW, float_buffer_i, 512);  // Carrier suppression offset.
   arm_offset_f32(float_buffer_q, CalData.qDCoffsetCW[ConfigData.currentBand] + CalData.dacOffsetCW, float_buffer_q, 512);
-#endif
 
 //  Q_out_L_Ex.setBehaviour(AudioPlayQueue_F32::ORIGINAL);
 //  Q_out_R_Ex.setBehaviour(AudioPlayQueue_F32::ORIGINAL);

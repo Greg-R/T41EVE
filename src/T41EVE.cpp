@@ -955,11 +955,7 @@ FLASHMEM void setup()
   sgtl5000_1.volume(0.8); // Set headphone volume.
   sgtl5000_1.micGain(0);
   sgtl5000_1.lineInLevel(0); // Line-in is not used.  Can't turn it off though.
-#ifdef QSE2
   sgtl5000_1.lineOutLevel(13); // Setting of 13 limits line-out level to 3.15 volts p-p (maximum).
-#else
-  sgtl5000_1.lineOutLevel(20); // Setting of 20 limits line-out level to 2.14 volts p-p.
-#endif
   sgtl5000_1.adcHighPassFilterEnable(); // This is required for QSE2DC, specifically for carrier calibration.
                                         //  sgtl5000_1.adcHighPassFilterDisable();  //reduces noise.  https://forum.pjrc.com/threads/27215-24-bit-audio-boards?p=78831&viewfull=1#post78831
 

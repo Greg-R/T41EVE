@@ -113,16 +113,11 @@ void SSB_ExciterIQData() {
   }
 
   //  This is the correct place in the data flow to inject the scaling for power.
-#ifdef QSE2
   powerScale = 2.0 * ConfigData.powerOutSSB[ConfigData.currentBand];
-#else
-  powerScale = 1.4 * ConfigData.powerOutSSB[ConfigData.currentBand];
-#endif
 
   arm_scale_f32(float_buffer_L_EX, powerScale, float_buffer_L_EX, 2048);  //Scale to compensate for losses in Interpolation
   arm_scale_f32(float_buffer_R_EX, powerScale, float_buffer_R_EX, 2048);
 
-#ifdef QSE2
   if (bands.bands[ConfigData.currentBand].mode == RadioMode::SSB_MODE) {
     arm_offset_f32(float_buffer_L_EX, CalData.iDCoffsetSSB[ConfigData.currentBand] + CalData.dacOffsetSSB, float_buffer_L_EX, 2048);  // Carrier suppression offset.
     arm_offset_f32(float_buffer_R_EX, CalData.qDCoffsetSSB[ConfigData.currentBand] + CalData.dacOffsetSSB, float_buffer_R_EX, 2048);
@@ -130,7 +125,6 @@ void SSB_ExciterIQData() {
     arm_offset_f32(float_buffer_L_EX, CalData.iDCoffsetCW[ConfigData.currentBand] + CalData.dacOffsetCW, float_buffer_L_EX, 2048);  // Carrier suppression offset.
     arm_offset_f32(float_buffer_R_EX, CalData.qDCoffsetCW[ConfigData.currentBand] + CalData.dacOffsetCW, float_buffer_R_EX, 2048);
   }
-#endif
 
   Q_out_L_Ex.setBehaviour(AudioPlayQueue_F32::ORIGINAL);
   Q_out_R_Ex.setBehaviour(AudioPlayQueue_F32::ORIGINAL);

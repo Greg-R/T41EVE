@@ -573,7 +573,7 @@ void TxCalibrate::DoXmitCalibrate(int calMode, bool radio, bool refine, bool toE
    Return value:
       void
  *****/
-#ifdef QSE2
+
 void TxCalibrate::DoXmitCarrierCalibrate(int calMode, bool radio, bool refine, bool toEeprom) {
   float32_t maxSweepAmp = 0.1;
   float32_t maxSweepPhase = 0.1;
@@ -868,8 +868,6 @@ ResetFlipFlops();
   }  // end while
 }  // End carrier calibration
 
-#endif
-
 
 // Automatic calibration of all bands.  Greg KF5N June 4, 2024
 void TxCalibrate::RadioCal(int mode, bool refineCal) {
@@ -897,9 +895,8 @@ void TxCalibrate::RadioCal(int mode, bool refineCal) {
     bands.bands[ConfigData.currentBand].sideband = Sideband::UPPER;
     rxcalibrater.DoReceiveCalibrate(mode, true, refineCal, false);  // Include 80M and 40M due to FT8.
     txcalibrater.DoXmitCalibrate(mode, true, refineCal, false);
-#ifdef QSE2
     txcalibrater.DoXmitCarrierCalibrate(mode, true, refineCal, false);
-#endif
+
   }
 
   // Set flag for initial calibration completed.
@@ -964,7 +961,6 @@ void TxCalibrate::MakeFFTData() {
     arm_scale_f32(float_buffer_L_EX, powerScale, float_buffer_L_EX, dataWidth);
     arm_scale_f32(float_buffer_R_EX, powerScale, float_buffer_R_EX, dataWidth);
 
-#ifdef QSE2
     if (TxCalibrate::mode == 0) {
       arm_offset_f32(float_buffer_L_EX, CalData.iDCoffsetCW[ConfigData.currentBand] + CalData.dacOffsetCW, float_buffer_L_EX, dataWidth);  // Carrier suppression offset.
       arm_offset_f32(float_buffer_R_EX, CalData.qDCoffsetCW[ConfigData.currentBand] + CalData.dacOffsetCW, float_buffer_R_EX, dataWidth);
@@ -973,7 +969,6 @@ void TxCalibrate::MakeFFTData() {
       arm_offset_f32(float_buffer_L_EX, CalData.iDCoffsetSSB[ConfigData.currentBand] + CalData.dacOffsetSSB, float_buffer_L_EX, dataWidth);  // Carrier suppression offset.
       arm_offset_f32(float_buffer_R_EX, CalData.qDCoffsetSSB[ConfigData.currentBand] + CalData.dacOffsetSSB, float_buffer_R_EX, dataWidth);
     }
-#endif
 
     Q_out_L_Ex.play(float_buffer_L_EX, dataWidth);  // play it!  This is the I channel from the Audio Adapter line out to QSE I input.
     Q_out_R_Ex.play(float_buffer_R_EX, dataWidth);  // play it!  This is the Q channel from the Audio Adapter line out to QSE Q input.
