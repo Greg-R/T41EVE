@@ -93,7 +93,7 @@ constexpr uint32_t FINE_TUNE_DEFAULT = 50;  // Set to the desired default in the
 constexpr float32_t SPEAKERSCALE = 2.0;   // Increase or decrease this value depending on your amplifier gain.
 constexpr float32_t HEADPHONESCALE = 8.0;  // Same as for the speaker.  Adjust to your preference for volume range.
 
-constexpr float32_t RFGAINSCALE = 1000.0;  // This adjusts for RF gain differences in the QSD.
+constexpr float32_t RFGAINSCALE = 1000.0;  // This adjusts for RF gain differences in the QSD2.
 
 constexpr float32_t FREQUENCYCAL = 100000;  // The nominal frequency calibration.  This can be set here permanently
                                             // after determining the unique value for your radio.
