@@ -31,8 +31,8 @@ uint64_t Clk0SetFreq = 0;
 uint64_t Clk1SetFreq = 0;
 uint64_t Clk2SetFreq = 0;
 
-#define MASTER_CLK_MULT_RX 2
-#define MASTER_CLK_MULT_TX 2
+const uint64_t MASTER_CLK_MULT_RX{2};
+const uint64_t MASTER_CLK_MULT_TX{2};
 
 /*****
   Purpose: A special variant of SetFreq() used only for calibration.
