@@ -16,10 +16,10 @@ You should have received a copy of the GNU General Public License along with T41
   "TEENSY CONVOLUTION SDR" substantially modified by Jack Purdum, W8TEE, and Al Peter, AC8GY
 
   This software is made available under the GNU GPLv3 license agreement. If commercial use of this
-  software is planned, we would appreciate it if the interested parties contact Jack Purdum, W8TEE, 
+  software is planned, we would appreciate it if the interested parties contact Jack Purdum, W8TEE,
   and Al Peter, AC8GY.
 
-  Any and all other uses, written or implied, by the GPLv3 license are forbidden without written 
+  Any and all other uses, written or implied, by the GPLv3 license are forbidden without written
   permission from from Jack Purdum, W8TEE, and Al Peter, AC8GY.
 */
 
@@ -336,7 +336,7 @@ const int DEC2STATESIZE = n_dec2_taps + (BUFFER_SIZE * N_B / (uint32_t)DF1) - 1;
 const int INT1_STATE_SIZE = 24 + BUFFER_SIZE * N_B / (uint32_t)DF - 1;
 const int INT2_STATE_SIZE = 8 + BUFFER_SIZE * N_B / (uint32_t)DF1 - 1;
 
-int32_t mainMenuIndex = START_MENU; // Done so we show menu[0] at startup
+int32_t mainMenuIndex{0}; // Done so we show menu[0] at startup
 
 uint32_t N_BLOCKS = N_B;
 
@@ -422,7 +422,7 @@ float32_t DMAMEM NR_FFT_buffer[512] __attribute__((aligned(4)));
 float32_t DMAMEM NR_output_audio_buffer[NR_FFT_L];
 float32_t DMAMEM NR_last_iFFT_result[NR_FFT_L / 2];
 float32_t DMAMEM NR_last_sample_buffer_L[NR_FFT_L / 2];
-//float32_t DMAMEM NR_last_sample_buffer_R[NR_FFT_L / 2];
+// float32_t DMAMEM NR_last_sample_buffer_R[NR_FFT_L / 2];
 float32_t DMAMEM NR_X[NR_FFT_L / 2][3];
 float32_t DMAMEM NR_E[NR_FFT_L / 2][15];
 float32_t DMAMEM NR_M[NR_FFT_L / 2];
@@ -625,52 +625,72 @@ FLASHMEM void InitializeDataArrays()
   Serial.printf("\tsizeof(NR_output_audio_buffer) %d", sizeof(NR_output_audio_buffer));
   Serial.println();
 #endif
-//  CLEAR_VAR(buffer_spec_FFT);         // memset(buffer_spec_FFT, 0, 4096);         // SPECTRUM_RES = 512 * 2 = 1024
-//  CLEAR_VAR(NR_FFT_buffer);           // memset(NR_FFT_buffer, 0, 2048);           // NR_FFT_L * sizeof(NR_FFT_buffer[0]));
-//  CLEAR_VAR(NR_output_audio_buffer);  // memset(NR_output_audio_buffer, 0, 1024);  // 256 * sizeof(NR_output_audio_buffer[0]));
-//  CLEAR_VAR(NR_last_iFFT_result);     // memset(NR_last_iFFT_result, 0, 512);
-//  CLEAR_VAR(NR_last_sample_buffer_L); // memset(NR_last_sample_buffer_L, 0, 512);
-//  CLEAR_VAR(NR_last_sample_buffer_R); // memset(NR_last_sample_buffer_R, 0, 512); Not used!
-//  CLEAR_VAR(NR_M);                    // memset(NR_M, 0, 512);
-//  CLEAR_VAR(NR_lambda);               // memset(NR_lambda, 0, 512);
-//  CLEAR_VAR(NR_G);                    // memset(NR_G, 0, 512);
-//  CLEAR_VAR(NR_SNR_prio);             // memset(NR_SNR_prio, 0, 512);
-//  CLEAR_VAR(NR_SNR_post);             // memset(NR_SNR_post, 0, 512);
-//  CLEAR_VAR(NR_Hk_old);               // memset(NR_Hk_old, 0, 512);
-//  CLEAR_VAR(NR_X);                    // memset(NR_X, 0, 1536);
-//  CLEAR_VAR(NR_Nest);                 // memset(NR_Nest, 0, 1024);
-//  CLEAR_VAR(NR_Gts);                  // memset(NR_Gts, 0, 1024);
-//  CLEAR_VAR(NR_E);                    // memset(NR_E, 0, 7680);
+  //  CLEAR_VAR(buffer_spec_FFT);         // memset(buffer_spec_FFT, 0, 4096);         // SPECTRUM_RES = 512 * 2 = 1024
+  //  CLEAR_VAR(NR_FFT_buffer);           // memset(NR_FFT_buffer, 0, 2048);           // NR_FFT_L * sizeof(NR_FFT_buffer[0]));
+  //  CLEAR_VAR(NR_output_audio_buffer);  // memset(NR_output_audio_buffer, 0, 1024);  // 256 * sizeof(NR_output_audio_buffer[0]));
+  //  CLEAR_VAR(NR_last_iFFT_result);     // memset(NR_last_iFFT_result, 0, 512);
+  //  CLEAR_VAR(NR_last_sample_buffer_L); // memset(NR_last_sample_buffer_L, 0, 512);
+  //  CLEAR_VAR(NR_last_sample_buffer_R); // memset(NR_last_sample_buffer_R, 0, 512); Not used!
+  //  CLEAR_VAR(NR_M);                    // memset(NR_M, 0, 512);
+  //  CLEAR_VAR(NR_lambda);               // memset(NR_lambda, 0, 512);
+  //  CLEAR_VAR(NR_G);                    // memset(NR_G, 0, 512);
+  //  CLEAR_VAR(NR_SNR_prio);             // memset(NR_SNR_prio, 0, 512);
+  //  CLEAR_VAR(NR_SNR_post);             // memset(NR_SNR_post, 0, 512);
+  //  CLEAR_VAR(NR_Hk_old);               // memset(NR_Hk_old, 0, 512);
+  //  CLEAR_VAR(NR_X);                    // memset(NR_X, 0, 1536);
+  //  CLEAR_VAR(NR_Nest);                 // memset(NR_Nest, 0, 1024);
+  //  CLEAR_VAR(NR_Gts);                  // memset(NR_Gts, 0, 1024);
+  //  CLEAR_VAR(NR_E);                    // memset(NR_E, 0, 7680);
 
-for(uint32_t i = 0; i < 1024; i = i + 1) buffer_spec_FFT[i] = 0.0;
-for(uint32_t i = 0; i < 512; i = i + 1) NR_FFT_buffer[i] = 0.0;
-for(uint32_t i = 0; i < NR_FFT_L; i = i + 1) NR_output_audio_buffer[i] = 0.0;
-for(uint32_t i = 0; i < (NR_FFT_L / 2); i = i + 1) NR_last_iFFT_result[i] = 0.0;
-for(uint32_t i = 0; i < (NR_FFT_L / 2); i = i + 1) NR_last_sample_buffer_L[i] = 0.0;
-for(uint32_t i = 0; i < (NR_FFT_L / 2); i = i + 1) NR_M[i] = 0.0;
-for(uint32_t i = 0; i < (NR_FFT_L / 2); i = i + 1) NR_lambda[i] = 0.0;
-for(uint32_t i = 0; i < (NR_FFT_L / 2); i = i + 1) NR_G[i] = 0.0;
-for(uint32_t i = 0; i < (NR_FFT_L / 2); i = i + 1) NR_SNR_prio[i] = 0.0;
-for(uint32_t i = 0; i < (NR_FFT_L / 2); i = i + 1) NR_SNR_post[i] = 0.0;
-for(uint32_t i = 0; i < (NR_FFT_L / 2); i = i + 1) NR_Hk_old[i] = 0.0;
+  for (uint32_t i = 0; i < 1024; i = i + 1)
+    buffer_spec_FFT[i] = 0.0;
+  for (uint32_t i = 0; i < 512; i = i + 1)
+    NR_FFT_buffer[i] = 0.0;
+  for (uint32_t i = 0; i < NR_FFT_L; i = i + 1)
+    NR_output_audio_buffer[i] = 0.0;
+  for (uint32_t i = 0; i < (NR_FFT_L / 2); i = i + 1)
+    NR_last_iFFT_result[i] = 0.0;
+  for (uint32_t i = 0; i < (NR_FFT_L / 2); i = i + 1)
+    NR_last_sample_buffer_L[i] = 0.0;
+  for (uint32_t i = 0; i < (NR_FFT_L / 2); i = i + 1)
+    NR_M[i] = 0.0;
+  for (uint32_t i = 0; i < (NR_FFT_L / 2); i = i + 1)
+    NR_lambda[i] = 0.0;
+  for (uint32_t i = 0; i < (NR_FFT_L / 2); i = i + 1)
+    NR_G[i] = 0.0;
+  for (uint32_t i = 0; i < (NR_FFT_L / 2); i = i + 1)
+    NR_SNR_prio[i] = 0.0;
+  for (uint32_t i = 0; i < (NR_FFT_L / 2); i = i + 1)
+    NR_SNR_post[i] = 0.0;
+  for (uint32_t i = 0; i < (NR_FFT_L / 2); i = i + 1)
+    NR_Hk_old[i] = 0.0;
 
-for(uint32_t j = 0; j < 3; j = j + 1) {
-for(uint32_t i = 0; i < (NR_FFT_L / 2); i = i + 1) NR_X[i][j] = 1.0;
-}
+  for (uint32_t j = 0; j < 3; j = j + 1)
+  {
+    for (uint32_t i = 0; i < (NR_FFT_L / 2); i = i + 1)
+      NR_X[i][j] = 1.0;
+  }
 
-for(uint32_t j = 0; j < 2; j = j + 1) {
-for(uint32_t i = 0; i < (NR_FFT_L / 2); i = i + 1) NR_Nest[i][j] = 1.0;
-}
+  for (uint32_t j = 0; j < 2; j = j + 1)
+  {
+    for (uint32_t i = 0; i < (NR_FFT_L / 2); i = i + 1)
+      NR_Nest[i][j] = 1.0;
+  }
 
-for(uint32_t j = 0; j < 2; j = j + 1) {
-for(uint32_t i = 0; i < (NR_FFT_L / 2); i = i + 1) NR_Gts[i][j] = 1.0;
-}
+  for (uint32_t j = 0; j < 2; j = j + 1)
+  {
+    for (uint32_t i = 0; i < (NR_FFT_L / 2); i = i + 1)
+      NR_Gts[i][j] = 1.0;
+  }
 
-for(uint32_t j = 0; j < 15; j = j + 1) {
-for(uint32_t i = 0; i < (NR_FFT_L / 2); i = i + 1) NR_E[i][j] = 1.0;
-}
+  for (uint32_t j = 0; j < 15; j = j + 1)
+  {
+    for (uint32_t i = 0; i < (NR_FFT_L / 2); i = i + 1)
+      NR_E[i][j] = 1.0;
+  }
 
-  for(uint32_t i = 0; i < (BUFFER_SIZE * N_B); i = i + 1) {
+  for (uint32_t i = 0; i < (BUFFER_SIZE * N_B); i = i + 1)
+  {
     float_buffer_L[i] = 0;
     float_buffer_R[i] = 0;
   }
@@ -815,7 +835,6 @@ for(uint32_t i = 0; i < (NR_FFT_L / 2); i = i + 1) NR_E[i][j] = 1.0;
 
 } // end InitializeDataArrays()
 
-
 /*****
   Purpose: CW Key interrupt service routine (tip)
 
@@ -918,7 +937,7 @@ FLASHMEM void setup()
   digitalWrite(MUTE, MUTEAUDIO); // Keep audio junk out of the speakers/headphones until configuration is complete.
   pinMode(PTT, INPUT_PULLUP);
   pinMode(BUSY_ANALOG_PIN, INPUT_PULLUP); // Pin 39.  Switch matrix output connects to this pin.
-                                   // Straight key and paddle GPIOs are handled in special set-up function.
+                                          // Straight key and paddle GPIOs are handled in special set-up function.
 
   // Rotary encoders.TUNE_ENCODER_A, TUNE_ENCODER_B
   tuneEncoder.begin(true);
@@ -954,8 +973,8 @@ FLASHMEM void setup()
   sgtl5000_1.inputSelect(AUDIO_INPUT_MIC);
   sgtl5000_1.volume(0.8); // Set headphone volume.
   sgtl5000_1.micGain(0);
-  sgtl5000_1.lineInLevel(0); // Line-in is not used.  Can't turn it off though.
-  sgtl5000_1.lineOutLevel(13); // Setting of 13 limits line-out level to 3.15 volts p-p (maximum).
+  sgtl5000_1.lineInLevel(0);            // Line-in is not used.  Can't turn it off though.
+  sgtl5000_1.lineOutLevel(13);          // Setting of 13 limits line-out level to 3.15 volts p-p (maximum).
   sgtl5000_1.adcHighPassFilterEnable(); // This is required for QSE2DC, specifically for carrier calibration.
                                         //  sgtl5000_1.adcHighPassFilterDisable();  //reduces noise.  https://forum.pjrc.com/threads/27215-24-bit-audio-boards?p=78831&viewfull=1#post78831
 
@@ -988,8 +1007,8 @@ FLASHMEM void setup()
   // Push and hold a button at power up to activate switch matrix calibration.
   // Please note that switch matrix calibration is also available in the Calibration menu.
 #ifdef DEBUG_SWITCH_CAL
-  eeprom.CalDataRead(); // If this is not done, the calibration data will be overwritten.
-  if (analogRead(BUSY_ANALOG_PIN) < NOTHING_TO_SEE_HERE)  // Skip if no button is pushed.
+  eeprom.CalDataRead();                                  // If this is not done, the calibration data will be overwritten.
+  if (analogRead(BUSY_ANALOG_PIN) < NOTHING_TO_SEE_HERE) // Skip if no button is pushed.
   {
     evedisplay.drawReleaseButtonScreen();
     delay(5000);
@@ -1052,7 +1071,7 @@ FLASHMEM void setup()
   SetAudioOperatingState(radioState);
 
   // Miscellaneous configurations.
-  mainMenuIndex = 0;               // Changed from middle to first. Do Menu Down to get to Calibrate quickly
+  //  mainMenuIndex = 0;               // Changed from middle to first. Do Menu Down to get to Calibrate quickly
   ConfigData.rfGainCurrent = 0;    // Start with lower gain so you don't get blasted.
   lastState = RadioState::NOSTATE; // Forces an update.
   powerUp = true;                  // This delays receiver start-up to allow transients to settle.
@@ -1103,53 +1122,68 @@ void loop()
   // SSB and FT8 transmit operate via the main loop().  CW modes operate within independent while loops.
   // Don't stop in SSB and FT8 transmit modes to read the buttons.
   // Also skip if top menu and sub menu operations are in progress.
-  if(menuCounter > 20000) {
-  if ((radioState != RadioState::SSB_TRANSMIT_STATE) and (radioState != RadioState::FT8_TRANSMIT_STATE) and (calibrateFlag == false) and (evemenucontrol.runOptionFunction == false) and (evemenucontrol.subMenuSelect == false))
+  if (menuCounter > 20000)
   {
-    menu = button.readButton();
-    if (menu != MenuSelect::BOGUS_PIN_READ)
-      button.ExecuteButtonPress(menu);
+    if ((radioState != RadioState::SSB_TRANSMIT_STATE) and (radioState != RadioState::FT8_TRANSMIT_STATE) and (calibrateFlag == false) and (evemenucontrol.runOptionFunction == false) and (evemenucontrol.subMenuSelect == false))
+    {
+      menu = button.readButton();
+      // Restrict allowed button selections if in top menu.
+      if (evemenucontrol.top == true)
+      {
+        if ((menu != MenuSelect::BOGUS_PIN_READ) and (menu == MenuSelect::MAIN_MENU_UP or menu == MenuSelect::MAIN_MENU_DN or menu == MenuSelect::MENU_OPTION_SELECT))
+          button.ExecuteButtonPress(menu);
+      }
+      else
+      {
+        if (menu != MenuSelect::BOGUS_PIN_READ)
+          button.ExecuteButtonPress(menu);
+      }
+    }
+    // This handles functions selected from the second level of menus.
+    if (evemenucontrol.runOptionFunction == true)
+    {
+      functionPtr[mainMenuIndex](); // The top menu item to run.  mainMenuIndex is a global.
+    }
+    menuCounter = 0;
   }
-  // This handles functions selected from the second level of menus.
-  if (evemenucontrol.runOptionFunction == true)
-  {
-    functionPtr[mainMenuIndex](); // The top menu item to run.  mainMenuIndex is a global.
-  }
-  menuCounter = 0;
-} else menuCounter = menuCounter + 1;
+  else
+    menuCounter = menuCounter + 1;
 
   // Screen selector.
   switch (evedisplay.screenSelect)
   {
   case EVE_Display::Screens::receiver:
     // Push RF spectrum and waterfall to the display.
-    if(displayUpdateCounter > 20000) {
-    evedisplay.drawReceiverScreen(pixelnew, display.waterfall, audioYPixel);
-    evedisplay.moveBitmapCells();
-    evedisplay.writeWaterFalltoRAM_G(display.waterfall);
-    displayUpdateCounter = 0;
-    updateDisplayFlag = true;
+    if (displayUpdateCounter > 20000)
+    {
+      evedisplay.drawReceiverScreen(pixelnew, display.waterfall, audioYPixel);
+      evedisplay.moveBitmapCells();
+      evedisplay.writeWaterFalltoRAM_G(display.waterfall);
+      displayUpdateCounter = 0;
+      updateDisplayFlag = true;
     }
     displayUpdateCounter = displayUpdateCounter + 1;
     break;
 
   case EVE_Display::Screens::buttonEntry:
 
-      if(displayUpdateCounter > 20000) {
-    evedisplay.drawButtonEntryScreen();
-displayUpdateCounter = 0;
-      }
-      displayUpdateCounter = displayUpdateCounter + 1;
+    if (displayUpdateCounter > 20000)
+    {
+      evedisplay.drawButtonEntryScreen();
+      displayUpdateCounter = 0;
+    }
+    displayUpdateCounter = displayUpdateCounter + 1;
     break;
 
   case EVE_Display::Screens::encoderEntry:
 
-        if(displayUpdateCounter > 20000) {
-    evedisplay.drawEncoderEntryScreen(false);
-displayUpdateCounter = 0;
-      }
-      displayUpdateCounter = displayUpdateCounter + 1;
-      
+    if (displayUpdateCounter > 20000)
+    {
+      evedisplay.drawEncoderEntryScreen(false);
+      displayUpdateCounter = 0;
+    }
+    displayUpdateCounter = displayUpdateCounter + 1;
+
     break;
 
   default:
@@ -1278,20 +1312,21 @@ displayUpdateCounter = 0;
     {                           // G0ORX 01092023
       enableTransmitter(false); // Disable transmitter.
     }
-//    if((static_cast<uint32_t>(ADC_RX_I.available()) > 15) and (static_cast<uint32_t>(ADC_RX_Q.available()) > 15)) {
-//      updateDisplayFlag = true;
-//      process.ProcessIQData();
-//    display.ShowSpectrum(drawSpectrum);
-//    }
+    //    if((static_cast<uint32_t>(ADC_RX_I.available()) > 15) and (static_cast<uint32_t>(ADC_RX_Q.available()) > 15)) {
+    //      updateDisplayFlag = true;
+    //      process.ProcessIQData();
+    //    display.ShowSpectrum(drawSpectrum);
+    //    }
 
-    if((static_cast<uint32_t>(ADC_RX_I.available()) > 15) and (static_cast<uint32_t>(ADC_RX_Q.available()) > 15)) {    
-    process.ProcessIQData();
-    display.ShowSpectrum(drawSpectrum);
-    updateDisplayFlag = false;
+    if ((static_cast<uint32_t>(ADC_RX_I.available()) > 15) and (static_cast<uint32_t>(ADC_RX_Q.available()) > 15))
+    {
+      process.ProcessIQData();
+      display.ShowSpectrum(drawSpectrum);
+      updateDisplayFlag = false;
     }
 
     break;
-    
+
   case RadioState::SSB_TRANSMIT_STATE:
     enableTransmitter(true);
     evedisplay.drawTransmitterScreen();
@@ -1352,13 +1387,14 @@ displayUpdateCounter = 0;
       enableTransmitter(false);
     }
 
-    if((static_cast<uint32_t>(ADC_RX_I.available()) > 15) and (static_cast<uint32_t>(ADC_RX_Q.available()) > 15)) {    
-    process.ProcessIQData();
-    display.ShowSpectrum(drawSpectrum);
-    updateDisplayFlag = false;
+    if ((static_cast<uint32_t>(ADC_RX_I.available()) > 15) and (static_cast<uint32_t>(ADC_RX_Q.available()) > 15))
+    {
+      process.ProcessIQData();
+      display.ShowSpectrum(drawSpectrum);
+      updateDisplayFlag = false;
     }
 
-//    display.ShowSpectrum(drawSpectrum); // if removed CW signal on is 2 mS
+    //    display.ShowSpectrum(drawSpectrum); // if removed CW signal on is 2 mS
     break;
 
   case RadioState::CW_TRANSMIT_STRAIGHT_STATE:
@@ -1370,8 +1406,8 @@ displayUpdateCounter = 0;
     while (millis() - cwTimer <= static_cast<uint32_t>(ConfigData.cwTransmitDelay))
     { // Start CW transmit timer.
 
-//    button.InputParameterEncoderNoWhile(1, 20, 1, "TX Power", ConfigData.transmitPowerLevel);
-//    initPowerCoefficients();
+      //    button.InputParameterEncoderNoWhile(1, 20, 1, "TX Power", ConfigData.transmitPowerLevel);
+      //    initPowerCoefficients();
 
       if (digitalRead(KEYER_DIT_INPUT_TIP) == LOW or straightKeyStart)
       { // AFP 09-25-22  Turn on CW signal
@@ -1524,17 +1560,17 @@ displayUpdateCounter = 0;
 
 #ifdef LOOP_TIMER
   loopCounter = loopCounter + 1;
-  if (loopCounter > 4000000000)   // uint32_t 2^32 = 4294967296
+  if (loopCounter > 4000000000) // uint32_t 2^32 = 4294967296
   {
     Serial.printf("Loop us = %u\n", (static_cast<uint32_t>(usec1) - usec1Old));
     loopCounter = 0;
     Serial.printf("AudioProcessorUsageMax() = %d\n", static_cast<uint32_t>(AudioProcessorUsageMax()));
     AudioProcessorUsageMaxReset();
     Serial.printf("ConfigData.sdCardPresent = %d\n", ConfigData.sdCardPresent);
-//        Serial.printf("evenmenucontrol.top = %d\n", evemenucontrol.top);
-//        Serial.printf("evenmenucontrol.runOptionFunction = %d\n", evemenucontrol.runOptionFunction);
-//        Serial.printf("evenmenucontrol.subMenuSelect = %d\n", evemenucontrol.subMenuSelect);
-//        Serial.printf("evenmenucontrol.subMenuChoice = %d\n", menuProc.subMenuChoice);
+    //        Serial.printf("evenmenucontrol.top = %d\n", evemenucontrol.top);
+    //        Serial.printf("evenmenucontrol.runOptionFunction = %d\n", evemenucontrol.runOptionFunction);
+    //        Serial.printf("evenmenucontrol.subMenuSelect = %d\n", evemenucontrol.subMenuSelect);
+    //        Serial.printf("evenmenucontrol.subMenuChoice = %d\n", menuProc.subMenuChoice);
   }
   usec1Old = usec1;
 #endif

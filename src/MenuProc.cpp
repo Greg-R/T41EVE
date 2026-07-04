@@ -16,10 +16,10 @@ You should have received a copy of the GNU General Public License along with T41
   "TEENSY CONVOLUTION SDR" substantially modified by Jack Purdum, W8TEE, and Al Peter, AC8GY
 
   This software is made available under the GNU GPLv3 license agreement. If commercial use of this
-  software is planned, we would appreciate it if the interested parties contact Jack Purdum, W8TEE, 
+  software is planned, we would appreciate it if the interested parties contact Jack Purdum, W8TEE,
   and Al Peter, AC8GY.
 
-  Any and all other uses, written or implied, by the GPLv3 license are forbidden without written 
+  Any and all other uses, written or implied, by the GPLv3 license are forbidden without written
   permission from from Jack Purdum, W8TEE, and Al Peter, AC8GY.
 */
 
@@ -92,7 +92,7 @@ void MenuProc::CalibrateOptions()
 
     break;
 
-  case 1: // CW PA Cal.  Set using encoder.
+  case 1:                                    // CW PA Cal.  Set using encoder.
     evemenucontrol.runOptionFunction = true; // Runs in loop().
     parameterAdjustFlag = true;              // Prevents multiple EEPROM writes.
     CalData.CWPowerCalibrationFactor[ConfigData.currentBand] = GetEncoderValueLive(0.0, 1.0, CalData.CWPowerCalibrationFactor[ConfigData.currentBand], 0.01);
@@ -237,8 +237,8 @@ void MenuProc::CalibrateOptions()
     subMenuChoice = 0;
     break;
 
-  case 15: // Set button repeat rate
-  evemenucontrol.runOptionFunction = true; // Runs in loop().
+  case 15:                                   // Set button repeat rate
+    evemenucontrol.runOptionFunction = true; // Runs in loop().
     CalData.buttonRepeatDelay = 1000 * GetEncoderValueLive(0, 5000, CalData.buttonRepeatDelay / 1000, 1);
     menu = button.readButton();
     if (menu != MenuSelect::BOGUS_PIN_READ)
@@ -588,7 +588,7 @@ void MenuProc::EqualizerXmtOptions()
 void MenuProc::SSBOptions()
 {
   float imdAmplitude = 1.0;
-  
+
   bool cancel = false;
   MenuSelect menu = MenuSelect::BOGUS_PIN_READ; // Used in IMD test.
   std::vector<std::string> ssbChoices = {"CESSB", "SSB", "FT8 Active", "FT8 Disable", "Compressor On", "Compressor Off", "Microphone Gain", "Compressor Ratio", "Compressor Threshold", "IMD Test ", "Cancel"};
@@ -668,7 +668,7 @@ void MenuProc::SSBOptions()
     SetAudioOperatingState(radioState);
     SetFreq();
     digitalWrite(RXTX, HIGH); // xmit on
-  
+
     while (menu != MenuSelect::MENU_OPTION_SELECT)
     {
       menu = button.readButton(); // Use this to quit.
@@ -679,7 +679,7 @@ void MenuProc::SSBOptions()
       toneSSBCal1.amplitude(imdAmplitude);
       toneSSBCal2.amplitude(imdAmplitude);
       SSB_ExciterIQData();
-    }  // End IMD loop.
+    } // End IMD loop.
 
     radioState = RadioState::SSB_RECEIVE_STATE;
     digitalWrite(RXTX, LOW); // Transmitter off.
@@ -846,7 +846,7 @@ void MenuProc::VFOSelect()
     } // End switch
     eeprom.ConfigDataWrite();
     button.ExecuteModeChange();
-    evemenucontrol.subMenuSelect = false;  // This does not use a sub-menu.
+    evemenucontrol.subMenuSelect = false; // This does not use a sub-menu.
     calibrateFlag = false;
   }
 }
@@ -1015,7 +1015,6 @@ void MenuProc::CalDataOptions()
   subMenuChoice = 0;
 }
 
-
 /*****
   Purpose: To select an option from a submenu.  This does not have a while loop.
 
@@ -1035,8 +1034,8 @@ void MenuProc::SubmenuSelectString(std::vector<std::string> options)
 {
   MenuSelect menu;
 
-  menu = button.readButton();             // Read the ladder value
-  if (menu != MenuSelect::BOGUS_PIN_READ) // Valid choice?
+  menu = button.readButton();                                                                                                               // Read the ladder value
+  if ((menu != MenuSelect::BOGUS_PIN_READ) and (menu == MenuSelect::MENU_OPTION_SELECT or menu == MenuSelect::MAIN_MENU_UP or menu == MenuSelect::MAIN_MENU_DN)) // Valid choice?
   {
     switch (menu)
     {
