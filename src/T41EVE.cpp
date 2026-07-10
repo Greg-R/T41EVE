@@ -1029,14 +1029,14 @@ FLASHMEM void setup()
   si5351.init(SI5351_CRYSTAL_LOAD_10PF, Si_5351_crystal, CalData.freqCorrectionFactor); // JJP  7/14/23
   si5351.set_ms_source(SI5351_CLK2, SI5351_PLLB);                                       // Allows CLK1 and CLK2 to exceed 100 MHz simultaneously.
   si5351.drive_strength(SI5351_CLK0, SI5351_DRIVE_8MA);
-  si5351.output_enable(SI5351_CLK2, 1);
+//  si5351.output_enable(SI5351_CLK2, 1);
   si5351.drive_strength(SI5351_CLK2, SI5351_DRIVE_8MA); // CWP AFP 10-13-22
 
   // Start with the last frequency in the last band.
   ConfigData.currentFreqA = ConfigData.lastFrequencies[ConfigData.currentBand][VFO_A];
   ConfigData.currentFreqB = ConfigData.lastFrequencies[ConfigData.currentBand][VFO_B];
 
-  SetFreq();
+//  SetFreq();
   // Reset flip-flops in QSD2 and QSE2.
   ResetFlipFlops();
 

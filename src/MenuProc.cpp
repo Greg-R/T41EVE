@@ -692,6 +692,7 @@ void MenuProc::SSBOptions()
         evemenucontrol.runOptionFunction = false;
         parameterAdjustFlag = false;
         subMenuChoice = 0;
+        imdAmplitudedB = 5;  // Put back to a low level.
         return; // Nothing saved or configured upon exit.
       }
     }
