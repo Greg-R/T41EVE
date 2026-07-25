@@ -83,7 +83,7 @@ void SSB_ExciterIQData() {
     return;
   }
 
-  // Get audio samples from the audio buffers and convert them to float.
+  // Get audio samples from the audio buffers and copy them to the buffers.
   for (unsigned i = 0; i < N_BLOCKS_EX; i++) {
 
     iBuffer = Q_in_L_Ex.readBuffer();
