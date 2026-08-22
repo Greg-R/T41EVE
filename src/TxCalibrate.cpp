@@ -281,16 +281,16 @@ void TxCalibrate::writeToCalData(float ichannel, float qchannel) {
  *****/
 void TxCalibrate::DoXmitCalibrate(int calMode, bool radio, bool refine, bool toEeprom) {
   int freqOffset = 0;  // Calibration tone same as regular modulation tone.
-  float maxSweepAmp = 0.2;
-  float maxSweepPhase = 0.1;
+  float maxSweepAmp = 0.1;
+  float maxSweepPhase = 0.05;
   xmitIncrement = 0.002;  // Coarse increment used during initial amplitude calibration.
   IQCalType = 0;          // Begin with IQ gain optimization.
   std::vector<float32_t> sweepVector(201);
   std::vector<float32_t> sweepVectorValue(201);
   std::vector<float32_t> sub_vectorAmp = std::vector<float>(21);  // Can these arrays be commonized?
   std::vector<float32_t> sub_vectorPhase = std::vector<float>(21);
-  std::vector<float> sub_vectorAmpResult = std::vector<float>(21);
-  std::vector<float> sub_vectorPhaseResult = std::vector<float>(21);
+  std::vector<float> sub_vectorAmpResult = std::vector<float>(10);
+  std::vector<float> sub_vectorPhaseResult = std::vector<float>(10);
   elapsedMillis fiveSeconds;
   int startTimer = 0;
   TxCalibrate::autoCal = false;
@@ -424,7 +424,7 @@ void TxCalibrate::DoXmitCalibrate(int calMode, bool radio, bool refine, bool toE
             // Clear the vector before moving to phase.
             std::fill(sweepVectorValue.begin(), sweepVectorValue.end(), 0.0);
             std::fill(sweepVector.begin(), sweepVector.end(), 0.0);
-            xmitIncrement = 0.001;             // The initial increment can be reduced because the sweep range is half.
+            xmitIncrement = 0.002;             // The initial increment can be reduced because the sweep range is half.
             state = State::initialSweepPhase;  // Initial sweeps done; proceed to refine phase.
             break;
           }
@@ -458,7 +458,7 @@ void TxCalibrate::DoXmitCalibrate(int calMode, bool radio, bool refine, bool toE
             averageFlag = false;
             averageCount = 0;
             xmitIncrement = 0.001;     // Use smaller increment in refinement.
-            state = State::refineAmp;  // Proceed to refine the gain channel.
+            state = State::setOptimal;  // Proceed to refine the gain channel.
             break;
           }
           state = State::initialSweepPhase;
@@ -468,10 +468,10 @@ void TxCalibrate::DoXmitCalibrate(int calMode, bool radio, bool refine, bool toE
           // Now sweep over the entire sub_vectorAmp array with averaging on. index starts at 0.
           amplitude = sub_vectorAmp[index];  // Starting value.
           // Don't record this until there is data.  So that will be AFTER this pass.
-          if (averageFlag) {
-            sub_vectorAmpResult[index] = adjdB_avg;
+       //   if (averageFlag) {
+            sub_vectorAmpResult[index] = adjdB;
             index = index + 1;
-          }
+      //    }
           // Terminate when all values in sub_vectorAmp have been measured.
           if (index == sub_vectorAmpResult.size()) {
             // Find the index of the minimum and record as iOptimal.
@@ -482,7 +482,7 @@ void TxCalibrate::DoXmitCalibrate(int calMode, bool radio, bool refine, bool toE
             amplitude = iOptimal;                     // Set to optimal value before refining phase.
             // Update display to optimal value and change from red to white.
             GetEncoderValueLive(-2.0, 2.0, amplitude, xmitIncrement);
-            for (int i = 0; i < 21; i = i + 1) {
+            for (int i = 0; i < 10; i = i + 1) {
               sub_vectorAmp[i] = (iOptimal - 10 * 0.001) + (0.001 * i);  // The next array to sweep.
             }
             IQCalType = 1;
@@ -490,10 +490,12 @@ void TxCalibrate::DoXmitCalibrate(int calMode, bool radio, bool refine, bool toE
             averageFlag = false;
             averageCount = 0;
             count = count + 1;
-            if (count == 1 or count == 3) state = State::refinePhase;  // Alternate refinePhase and refineAmp.
+    ////        if (count == 1 or count == 3) state = State::refinePhase;  // Alternate refinePhase and refineAmp.
+            state = State::refinePhase;
             break;
           }
-          state = State::average;
+////          state = State::average;
+          state = State::refineAmp;
           break;
 
         case State::refinePhase:
@@ -502,10 +504,10 @@ void TxCalibrate::DoXmitCalibrate(int calMode, bool radio, bool refine, bool toE
                                            //         state = State::exit;
                                            //         break;
           // Don't record this until there is data.  So that will be AFTER this pass.
-          if (averageFlag) {
-            sub_vectorPhaseResult[index] = adjdB_avg;
+    ////      if (averageFlag) {
+            sub_vectorPhaseResult[index] = adjdB;
             index = index + 1;
-          }
+    ////      }
           // Terminate when all values in sub_vectorAmp have been measured.
           if (index == sub_vectorPhaseResult.size()) {
             // Find the index of the minimum and record as iOptimal.
@@ -516,7 +518,7 @@ void TxCalibrate::DoXmitCalibrate(int calMode, bool radio, bool refine, bool toE
             phase = qOptimal;
             // Update display to optimal value and change from red to white.
             GetEncoderValueLive(-2.0, 2.0, phase, xmitIncrement);
-            for (int i = 0; i < 21; i = i + 1) {
+            for (int i = 0; i < 10; i = i + 1) {
               sub_vectorPhase[i] = (qOptimal - 10 * 0.001) + (0.001 * i);
             }
             IQCalType = 0;
@@ -524,11 +526,12 @@ void TxCalibrate::DoXmitCalibrate(int calMode, bool radio, bool refine, bool toE
             averageFlag = false;
             averageCount = 0;
             count = count + 1;
-            if (count == 2) state = State::refineAmp;
-            if (count == 4) state = State::setOptimal;
+         //   if (count == 2) state = State::refineAmp;
+            if (count == 2) state = State::setOptimal;
             break;
           }
-          state = State::average;
+////          state = State::average;
+          state = State::refinePhase;
           break;
 
         case State::average:  // Stay in this state while averaging is in progress.  Used for refinement only.
@@ -1141,6 +1144,7 @@ float TxCalibrate::PlotCalSpectrum(int x1, int cal_bins[3], int capture_bins) {
     updateDisplayFlag = true;                // This flag is used in ZoomFFTExe().  When true the FFT is performed, when false skipped.
                                              // This is going to acquire 2048 samples of I and Q from the receiver, and then perform the FFT.
                                              // The result will be a 512 wide array of FFT bin levels.
+    TxCalibrate::MakeFFTData();
     TxCalibrate::MakeFFTData();
   } else updateDisplayFlag = false;  //  Do not save the the display data for the remainder of the sweep.
 
