@@ -962,7 +962,7 @@ FLASHMEM void setup()
 
   // Set Teensy and Open Audio Library blocks.
   AudioMemory(240);
-  AudioMemory_F32(110);
+  AudioMemory_F32(80);
 
   // Configure Audio Adapter
   sgtl5000_1.enable();

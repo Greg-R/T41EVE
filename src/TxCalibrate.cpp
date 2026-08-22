@@ -38,10 +38,12 @@ You should have received a copy of the GNU General Public License along with T41
   Return value:
     void
 *****/
+elapsedMillis txTimer;
 void TxCalibrate::warmUpCal() {
   uint32_t index_of_max{ 0 };
   uint32_t count{ 0 };
   uint32_t i;
+  uint32_t timerStart{0};
 
   // MakeFFTData() has to be called enough times for transients to settle out before computing FFT.
   for (i = 0; i < 128; i = i + 1) {
@@ -64,6 +66,17 @@ void TxCalibrate::warmUpCal() {
    Serial.printf("Problem with TX warmUpCal\n");
    Serial.printf("index_of_max = %d\n", index_of_max);
   }
+  ADC_RX_I.clear();
+  ADC_RX_Q.clear();
+  Q_in_L_Ex.clear();
+  Q_in_R_Ex.clear();
+
+  // Wait for transmitter buffers to fill?
+  timerStart = static_cast<uint32_t>(txTimer);
+//  while((static_cast<uint32_t>(txTimer) - timerStart) < 44) {
+//;
+//  }
+
 }
 
 
@@ -387,7 +400,7 @@ void TxCalibrate::DoXmitCalibrate(int calMode, bool radio, bool refine, bool toE
           state = State::initialSweepAmp;  // Let this fall through.
 
         case State::initialSweepAmp:
-          TxCalibrate::ShowSpectrum();  // This slows down the loop to improve accuracy.
+//          TxCalibrate::ShowSpectrum();  // This slows down the loop to improve accuracy.
           sweepVectorValue[index] = amplitude;
           sweepVector[index] = adjdB;
           // Increment for next measurement.
@@ -415,6 +428,10 @@ void TxCalibrate::DoXmitCalibrate(int calMode, bool radio, bool refine, bool toE
             state = State::initialSweepPhase;  // Initial sweeps done; proceed to refine phase.
             break;
           }
+          Serial.printf("Q_in_L_Ex.available = %d\n", static_cast<uint32_t>(Q_in_L_Ex.available()));
+          Serial.printf("Q_in_R_Ex.available = %d\n", static_cast<uint32_t>(Q_in_R_Ex.available()));
+          Serial.printf("ADC_RX_I.available = %d\n", static_cast<uint32_t>(ADC_RX_I.available()));
+          Serial.printf("ADC_RX_Q.available = %d\n", static_cast<uint32_t>(ADC_RX_Q.available()));
           state = State::initialSweepAmp;
           break;
 
@@ -922,6 +939,13 @@ void TxCalibrate::MakeFFTData() {
   float32_t* iBuffer = nullptr;  // I and Q pointers needed for one-time read of record queues.
   float32_t* qBuffer = nullptr;
 
+  while(static_cast<uint32_t>(Q_in_L_Ex.available()) < 16 and static_cast<uint32_t>(Q_in_R_Ex.available()) < 16) {
+    ;
+  }
+
+  Serial.printf("Q_in_L_Ex.available before = %d\n", static_cast<uint32_t>(Q_in_L_Ex.available()));
+  Serial.printf("Q_in_R_Ex.available before = %d\n", static_cast<uint32_t>(Q_in_R_Ex.available()));
+
   // Read incoming I and Q audio blocks from the SSB exciter.
   // Are there at least N_BLOCKS buffers in each channel available ?
   if (static_cast<uint32_t>(Q_in_L_Ex.available()) > 15 and static_cast<uint32_t>(Q_in_R_Ex.available()) > 15) {
@@ -976,6 +1000,8 @@ void TxCalibrate::MakeFFTData() {
     fftSuccess = false;  // Not enough transmit data.
     Serial.printf("Failed to get enough I and Q transmitter data!\n");
   }
+  Serial.printf("Q_in_L_Ex.available after = %d\n", static_cast<uint32_t>(Q_in_L_Ex.available()));
+  Serial.printf("Q_in_R_Ex.available after = %d\n", static_cast<uint32_t>(Q_in_R_Ex.available()));
   // End of transmit code.  Begin receive code.
 
   // Get audio samples from the audio  buffers and convert them to float.
@@ -1027,11 +1053,15 @@ void TxCalibrate::MakeFFTData() {
     updateDisplayFlag = true;
     if (fftActive) ZoomFFTExe(2048);
     fftSuccess = true;
+    Serial.printf("FFT successful\n");
   }  // End of receive code
   else {
     fftSuccess = false;  // Insufficient receive buffers to make FFT.  Do not plot FFT data!
     Serial.printf("FFT failed due to insufficient I and Q receive data!\n");
   }
+
+          Serial.printf("ADC_RX_I.available = %d\n", static_cast<uint32_t>(ADC_RX_I.available()));
+          Serial.printf("ADC_RX_Q.available = %d\n", static_cast<uint32_t>(ADC_RX_Q.available()));
 }
 
 
