@@ -91,6 +91,8 @@ public:
                             // This is false when desired to push data through the system
                             // to wring out the transient response.
   bool exitManual = false;
+  bool firstPass{false};
+  bool print{false};
 
   // Blue and red bar variables:
   int32_t rx_blue_usb = 128;
@@ -112,8 +114,13 @@ public:
                      state0,
                      initialSweepAmp,
                      initialSweepPhase,
+                     ringOut,
                      refineAmp,
+                     refineAmpPlus,
+                     refineAmpMinus,
                      refinePhase,
+                     refinePhasePlus,
+                     refinePhaseMinus,
                      average,
                      setOptimal,
                      exit };

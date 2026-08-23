@@ -283,6 +283,7 @@ void TxCalibrate::DoXmitCalibrate(int calMode, bool radio, bool refine, bool toE
   int freqOffset = 0;  // Calibration tone same as regular modulation tone.
   float maxSweepAmp = 0.1;
   float maxSweepPhase = 0.05;
+  float adjdB_old{0};
   xmitIncrement = 0.002;  // Coarse increment used during initial amplitude calibration.
   IQCalType = 0;          // Begin with IQ gain optimization.
   std::vector<float32_t> sweepVector(201);
@@ -301,7 +302,7 @@ void TxCalibrate::DoXmitCalibrate(int calMode, bool radio, bool refine, bool toE
   std::vector<float>::iterator result;
   TxCalibrate::CalibratePreamble(2);  // Set zoom to 4X.  Sample rate 48ksps.
   calTypeFlag = 1;                    // TX sideband
-//  plotCalGraphics(calTypeFlag);
+int ringOutCounter = 0;
 
     ResetFlipFlops();  // This has a delay.
 
@@ -385,7 +386,7 @@ void TxCalibrate::DoXmitCalibrate(int calMode, bool radio, bool refine, bool toE
           }
           IQCalType = 0;  // Start in IQ Gain.
           index = 0;
-          state = State::refineAmp;  // Skip the initial sweeps.
+          state = State::refineAmpPlus;  // Skip the initial sweeps.
           break;
         case State::state0:
           // Starting values for initial calibration sweeps.  First sweep is amplitude (gain).
@@ -428,10 +429,10 @@ void TxCalibrate::DoXmitCalibrate(int calMode, bool radio, bool refine, bool toE
             state = State::initialSweepPhase;  // Initial sweeps done; proceed to refine phase.
             break;
           }
-          Serial.printf("Q_in_L_Ex.available = %d\n", static_cast<uint32_t>(Q_in_L_Ex.available()));
-          Serial.printf("Q_in_R_Ex.available = %d\n", static_cast<uint32_t>(Q_in_R_Ex.available()));
-          Serial.printf("ADC_RX_I.available = %d\n", static_cast<uint32_t>(ADC_RX_I.available()));
-          Serial.printf("ADC_RX_Q.available = %d\n", static_cast<uint32_t>(ADC_RX_Q.available()));
+//          Serial.printf("Q_in_L_Ex.available = %d\n", static_cast<uint32_t>(Q_in_L_Ex.available()));
+//          Serial.printf("Q_in_R_Ex.available = %d\n", static_cast<uint32_t>(Q_in_R_Ex.available()));
+//          Serial.printf("ADC_RX_I.available = %d\n", static_cast<uint32_t>(ADC_RX_I.available()));
+//          Serial.printf("ADC_RX_Q.available = %d\n", static_cast<uint32_t>(ADC_RX_Q.available()));
           state = State::initialSweepAmp;
           break;
 
@@ -458,13 +459,96 @@ void TxCalibrate::DoXmitCalibrate(int calMode, bool radio, bool refine, bool toE
             averageFlag = false;
             averageCount = 0;
             xmitIncrement = 0.001;     // Use smaller increment in refinement.
-            state = State::setOptimal;  // Proceed to refine the gain channel.
+            ringOutCounter = 0;
+            firstPass = true;
+            state = State::ringOut;  // Proceed to refine the gain channel.
+//            state = State::setOptimal;
             break;
           }
           state = State::initialSweepPhase;
           break;
 
-        case State::refineAmp:
+        case State::ringOut:
+
+        if(ringOutCounter > 10) {
+          ringOutCounter = 0;
+          state = State::refineAmpPlus;
+          amplitude = amplitude + xmitIncrement;
+          print = true;
+          Serial.printf("1 ringOut refineAmpPlus adjdB = %f ringOutCounter = %d amplitude = %f\n", adjdB, ringOutCounter, amplitude);
+     //     break;
+        } else {
+          ringOutCounter = ringOutCounter + 1;
+          Serial.printf("2 ringOut refineAmpPlus adjdB = %f ringOutCounter = %d amplitude = %f\n", adjdB, ringOutCounter, amplitude);
+          state = State::ringOut;
+        //  break;
+        }
+
+        break;
+
+        case State::refineAmpPlus:
+        
+Serial.printf("Top of refineAmpPlus adjdB = %f adjdB_old = %f amplitude = %f\n", adjdB, adjdB_old, amplitude);
+
+//        amplitude = amplitude + 0.001;
+
+        
+        ringOutCounter = ringOutCounter + 1;
+        if (ringOutCounter == 10) state = State::ringOut;
+        else {
+          state = State::refineAmpPlus;
+          break;
+        }
+
+
+        /* This is required because adjdB must be re-computed.
+        if(firstPass) {      
+            adjdB_old = adjdB;
+            firstPass = false;
+            state = State::refineAmpPlus;
+            break;
+        }
+          if(adjdB < adjdB_old) {
+            adjdB_old = adjdB;
+            Serial.printf("1 refineAmpPlus adjdB = %f adjdB_old = %f\n", adjdB, adjdB_old);
+             state = State::refineAmpPlus;
+           break;
+          } else {
+            amplitude = amplitude - xmitIncrement;  // Put back because last pass did not improve.
+            Serial.printf("2 refineAmpPlus adjdB = %f adjdB_old = %f\n", adjdB, adjdB_old);
+            firstPass = true;
+            state = State::setOptimal;
+            break;
+          }
+            */
+            
+
+        case State::refineAmpMinus:
+        
+//        amplitude = amplitude - xmitIncrement;
+
+        if(firstPass) {      
+            adjdB_old = adjdB;
+            Serial.printf("refineAmpMinus firstPass adjdB = %f adjdB_old = %f\n", adjdB, adjdB_old);
+            firstPass = false;
+            state = State::refineAmpMinus;
+            break;
+        }
+          if(adjdB < adjdB_old) {
+            adjdB_old = adjdB;
+            Serial.printf("1 refineAmpMinus adjdB = %f adjdB_old = %f\n", adjdB, adjdB_old);
+             state = State::refineAmpMinus;
+           break;
+          } else {
+ //           amplitude = amplitude + xmitIncrement;
+            Serial.printf("2 refineAmpMinus adjdB = %f adjdB_old = %f\n", adjdB, adjdB_old);
+            print = false;
+            state = State::setOptimal;
+            break;
+          }
+
+
+        /*
           // Now sweep over the entire sub_vectorAmp array with averaging on. index starts at 0.
           amplitude = sub_vectorAmp[index];  // Starting value.
           // Don't record this until there is data.  So that will be AFTER this pass.
@@ -497,9 +581,15 @@ void TxCalibrate::DoXmitCalibrate(int calMode, bool radio, bool refine, bool toE
 ////          state = State::average;
           state = State::refineAmp;
           break;
+          */
 
-        case State::refinePhase:
-          // Now sweep over the entire sub_vectorAmp array with averaging on. index starts at 0.
+        case State::refinePhasePlus:
+
+
+         break;
+
+
+          /* Now sweep over the entire sub_vectorAmp array with averaging on. index starts at 0.
           phase = sub_vectorPhase[index];  // Starting value.
                                            //         state = State::exit;
                                            //         break;
@@ -533,6 +623,7 @@ void TxCalibrate::DoXmitCalibrate(int calMode, bool radio, bool refine, bool toE
 ////          state = State::average;
           state = State::refinePhase;
           break;
+          */
 
         case State::average:  // Stay in this state while averaging is in progress.  Used for refinement only.
           if (averageCount > 5) {
@@ -946,8 +1037,8 @@ void TxCalibrate::MakeFFTData() {
     ;
   }
 
-  Serial.printf("Q_in_L_Ex.available before = %d\n", static_cast<uint32_t>(Q_in_L_Ex.available()));
-  Serial.printf("Q_in_R_Ex.available before = %d\n", static_cast<uint32_t>(Q_in_R_Ex.available()));
+//  Serial.printf("Q_in_L_Ex.available before = %d\n", static_cast<uint32_t>(Q_in_L_Ex.available()));
+//  Serial.printf("Q_in_R_Ex.available before = %d\n", static_cast<uint32_t>(Q_in_R_Ex.available()));
 
   // Read incoming I and Q audio blocks from the SSB exciter.
   // Are there at least N_BLOCKS buffers in each channel available ?
@@ -1003,8 +1094,8 @@ void TxCalibrate::MakeFFTData() {
     fftSuccess = false;  // Not enough transmit data.
     Serial.printf("Failed to get enough I and Q transmitter data!\n");
   }
-  Serial.printf("Q_in_L_Ex.available after = %d\n", static_cast<uint32_t>(Q_in_L_Ex.available()));
-  Serial.printf("Q_in_R_Ex.available after = %d\n", static_cast<uint32_t>(Q_in_R_Ex.available()));
+//  Serial.printf("Q_in_L_Ex.available after = %d\n", static_cast<uint32_t>(Q_in_L_Ex.available()));
+//  Serial.printf("Q_in_R_Ex.available after = %d\n", static_cast<uint32_t>(Q_in_R_Ex.available()));
   // End of transmit code.  Begin receive code.
 
   // Get audio samples from the audio  buffers and convert them to float.
@@ -1056,15 +1147,15 @@ void TxCalibrate::MakeFFTData() {
     updateDisplayFlag = true;
     if (fftActive) ZoomFFTExe(2048);
     fftSuccess = true;
-    Serial.printf("FFT successful\n");
+//    Serial.printf("FFT successful\n");
   }  // End of receive code
   else {
     fftSuccess = false;  // Insufficient receive buffers to make FFT.  Do not plot FFT data!
     Serial.printf("FFT failed due to insufficient I and Q receive data!\n");
   }
 
-          Serial.printf("ADC_RX_I.available = %d\n", static_cast<uint32_t>(ADC_RX_I.available()));
-          Serial.printf("ADC_RX_Q.available = %d\n", static_cast<uint32_t>(ADC_RX_Q.available()));
+  //        Serial.printf("ADC_RX_I.available = %d\n", static_cast<uint32_t>(ADC_RX_I.available()));
+  //        Serial.printf("ADC_RX_Q.available = %d\n", static_cast<uint32_t>(ADC_RX_Q.available()));
 }
 
 
@@ -1105,9 +1196,12 @@ void TxCalibrate::ShowSpectrum()  //AFP 2-10-23
 
   // Plot carrier during transmit cal, do not return a dB value:
   if (calTypeFlag == 1) {  // Transmit cal
-    for (x1 = cal_bins[0] - capture_bins; x1 < cal_bins[0] + capture_bins; x1++) adjdB = TxCalibrate::PlotCalSpectrum(x1, cal_bins, capture_bins);
-    for (x1 = cal_bins[2] - capture_bins; x1 < cal_bins[2] + capture_bins; x1++) adjdB = TxCalibrate::PlotCalSpectrum(x1, cal_bins, capture_bins);
-    for (x1 = cal_bins[1] - capture_bins; x1 < cal_bins[1] + capture_bins; x1++) TxCalibrate::PlotCalSpectrum(x1, cal_bins, capture_bins);  // Carrier
+ //   for (
+      x1 = cal_bins[0] - capture_bins;
+     //  x1 < cal_bins[0] + capture_bins; x1++)
+       adjdB = TxCalibrate::PlotCalSpectrum(x1, cal_bins, capture_bins);
+  //  for (x1 = cal_bins[2] - capture_bins; x1 < cal_bins[2] + capture_bins; x1++) adjdB = TxCalibrate::PlotCalSpectrum(x1, cal_bins, capture_bins);
+  //  for (x1 = cal_bins[1] - capture_bins; x1 < cal_bins[1] + capture_bins; x1++) TxCalibrate::PlotCalSpectrum(x1, cal_bins, capture_bins);  // Carrier
   }
   if (calTypeFlag == 2) {  // Carrier cal
     for (x1 = cal_bins[0] - capture_bins; x1 < cal_bins[0] + capture_bins; x1++) adjdB = TxCalibrate::PlotCalSpectrum(x1, cal_bins, capture_bins);
@@ -1146,6 +1240,7 @@ float TxCalibrate::PlotCalSpectrum(int x1, int cal_bins[3], int capture_bins) {
                                              // The result will be a 512 wide array of FFT bin levels.
     TxCalibrate::MakeFFTData();
     TxCalibrate::MakeFFTData();
+    TxCalibrate::MakeFFTData();
   } else updateDisplayFlag = false;  //  Do not save the the display data for the remainder of the sweep.
 
   // Find the maximums of the desired and undesired signals so that dB can be calculated.
@@ -1172,6 +1267,8 @@ float TxCalibrate::PlotCalSpectrum(int x1, int cal_bins[3], int capture_bins) {
   if (bands.bands[ConfigData.currentBand].sideband == Sideband::UPPER && not(calTypeFlag == 0)) adjdB = -adjdB;  // Flip sign for USB only for TX cal.
   adjdB_avg = adjdB * alpha + adjdBold * (1.0 - alpha);                                                          // Exponential average.
   adjdBold = adjdB_avg;
+
+  if(print) Serial.printf("amplitude = %f adjdB = %f\n", amplitude, adjdB);
 
   return adjdB_avg;
 }  // end PlotCalSpectrum(. . .)
