@@ -1001,7 +1001,7 @@ FLASHMEM void setup()
 
   //  Entry graphics.
   evedisplay.drawSplash();
-  delay(5000);
+  delay(500);
 
   // Switch matrix debug code.
   // Push and hold a button at power up to activate switch matrix calibration.

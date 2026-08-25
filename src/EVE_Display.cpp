@@ -1534,7 +1534,7 @@ FLASHMEM void EVE_Display::transmitterCalStatic_cmd_list()
   // Draw the button push guides.
   EVE_color_rgb(0x00ff00);
   EVE_cmd_text(550, 125, 28, 0, "Incr =");
-  EVE_cmd_text(640, 150, 30, 0, "dBC");
+  EVE_cmd_text(660, 150, 30, 0, "dBC");
   EVE_cmd_text(550, 185, 28, 0, "User1: Gain/Phase");
   EVE_cmd_text(550, 215, 28, 0, "User2: Increment");
   EVE_cmd_text(550, 245, 28, 0, "Zoom: Auto-Cal");
@@ -1692,7 +1692,8 @@ void EVE_Display::drawTransmitterCalScreen(int16_t *fftArray)
   EVE_cmd_number_burst(430, 80, 26, 0, ConfigData.transmitPowerLevel);
 
   // Draw current suppression in dBC.
-  dtostrf(txcalibrater.adjdB_avg, 4, 1, buffer);
+////  dtostrf(txcalibrater.adjdB_avg, 4, 1, buffer);
+  dtostrf(txcalibrater.adjdB, 5, 3, buffer);
   EVE_color_a(255);
   EVE_cmd_text_burst(550, 150, 30, 0, buffer);
 

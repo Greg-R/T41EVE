@@ -43,7 +43,7 @@ public:
   void DoXmitCarrierCalibrate(int calMode, bool radio, bool refine, bool toEeprom);
   const char *calFreqs[2]{ "750 Hz", "3.0 kHz" };
   void ShowSpectrum();
-  float PlotCalSpectrum(int x1, int cal_bins[3], int capture_bins);
+  void PlotCalSpectrum(int x1, int cal_bins[3], int capture_bins);
   void RadioCal(int mode, bool refineCal);
   void buttonTasks();
   void writeToCalData(float ichannel, float qchannel);
@@ -93,6 +93,7 @@ public:
   bool exitManual = false;
   bool firstPass{false};
   bool print{false};
+  bool extraFFT{false};
 
   // Blue and red bar variables:
   int32_t rx_blue_usb = 128;
@@ -102,13 +103,22 @@ public:
                         CW_CARRIER,
                         SSB_RECEIVE,
                         SSB_TRANSMIT,
-                        SSB_CARRIER,
+                        SSB_CARRIER
   };
+
+  enum class computeAdjdB { notComputed,
+                        valuesEqual,
+                        adjdB2_ne_adjdB1,
+                        computed
+  };
+
+  computeAdjdB adjdBstate = computeAdjdB:: notComputed;
 
   void warmUpCal();
   void CalibratePreamble(int setZoom);
   void CalibrateEpilogue();
   void MakeFFTData();
+  void computeAdjdB();
   enum class State { warmup,
                      refineCal,
                      state0,
