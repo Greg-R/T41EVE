@@ -255,7 +255,7 @@ void MenuProc::CalibrateOptions()
 
   case 16: // Cancelled choice
 
-    calibrateFlag = 0;
+    calibrateFlag = false;
     parameterAdjustFlag = false;              // Save to EEPROM at conclusion of this function.
     evemenucontrol.runOptionFunction = false; // Deactivate function.
     subMenuChoice = 0;

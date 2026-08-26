@@ -46,7 +46,7 @@ void TxCalibrate::warmUpCal()
   uint32_t timerStart{0};
 
   // MakeFFTData() has to be called enough times for transients to settle out before computing FFT.
-  for (i = 0; i < 128; i = i + 1)
+  for (i = 0; i < 32; i = i + 1)
   {
     fftActive = true;
     updateDisplayFlag = true;
@@ -318,7 +318,7 @@ void TxCalibrate::DoXmitCalibrate(int calMode, bool radio, bool refine, bool toE
   float maxSweepAmp = 0.1;
   float maxSweepPhase = 0.05;
   float adjdB_old{0};
-  xmitIncrement = 0.002; // Coarse increment used during initial amplitude calibration.
+  xmitIncrement = 0.01; // Coarse increment used during initial amplitude calibration.
   IQCalType = 0;         // Begin with IQ gain optimization.
   std::vector<float32_t> sweepVector(201);
   std::vector<float32_t> sweepVectorValue(201);
@@ -339,7 +339,7 @@ void TxCalibrate::DoXmitCalibrate(int calMode, bool radio, bool refine, bool toE
   int ringOutCounter = 0;
   int refinePass{0};
 
-  ResetFlipFlops(); // This has a delay.
+//  ResetFlipFlops(); // This has a delay.
 
   SetFreqCal(freqOffset);
   // Get current values into the iOptimal and qOptimal amplitude and phase working variables.
@@ -389,6 +389,7 @@ void TxCalibrate::DoXmitCalibrate(int calMode, bool radio, bool refine, bool toE
   // Transmit Calibration Loop
   while (true)
   {
+//    Serial.printf("Top of while amplitude = %f phase = %f\n", amplitude, phase);
     fftActive = true;
     ////    TxCalibrate::ShowSpectrum();
     computeAdjdB();
@@ -424,7 +425,7 @@ void TxCalibrate::DoXmitCalibrate(int calMode, bool radio, bool refine, bool toE
           amplitude = 1.0 + maxSweepAmp; //  so adjdB and adjdB_avg are forced upwards.
         }
         state = State::warmup;
-        if (warmup == 16)
+        if (warmup == 1)  // Was 16.
           state = State::state0; // Proceed with initial calibration.
         if (warmup == 16 and refineCal)
           state = State::refineCal;
@@ -452,7 +453,7 @@ void TxCalibrate::DoXmitCalibrate(int calMode, bool radio, bool refine, bool toE
         adjdB_avg = 0;
         index = 0;
         IQCalType = 0;                  // IQ Gain
-        xmitIncrement = 0.002;          // Reset in case initial cal is run twice.
+        xmitIncrement = 0.01;          // Reset in case initial cal is run twice.
         state = State::initialSweepAmp; // Let this fall through.
 
       case State::initialSweepAmp:
@@ -482,7 +483,7 @@ void TxCalibrate::DoXmitCalibrate(int calMode, bool radio, bool refine, bool toE
           // Clear the vector before moving to phase.
           std::fill(sweepVectorValue.begin(), sweepVectorValue.end(), 0.0);
           std::fill(sweepVector.begin(), sweepVector.end(), 0.0);
-          xmitIncrement = 0.002;            // The initial increment can be reduced because the sweep range is half.
+          xmitIncrement = 0.01;            // The initial increment can be reduced because the sweep range is half.
           state = State::initialSweepPhase; // Initial sweeps done; proceed to refine phase.
           break;
         }
@@ -517,11 +518,15 @@ void TxCalibrate::DoXmitCalibrate(int calMode, bool radio, bool refine, bool toE
           index = 0;
           averageFlag = false;
           averageCount = 0;
-          xmitIncrement = 0.001; // Use smaller increment in refinement.
+          xmitIncrement = 0.01; // Use smaller increment in refinement.
           ringOutCounter = 0;
           firstPass = true;
-          state = State::ringOut; // Proceed to refine the gain channel.
-                                  //            state = State::setOptimal;
+////          state = State::ringOut; // Proceed to refine the gain channel.
+          refinePass = 0;
+          computeAdjdB();
+          amplitude = amplitude + 0.001;  // Now increment amplitude.
+          adjdB_old = adjdB;  // Must calculate current best adjdB before entering refineAmpPlus.
+          state = State::refineAmpPlus;
           break;
         }
         state = State::initialSweepPhase;
@@ -534,7 +539,7 @@ void TxCalibrate::DoXmitCalibrate(int calMode, bool radio, bool refine, bool toE
           ringOutCounter = 0;
           state = State::refineAmpPlus;
           refinePass = 0;
-          amplitude = amplitude + xmitIncrement;  // Increment here.
+          amplitude = amplitude + 001;  // Increment here.
           adjdB_old = adjdB;
           writeToCalData(amplitude, phase);
           print = true;
@@ -548,7 +553,6 @@ void TxCalibrate::DoXmitCalibrate(int calMode, bool radio, bool refine, bool toE
         {
           print = true;
           ringOutCounter = ringOutCounter + 1;
-     //     amplitude = amplitude + xmitIncrement;
           Serial.printf("RING OUT adjdB = %f ringOutCounter = %d amplitude = %f\n", adjdB, ringOutCounter, amplitude);
           state = State::ringOut;
           //  break;
@@ -557,25 +561,23 @@ void TxCalibrate::DoXmitCalibrate(int calMode, bool radio, bool refine, bool toE
         break;
 
       case State::refineAmpPlus:
-
-        
+       
         print = true;
-        Serial.printf("Top of refineAmpPlus adjdB = %f adjdB_old = %f amplitude = %f\n", adjdB, adjdB_old, amplitude);
+        Serial.printf("Enter refineAmpPlus adjdB = %f adjdB_old = %f amplitude = %f phase = %f\n", adjdB, adjdB_old, amplitude, phase);
 
         if (adjdB < adjdB_old)
         {
           adjdB_old = adjdB;
           amplitude = amplitude + 0.001;
-          Serial.printf("1 refineAmpPlus adjdB = %f adjdB_old = %f\n", adjdB, adjdB_old);
+          Serial.printf("Increment refineAmpPlus adjdB = %f adjdB_old = %f amplitude = %f phase = %f\n", adjdB, adjdB_old, amplitude, phase);
           state = State::refineAmpPlus;
           break;
         }
         else
         {
-          //           amplitude = amplitude + xmitIncrement;
-          Serial.printf("2 refineAmpPlus adjdB = %f adjdB_old = %f\n", adjdB, adjdB_old);
-          print = false;
-          amplitude = amplitude - 0.001 - 0.001;  // Put back last increment and increment in minus direction.
+amplitude = amplitude - 0.001 - 0.001;  // Put back last increment and increment in minus direction.
+          Serial.printf("Exit refineAmpPlus adjdB = %f adjdB_old = %f amplitude = %f phase = %f\n", adjdB, adjdB_old, amplitude, phase);
+          print = false;        
           refinePass = refinePass + 1;
           state = State::refineAmpMinus;
           break;
@@ -585,22 +587,21 @@ void TxCalibrate::DoXmitCalibrate(int calMode, bool radio, bool refine, bool toE
 
       case State::refineAmpMinus:
 
-      Serial.printf("Top of refineAmpMinus adjdB = %f adjdB_old = %f amplitude = %f\n", adjdB, adjdB_old, amplitude);
+      Serial.printf("Enter refineAmpMinus adjdB = %f adjdB_old = %f amplitude = %f phase = %f\n", adjdB, adjdB_old, amplitude, phase);
 
         if (adjdB < adjdB_old)
         {
           adjdB_old = adjdB;
           amplitude = amplitude - 0.001;
-          Serial.printf("1 refineAmpMinus adjdB = %f adjdB_old = %f\n", adjdB, adjdB_old);
+          Serial.printf("Increment refineAmpMinus adjdB = %f adjdB_old = %f amplitude = %f phase = %f\n", adjdB, adjdB_old, amplitude, phase);
           state = State::refineAmpMinus;
           break;
         }
         else
         {
-          amplitude = amplitude + xmitIncrement;
-          Serial.printf("2 refineAmpMinus adjdB = %f adjdB_old = %f\n", adjdB, adjdB_old);
-          print = false;
           amplitude = amplitude + 0.001;  // Put back last step.
+          Serial.printf("Exit refineAmpMinus adjdB = %f adjdB_old = %f amplitude = %f phase = %f\n", adjdB, adjdB_old, amplitude, phase);
+          print = false;         
           phase = phase + 0.001;  // Set for refinePhasePlus.
           state = State::refinePhasePlus;
           break;
@@ -611,21 +612,21 @@ void TxCalibrate::DoXmitCalibrate(int calMode, bool radio, bool refine, bool toE
       case State::refinePhasePlus:
 
         print = true;
-        Serial.printf("Top of refinePhasePlus adjdB = %f adjdB_old = %f phase = %f\n", adjdB, adjdB_old, phase);
+        Serial.printf("Enter refinePhasePlus adjdB = %f adjdB_old = %f amplitude = %f phase = %f\n", adjdB, adjdB_old, amplitude, phase);
 
         if (adjdB < adjdB_old)
         {
           adjdB_old = adjdB;
           phase = phase + 0.001;
-          Serial.printf("1 refinePhasePlus adjdB = %f adjdB_old = %f\n", adjdB, adjdB_old);
+          Serial.printf("Increment refinePhasePlus adjdB = %f adjdB_old = %f amplitude = %f phase = %f\n", adjdB, adjdB_old, amplitude, phase);
           state = State::refinePhasePlus;
           break;
         }
         else
         {
-          Serial.printf("2 refinePhasePlus adjdB = %f adjdB_old = %f\n", adjdB, adjdB_old);
-          print = false;
           phase = phase - 0.001 - 0.001;  // Put back last increment and increment in minus direction.
+          Serial.printf("Exit refinePhasePlus adjdB = %f adjdB_old = %f amplitude = %f phase = %f\n", adjdB, adjdB_old, amplitude, phase);
+          print = false;       
           state = State::refinePhaseMinus;
           break;
         }
@@ -635,23 +636,26 @@ void TxCalibrate::DoXmitCalibrate(int calMode, bool radio, bool refine, bool toE
         case State::refinePhaseMinus:
 
         print = true;
-        Serial.printf("Top of refinePhaseMinus adjdB = %f adjdB_old = %f phase = %f\n", adjdB, adjdB_old, phase);
+        Serial.printf("Enter refinePhaseMinus adjdB = %f adjdB_old = %f amplitude = %f phase = %f\n", adjdB, adjdB_old, amplitude, phase);
 
         if (adjdB < adjdB_old)
         {
           adjdB_old = adjdB;
           phase = phase - 0.001;
-          Serial.printf("1 refinePhaseMinus adjdB = %f adjdB_old = %f\n", adjdB, adjdB_old);
+          Serial.printf("Increment refinePhaseMinus adjdB = %f adjdB_old = %f amplitude = %f phase = %f\n", adjdB, adjdB_old, amplitude, phase);
           state = State::refinePhaseMinus;
           break;
         }
         else
         {
-          Serial.printf("2 refinePhaseMinus adjdB = %f adjdB_old = %f\n", adjdB, adjdB_old);
-          print = false;
           phase = phase + 0.001;  // Put back last increment.
-          state = State::refineAmpPlus;  // A second pass.
-          if(refinePass == 4) state = State::setOptimal;
+          Serial.printf("Exit refinePhaseMinus adjdB = %f adjdB_old = %f amplitude = %f phase = %f\n", adjdB, adjdB_old, amplitude, phase);
+          print = false;                       
+          if(refinePass == 1) state = State::setOptimal;
+          else {
+            amplitude = amplitude + 0.001;
+            state = State::refineAmpPlus;  // Proceed to next pass.
+          }
           break;
         }
 
@@ -712,9 +716,9 @@ void TxCalibrate::DoXmitCalibrate(int calMode, bool radio, bool refine, bool toE
     task = MenuSelect::DEFAULT; // Reset task after it is used.
                                 //  Read encoder and update values.
     if (IQCalType == 0)
-      amplitude = GetEncoderValueLive(-2.0, 2.0, amplitude, xmitIncrement);
+      amplitude = GetEncoderValueLive(-2.0, 2.0, amplitude, 0.001);
     if (IQCalType == 1)
-      phase = GetEncoderValueLive(-2.0, 2.0, phase, xmitIncrement);
+      phase = GetEncoderValueLive(-2.0, 2.0, phase, 0.001);
     writeToCalData(amplitude, phase);
   } // end while
 } // End Transmit calibration
@@ -1127,6 +1131,7 @@ void TxCalibrate::MakeFFTData()
 
   if(print) Serial.printf("MakeFFTData\n");
 
+  // Data gatekeeper.
   while (static_cast<uint32_t>(Q_in_L_Ex.available()) < 16 and static_cast<uint32_t>(Q_in_R_Ex.available()) < 16)
   {
     ;
@@ -1137,8 +1142,8 @@ void TxCalibrate::MakeFFTData()
 
   // Read incoming I and Q audio blocks from the SSB exciter.
   // Are there at least N_BLOCKS buffers in each channel available ?
-  if (static_cast<uint32_t>(Q_in_L_Ex.available()) > 15 and static_cast<uint32_t>(Q_in_R_Ex.available()) > 15)
-  {
+//  if (static_cast<uint32_t>(Q_in_L_Ex.available()) > 15 and static_cast<uint32_t>(Q_in_R_Ex.available()) > 15)
+//  {
     for (unsigned i = 0; i < 16; i++)
     {
 
@@ -1197,12 +1202,12 @@ void TxCalibrate::MakeFFTData()
 
     Q_out_L_Ex.play(float_buffer_L_EX, dataWidth); // play it!  This is the I channel from the Audio Adapter line out to QSE I input.
     Q_out_R_Ex.play(float_buffer_R_EX, dataWidth); // play it!  This is the Q channel from the Audio Adapter line out to QSE Q input.
-  }
-  else
-  {
-    fftSuccess = false; // Not enough transmit data.
-    Serial.printf("Failed to get enough I and Q transmitter data!\n");
-  }
+//  }
+//  else
+//  {
+//    fftSuccess = false; // Not enough transmit data.
+//    Serial.printf("Failed to get enough I and Q transmitter data!\n");
+//  }
   //  Serial.printf("Q_in_L_Ex.available after = %d\n", static_cast<uint32_t>(Q_in_L_Ex.available()));
   //  Serial.printf("Q_in_R_Ex.available after = %d\n", static_cast<uint32_t>(Q_in_R_Ex.available()));
   // End of transmit code.  Begin receive code.
@@ -1470,23 +1475,25 @@ if(print) Serial.printf("valuesEqual\n");
 if(print) Serial.printf("adjdB2_ne_adjdB1\n");
 
       // Bail out if the numbers get really low and noisy!
-      if((adjdB1 < -70.0) and (adjdB2 < -70.0)) {
+      if((adjdB1 < -72.0) and (adjdB2 < -72.0) and autoCal) {
         if(print) { 
         Serial.printf("adjdB2_ne_adjdB1 adjdB1 = %f adjdB2 = %f\n", adjdB1, adjdB2);
         Serial.printf("Bailed out < -70\n");
         }
+        adjdB = -72.0;
         return;  // No reason to do anything else.
         break;
       }
 
-      if (fabs(adjdB1 - adjdB2) > 0.5)
+
+      if (fabs(adjdB1 - adjdB2) > 1.0)
       {
         adjdB1 = adjdB2;
         adjdBstate = computeAdjdB::notComputed;
         break;
       }
 
-      if (fabs(adjdB1 - adjdB2) < 0.5)
+      if (fabs(adjdB1 - adjdB2) < 1.0)
       {
      //   adjdBstate = computeAdjdB::computed;
      if(print) Serial.printf("adjdB2_ne_adjdB1 adjdB1 = %f adjdB2 = %f\n", adjdB1, adjdB2);
