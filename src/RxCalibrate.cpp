@@ -298,8 +298,12 @@ void RxCalibrate::DoReceiveCalibrate(int calMode, bool radio, bool refine, bool 
   while (true) {
     fftActive = true;
     RxCalibrate::ShowSpectrum();
+
+     if((static_cast<int>(displayTimer) - lastDisplayTime) > 20) {
      evedisplay.drawReceiverCalScreen(pixelnew);
-    
+     lastDisplayTime = static_cast<int>(displayTimer);
+     }
+  
     // Exit from manual calibration by button push.
     if (exitManual == true) {
       RxCalibrate::CalibrateEpilogue(radioCal, saveToEeprom);
@@ -567,7 +571,7 @@ void RxCalibrate::DoReceiveCalibrate(int calMode, bool radio, bool refine, bool 
           // Delay exit if in radio calibration to show calibration results for 5 seconds.
           if (radioCal) {
 //            printCalType(autoCal, true);
-            if ((static_cast<int>(milliTimer) - startTimer) < 5000) {  // Show calibration result for 5 seconds at conclusion during Radio Cal.
+            if ((static_cast<int>(milliTimer) - startTimer) < 3000) {  // Show calibration result for 5 seconds at conclusion during Radio Cal.
               state = State::exit;
               break;
             } else {

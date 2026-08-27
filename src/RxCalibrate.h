@@ -74,6 +74,8 @@ public:
   bool fftActive = false;
   bool fftSuccess = false;
   elapsedMillis milliTimer;
+  elapsedMillis displayTimer;
+  int lastDisplayTime{0};
   int mode;
   Sideband tempSideband;
   RadioMode tempMode;

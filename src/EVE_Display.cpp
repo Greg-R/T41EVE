@@ -2205,7 +2205,7 @@ FLASHMEM void EVE_Display::transmitterStatic_cmd_list()
 
   // Current version.
   EVE_color_rgb(0x00ff00);
-  EVE_cmd_text(705, 5, 27, 0, "T41EVE.01");
+  EVE_cmd_text(705, 5, 27, 0, "T41EVE.02");
 
   // Spectrum center line.
   EVE_begin(EVE_LINES);

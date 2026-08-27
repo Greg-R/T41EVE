@@ -520,12 +520,16 @@ void TxCalibrate::DoXmitCalibrate(int calMode, bool radio, bool refine, bool toE
           averageCount = 0;
           xmitIncrement = 0.01; // Use smaller increment in refinement.
           ringOutCounter = 0;
-          firstPass = true;
+////          firstPass = true;
 ////          state = State::ringOut; // Proceed to refine the gain channel.
           refinePass = 0;
-          computeAdjdB();
+          writeToCalData(amplitude, phase);  // Optimal values at end of initial amplitude and phase sweeps.
+          computeAdjdB();  // This is to flush out transient from phase last set at extreme.
           amplitude = amplitude + 0.001;  // Now increment amplitude.
           adjdB_old = adjdB;  // Must calculate current best adjdB before entering refineAmpPlus.
+//          state = State::refineAmpPlus;
+          Serial.printf("adjdB at exit from initialSweepPhase adjdB = %f\n", adjdB);
+//          state = State::exit;
           state = State::refineAmpPlus;
           break;
         }
@@ -573,8 +577,10 @@ void TxCalibrate::DoXmitCalibrate(int calMode, bool radio, bool refine, bool toE
           state = State::refineAmpPlus;
           break;
         }
-        else
+        else // Prepare for refineAmpMinus.
         {
+
+
 amplitude = amplitude - 0.001 - 0.001;  // Put back last increment and increment in minus direction.
           Serial.printf("Exit refineAmpPlus adjdB = %f adjdB_old = %f amplitude = %f phase = %f\n", adjdB, adjdB_old, amplitude, phase);
           print = false;        
@@ -599,6 +605,8 @@ amplitude = amplitude - 0.001 - 0.001;  // Put back last increment and increment
         }
         else
         {
+//adjdB_old = adjdB;
+
           amplitude = amplitude + 0.001;  // Put back last step.
           Serial.printf("Exit refineAmpMinus adjdB = %f adjdB_old = %f amplitude = %f phase = %f\n", adjdB, adjdB_old, amplitude, phase);
           print = false;         
@@ -624,6 +632,8 @@ amplitude = amplitude - 0.001 - 0.001;  // Put back last increment and increment
         }
         else
         {
+//adjdB_old = adjdB;
+
           phase = phase - 0.001 - 0.001;  // Put back last increment and increment in minus direction.
           Serial.printf("Exit refinePhasePlus adjdB = %f adjdB_old = %f amplitude = %f phase = %f\n", adjdB, adjdB_old, amplitude, phase);
           print = false;       
@@ -648,10 +658,14 @@ amplitude = amplitude - 0.001 - 0.001;  // Put back last increment and increment
         }
         else
         {
+//adjdB_old = adjdB;
+
           phase = phase + 0.001;  // Put back last increment.
           Serial.printf("Exit refinePhaseMinus adjdB = %f adjdB_old = %f amplitude = %f phase = %f\n", adjdB, adjdB_old, amplitude, phase);
           print = false;                       
-          if(refinePass == 1) state = State::setOptimal;
+          if(refinePass == 2) {         
+            state = State::setOptimal;
+          }
           else {
             amplitude = amplitude + 0.001;
             state = State::refineAmpPlus;  // Proceed to next pass.
@@ -737,7 +751,8 @@ void TxCalibrate::DoXmitCarrierCalibrate(int calMode, bool radio, bool refine, b
 {
   float32_t maxSweepAmp = 0.1;
   float32_t maxSweepPhase = 0.1;
-  carrIncrement = 0.0010; // Initial carrier increment.
+  float adjdB_old{0};
+  carrIncrement = 0.010; // Initial carrier increment.
   IQCalType = 0;          // Begin with I channel offset.
   int averageCount = 0;
   TxCalibrate::mode = calMode; // CW or SSB
@@ -752,10 +767,11 @@ void TxCalibrate::DoXmitCarrierCalibrate(int calMode, bool radio, bool refine, b
   std::vector<float> sub_vectorPhaseResult = std::vector<float>(21);
   std::vector<float>::iterator result;
   int startTimer = 0;
+  int refinePass{0};
   TxCalibrate::CalibratePreamble(2); // Set zoom to 4X.  Note this is using 48ksps sample rate.
   int freqOffset = 0;                // Calibration tone same as regular modulation tone.
   calTypeFlag = 2;                   // Carrier calibration
-  ResetFlipFlops();
+//  ResetFlipFlops();
   radioState = RadioState::SSB_TRANSMIT_STATE;
   SetFreqCal(freqOffset);
   // Get current values into the iDCoffset and qDCoffset working variables.
@@ -790,7 +806,8 @@ void TxCalibrate::DoXmitCarrierCalibrate(int calMode, bool radio, bool refine, b
   while (true)
   {
     fftActive = true;
-    TxCalibrate::ShowSpectrum();
+//    TxCalibrate::ShowSpectrum();
+computeAdjdB();
     evedisplay.drawTransmitterCalScreen(pixelnew);
     // Slow things down if adjdB < -35.
     //  if (adjdB < -35.0 and (state == State::initialSweepAmp or state == State::initialSweepPhase)) {
@@ -820,7 +837,7 @@ void TxCalibrate::DoXmitCarrierCalibrate(int calMode, bool radio, bool refine, b
           iDCoffset = maxSweepAmp;   //  so adjdB and adjdB_avg are forced upwards.
         }
         state = State::warmup;
-        if (warmup == 16)
+        if (warmup == 1)
           state = State::state0;
         if (warmup == 16 && refineCal)
           state = State::refineCal;
@@ -836,16 +853,17 @@ void TxCalibrate::DoXmitCarrierCalibrate(int calMode, bool radio, bool refine, b
           sub_vectorQoffset[i] = (qDCoffset - 10 * 0.0005) + (0.0005 * static_cast<float32_t>(i)); // The next array to sweep.
         }
         IQCalType = 0; // Start with the I offset.
-        carrIncrement = 0.0005;
+        carrIncrement = 0.01;
         state = State::refineAmp; // Skip the initial sweeps.
         break;
       case State::state0:
-        qDCoffset = 0.0;
+//        qDCoffset = 0.0;
         iDCoffset = -maxSweepAmp; // Begin sweep at low end and move upwards.
+        qDCoffset = -maxSweepAmp; // Begin sweep at low end and move upwards.
         GetEncoderValueLive(-1.0, 1.0, qDCoffset, carrIncrement);
         index = 0;
         IQCalType = 0;
-        carrIncrement = 0.0010;         // Reset in case initial cal is run twice.
+        carrIncrement = 0.010;         // Reset in case initial cal is run twice.
         state = State::initialSweepAmp; // Let this fall through.
 
       case State::initialSweepAmp:
@@ -854,6 +872,7 @@ void TxCalibrate::DoXmitCarrierCalibrate(int calMode, bool radio, bool refine, b
         index = index + 1;
         // Increment for next measurement.
         iDCoffset = iDCoffset + carrIncrement;
+        qDCoffset = qDCoffset + carrIncrement;
         // Go to Q channel when I channel sweep is finished.
         if (iDCoffset > maxSweepAmp)
         {
@@ -862,6 +881,8 @@ void TxCalibrate::DoXmitCarrierCalibrate(int calMode, bool radio, bool refine, b
           adjdBMinIndex = std::distance(sweepVector.begin(), result);        // Find the index.
           iOptimal = sweepVectorValue[adjdBMinIndex];                        // Set to the discovered minimum.
           iDCoffset = iOptimal;                                              // Reset for next sweep.
+          qDCoffset = iOptimal;
+          qOptimal = qDCoffset;
           // Update display to optimal value and change from red to white.
           GetEncoderValueLive(-1.0, 1.0, iDCoffset, carrIncrement);
           // Save the sub_vector which will be used to refine the optimal result.
@@ -907,87 +928,141 @@ void TxCalibrate::DoXmitCarrierCalibrate(int calMode, bool radio, bool refine, b
           index = 0;
           averageFlag = false;
           averageCount = 0;
-          carrIncrement = 0.0005;   // Use smaller increment in refinement.
-          count = 0;                // This variable is used to switch back and forth between I and Q refinement.
-          state = State::refineAmp; // Proceed to refine the gain channel.
+          carrIncrement = 0.0005;   // Manual increment.
+//          count = 0;                // This variable is used to switch back and forth between I and Q refinement.
+          refinePass = 0;
+
+
+    // Set optimal values to CalData.
+    if (mode == 0)
+    {
+      CalData.iDCoffsetCW[ConfigData.currentBand] = iDCoffset;
+      CalData.qDCoffsetCW[ConfigData.currentBand] = qDCoffset;
+    }
+    if (mode == 1)
+    {
+      CalData.iDCoffsetSSB[ConfigData.currentBand] = iDCoffset;
+      CalData.qDCoffsetSSB[ConfigData.currentBand] = qDCoffset;
+    }
+          computeAdjdB();  // This is to flush out transient from phase last set at extreme.
+          adjdB_old = adjdB;  // Must calculate current best adjdB before entering refineAmpPlus.
+          iDCoffset = iDCoffset + 0.0005;  // Now increment amplitude.  Now calculate adjdB.
+          state = State::refineAmpPlus; // Proceed to refine the gain channel.
           break;
         }
         state = State::initialSweepPhase;
         break;
 
-      case State::refineAmp:
-        // Now sweep over the entire sub_vectorAmp array with averaging on. index starts at 0.
-        iDCoffset = sub_vectorIoffset[index]; // Starting value.
-        // Don't record this until there is data.  So that will be AFTER this pass.
-        if (averageFlag)
+      case State::refineAmpPlus:
+
+        print = true;
+        Serial.printf("Enter refineAmpPlus adjdB = %f adjdB_old = %f iDCoffset = %f qDCoffset = %f\n", adjdB, adjdB_old, iDCoffset, qDCoffset);
+
+        if (adjdB < adjdB_old)
         {
-          sub_vectorAmpResult[index] = adjdB_avg;
-          index = index + 1;
-        }
-        // Terminate when all values in sub_vectorAmp have been measured.
-        if (index == sub_vectorAmpResult.size())
-        {
-          // Find the index of the minimum and record as iOptimal.
-          result = std::min_element(sub_vectorAmpResult.begin(), sub_vectorAmpResult.end());
-          adjdBMinIndex = std::distance(sub_vectorAmpResult.begin(), result);
-          // iOptimal is simply the value of sub_vectorAmp[adjdBMinIndex].
-          iOptimal = sub_vectorIoffset[adjdBMinIndex]; // -.001;
-          iDCoffset = iOptimal;                        // Set to optimal value before refining phase.
-          // Update display to optimal value and change from red to white.
-          GetEncoderValueLive(-1.0, 1.0, iDCoffset, carrIncrement);
-          for (uint32_t i = 0; i < sub_vectorIoffset.size(); i = i + 1)
-          {
-            sub_vectorIoffset[i] = (iOptimal - 10 * 0.0005) + (0.0005 * static_cast<float32_t>(i)); // The next array to sweep.
-          }
-          IQCalType = 1;
-          index = 0;
-          averageFlag = false;
-          averageCount = 0;
-          count = count + 1;
-          if (count == 1 || count == 3)
-            state = State::refinePhase; // Alternate refinePhase and refineAmp.
+          adjdB_old = adjdB;
+          iDCoffset = iDCoffset + 0.0005;
+          Serial.printf("Increment refineAmpPlus adjdB = %f adjdB_old = %f iDCoffset = %f qDCoffset = %f\n", adjdB, adjdB_old, iDCoffset, qDCoffset);
+          state = State::refineAmpPlus;
           break;
         }
-        state = State::average;
+        else
+        {
+
+          iDCoffset = iDCoffset - 0.0005 - 0.0005;  // Put back last increment and increment in minus direction.
+          Serial.printf("Exit refineAmpPlus adjdB = %f adjdB_old = %f iDCoffset = %f qDCoffset = %f\n", adjdB, adjdB_old, iDCoffset, qDCoffset);
+          print = false;        
+          refinePass = refinePass + 1;
+          state = State::refineAmpMinus;
+          break;
+        }
+
         break;
 
-      case State::refinePhase:
-        // Now sweep over the entire sub_vectorAmp array with averaging on. index starts at 0.
-        qDCoffset = sub_vectorQoffset[index]; // Starting value.
-        // Don't record this until there is data.  So that will be AFTER this pass.
-        if (averageFlag)
+      case State::refineAmpMinus:
+
+              print = true;
+        Serial.printf("Enter refineAmpMinus adjdB = %f adjdB_old = %f iDCoffset = %f qDCoffset = %f\n", adjdB, adjdB_old, iDCoffset, qDCoffset);
+
+        if (adjdB < adjdB_old)
         {
-          sub_vectorPhaseResult[index] = adjdB_avg;
-          index = index + 1;
-        }
-        // Terminate when all values in sub_vectorAmp have been measured.
-        if (index == sub_vectorPhaseResult.size())
-        {
-          // Find the index of the minimum and record as iOptimal.
-          result = std::min_element(sub_vectorPhaseResult.begin(), sub_vectorPhaseResult.end());
-          adjdBMinIndex = std::distance(sub_vectorPhaseResult.begin(), result);
-          // qOptimal is simply the value of sub_vectorAmp[adjdBMinIndex].
-          index = 0;
-          qOptimal = sub_vectorQoffset[adjdBMinIndex]; // - .001;
-          qDCoffset = qOptimal;
-          // Update display to optimal value and change from red to white.
-          GetEncoderValueLive(-1.0, 1.0, qDCoffset, carrIncrement);
-          for (uint32_t i = 0; i < sub_vectorQoffset.size(); i = i + 1)
-          {
-            sub_vectorQoffset[i] = (qOptimal - 10 * 0.0005) + (0.0005 * static_cast<float32_t>(i));
-          }
-          IQCalType = 0;
-          averageFlag = 0;
-          averageCount = 0;
-          count = count + 1;
-          state = State::refineAmp;
-          if (count == 2)
-            state = State::refineAmp;
-          if (count == 4)
-            state = State::setOptimal;
+          adjdB_old = adjdB;
+          iDCoffset = iDCoffset - 0.0005;
+          Serial.printf("Increment refineAmpMinus adjdB = %f adjdB_old = %f iDCoffset = %f qDCoffset = %f\n", adjdB, adjdB_old, iDCoffset, qDCoffset);
+          state = State::refineAmpMinus;
           break;
         }
-        state = State::average;
+        else
+        {
+
+          iDCoffset = iDCoffset + 0.0005;  // Put back last increment.
+          qDCoffset = qDCoffset + 0.0005;  // Increment for refinePhasePlus.
+          Serial.printf("Exit refineAmpMinus adjdB = %f adjdB_old = %f iDCoffset = %f qDCoffset = %f\n", adjdB, adjdB_old, iDCoffset, qDCoffset);
+          print = false;        
+          state = State::refinePhasePlus;
+          break;
+        }
+
+        break;
+
+      case State::refinePhasePlus:
+
+        print = true;
+        Serial.printf("Enter refinePhasePlus adjdB = %f adjdB_old = %f iDCoffset = %f qDCoffset = %f\n", adjdB, adjdB_old, iDCoffset, qDCoffset);
+
+        if (adjdB < adjdB_old)
+        {
+          adjdB_old = adjdB;
+          qDCoffset = qDCoffset + 0.0005;
+          Serial.printf("Increment refinePhasePlus adjdB = %f adjdB_old = %f iDCoffset = %f qDCoffset = %f\n", adjdB, adjdB_old, iDCoffset, qDCoffset);
+          state = State::refinePhasePlus;
+          break;
+        }
+        else
+        {
+          qDCoffset = qDCoffset - 0.0005 - 0.0005;  // Put back last increment, and increment in the negative direction.
+          Serial.printf("Exit refinePhasePlus adjdB = %f adjdB_old = %f iDCoffset = %f qDCoffset = %f\n", adjdB, adjdB_old, iDCoffset, qDCoffset);
+          print = false;        
+          state = State::refinePhaseMinus;
+          break;
+        }
+
+
+        break;
+
+      case State::refinePhaseMinus:
+
+        print = true;
+        Serial.printf("Enter refinePhaseMinus adjdB = %f adjdB_old = %f iDCoffset = %f qDCoffset = %f\n", adjdB, adjdB_old, iDCoffset, qDCoffset);
+
+        if (adjdB < adjdB_old)
+        {
+          adjdB_old = adjdB;
+          qDCoffset = qDCoffset - 0.0005;
+          Serial.printf("Increment refinePhaseMinus adjdB = %f adjdB_old = %f iDCoffset = %f qDCoffset = %f\n", adjdB, adjdB_old, iDCoffset, qDCoffset);
+          state = State::refinePhaseMinus;
+          break;
+        }
+        else
+        {
+
+          qDCoffset = qDCoffset + 0.0005;  // Put back last increment.
+          Serial.printf("Exit refinePhaseMinus adjdB = %f adjdB_old = %f iDCoffset = %f qDCoffset = %f\n", adjdB, adjdB_old, iDCoffset, qDCoffset);
+          print = false;        
+
+          if(refinePass == 2) {
+             state = State::setOptimal;
+          }
+          else {
+            iDCoffset = iDCoffset + 0.0005;
+            state = State::refineAmpPlus;  // Proceed to next pass.
+            break;
+          }
+
+          state = State::setOptimal;
+          break;
+        }
+
         break;
 
       case State::average: // Stay in this state while averaging is in progress.
@@ -1028,7 +1103,7 @@ void TxCalibrate::DoXmitCarrierCalibrate(int calMode, bool radio, bool refine, b
         // Delay exit if in radio calibration to show calibration results for 5 seconds and then exit.
         if (radioCal)
         {
-          if ((static_cast<int>(milliTimer) - startTimer) < 5000)
+          if ((static_cast<int>(milliTimer) - startTimer) < 3000)
           { // Show calibration result for 5 seconds at conclusion during Radio Cal.
             state = State::exit;
             break;
@@ -1053,9 +1128,9 @@ void TxCalibrate::DoXmitCarrierCalibrate(int calMode, bool radio, bool refine, b
     task = MenuSelect::DEFAULT; // Reset task after it is used.
     //  Read encoder and update values.
     if (IQCalType == 0)
-      iDCoffset = GetEncoderValueLive(-1.0, 1.0, iDCoffset, carrIncrement);
+      iDCoffset = GetEncoderValueLive(-1.0, 1.0, iDCoffset, 0.0005);
     if (IQCalType == 1)
-      qDCoffset = GetEncoderValueLive(-1.0, 1.0, qDCoffset, carrIncrement);
+      qDCoffset = GetEncoderValueLive(-1.0, 1.0, qDCoffset, 0.0005);
     if (mode == 0)
     {
       CalData.iDCoffsetCW[ConfigData.currentBand] = iDCoffset;
@@ -1324,12 +1399,13 @@ void TxCalibrate::ShowSpectrum() // AFP 2-10-23
   }
   if (calTypeFlag == 2)
   { // Carrier cal
-    for (x1 = cal_bins[0] - capture_bins; x1 < cal_bins[0] + capture_bins; x1++)
+ //   for (
+      x1 = cal_bins[0] - capture_bins; // x1 < cal_bins[0] + capture_bins; x1++)
       TxCalibrate::PlotCalSpectrum(x1, cal_bins, capture_bins);
-    for (x1 = cal_bins[1] - capture_bins; x1 < cal_bins[1] + capture_bins; x1++)
-      TxCalibrate::PlotCalSpectrum(x1, cal_bins, capture_bins);
-    for (x1 = cal_bins[2] - capture_bins; x1 < cal_bins[2] + capture_bins; x1++)
-      TxCalibrate::PlotCalSpectrum(x1, cal_bins, capture_bins); // Undesired sideband
+//    for (x1 = cal_bins[1] - capture_bins; x1 < cal_bins[1] + capture_bins; x1++)
+//      TxCalibrate::PlotCalSpectrum(x1, cal_bins, capture_bins);
+//    for (x1 = cal_bins[2] - capture_bins; x1 < cal_bins[2] + capture_bins; x1++)
+//      TxCalibrate::PlotCalSpectrum(x1, cal_bins, capture_bins); // Undesired sideband
   }
 
 } // end ShowSpectrum()
