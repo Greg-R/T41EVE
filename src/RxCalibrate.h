@@ -52,13 +52,12 @@ public:
   bool averageFlag = false;
   bool saveToEeprom = false;
   int val;
-  // float increment = 0.002;
   int userScale, userZoomIndex, userxmtMode;
   int transmitPowerLevelTemp, cwFreqOffsetTemp, calFreqTemp;
   uint16_t base_y = 460; // 247
   int calTypeFlag = 0;
   float adjdB{0.0};
-  float adjdBold = 0.0; // Used in exponential averager.  KF5N May 19, 2024
+//  float adjdBold = 0.0; // Used in exponential averager.  KF5N May 19, 2024
   float adjdB_avg = 0.0;
   uint32_t adjdBMinIndex;
   float32_t amplitude = 0.0;
@@ -97,13 +96,15 @@ public:
     exit
   };
 
-    enum class computeAdjdB { notComputed,
-                        valuesEqual,
-                        adjdB2_ne_adjdB1,
-                        computed
+  enum class computeAdjdB
+  {
+    notComputed,
+    valuesEqual,
+    adjdB2_ne_adjdB1,
+    computed
   };
 
-  computeAdjdB adjdBstate = computeAdjdB:: notComputed;
+  computeAdjdB adjdBstate = computeAdjdB::notComputed;
 
   void loadCalToneBuffers(float toneFreq);
   void MakeFFTData();

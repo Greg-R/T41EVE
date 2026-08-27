@@ -45,7 +45,7 @@ public:
     float imdAmplitudedB = 5;  // This needs to be public so EVE_Display can show it during test.
 
     std::vector<std::string> IQOptions{"Freq Cal", "CW PA Cal", "CW Rec Cal", "CW Carrier Cal", "CW Xmit Cal", "SSB PA Cal",
-                                       "SSB Rec Cal", "SSB Carrier Cal", "SSB Transmit Cal", "CW Radio Cal", "CW Refine Cal", "SSB Radio Cal", "SSB Refine Cal",
+                                       "SSB Rec Cal", "SSB Carrier Cal", "SSB Transmit Cal", "CW Radio Cal", "SSB Radio Cal",
                                        "dBm Level Cal", "Switch Matrix Cal", "Button Repeat", "Cancel"};
 
     void CalibrateOptions();

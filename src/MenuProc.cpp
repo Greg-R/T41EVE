@@ -185,15 +185,7 @@ void MenuProc::CalibrateOptions()
     subMenuChoice = 0;
     break;
 
-  case 10: // CW full automatic calibration refinement.
-    txcalibrater.RadioCal(0, true);
-    calibrateFlag = false;
-    parameterAdjustFlag = false;              // Save to EEPROM at conclusion of this function.
-    evemenucontrol.runOptionFunction = false; // Deactivate function.
-    subMenuChoice = 0;
-    break;
-
-  case 11: // SSB fully automatic radio calibration.
+  case 10: // SSB fully automatic radio calibration.
     txcalibrater.RadioCal(1, false);
     calibrateFlag = false;
     parameterAdjustFlag = false;              // Save to EEPROM at conclusion of this function.
@@ -201,15 +193,7 @@ void MenuProc::CalibrateOptions()
     subMenuChoice = 0;
     break;
 
-  case 12: // SSB fully automatic calibration refinement.
-    txcalibrater.RadioCal(1, true);
-    calibrateFlag = false;
-    parameterAdjustFlag = false;              // Save to EEPROM at conclusion of this function.
-    evemenucontrol.runOptionFunction = false; // Deactivate function.
-    subMenuChoice = 0;
-    break;
-
-  case 13:                                   // dBm level cal.
+  case 11:                                   // dBm level cal.
     evemenucontrol.runOptionFunction = true; // Runs in loop().
     CalData.dBm_calibration = GetEncoderValueLive(0, 100, CalData.dBm_calibration, 1);
     if (CalData.dBm_calibration != freqCorrectionFactorOld)
@@ -229,7 +213,7 @@ void MenuProc::CalibrateOptions()
     }
     break;
 
-  case 14: // Calibrate buttons
+  case 12: // Calibrate buttons
     SaveAnalogSwitchValues();
     calibrateFlag = false;
     parameterAdjustFlag = false;              // Save to EEPROM at conclusion of this function.
@@ -237,7 +221,7 @@ void MenuProc::CalibrateOptions()
     subMenuChoice = 0;
     break;
 
-  case 15:                                   // Set button repeat rate
+  case 13:                                   // Set button repeat rate
     evemenucontrol.runOptionFunction = true; // Runs in loop().
     CalData.buttonRepeatDelay = 1000 * GetEncoderValueLive(0, 5000, CalData.buttonRepeatDelay / 1000, 1);
     menu = button.readButton();
@@ -253,7 +237,7 @@ void MenuProc::CalibrateOptions()
     }
     break;
 
-  case 16: // Cancelled choice
+  case 14: // Cancelled choice
 
     calibrateFlag = false;
     parameterAdjustFlag = false;              // Save to EEPROM at conclusion of this function.
