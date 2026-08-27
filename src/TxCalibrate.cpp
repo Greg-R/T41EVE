@@ -289,10 +289,10 @@ void TxCalibrate::DoXmitCalibrate(int calMode, bool radio, bool refine, bool toE
   IQCalType = 0;        // Begin with IQ gain optimization.
   std::vector<float32_t> sweepVector(21);
   std::vector<float32_t> sweepVectorValue(21);
-//  std::vector<float32_t> sub_vectorAmp = std::vector<float>(21); // Can these arrays be commonized?
-//  std::vector<float32_t> sub_vectorPhase = std::vector<float>(21);
-//  std::vector<float> sub_vectorAmpResult = std::vector<float>(10);
-//  std::vector<float> sub_vectorPhaseResult = std::vector<float>(10);
+  //  std::vector<float32_t> sub_vectorAmp = std::vector<float>(21); // Can these arrays be commonized?
+  //  std::vector<float32_t> sub_vectorPhase = std::vector<float>(21);
+  //  std::vector<float> sub_vectorAmpResult = std::vector<float>(10);
+  //  std::vector<float> sub_vectorPhaseResult = std::vector<float>(10);
   elapsedMillis fiveSeconds;
   int startTimer = 0;
   TxCalibrate::autoCal = false;
@@ -303,7 +303,7 @@ void TxCalibrate::DoXmitCalibrate(int calMode, bool radio, bool refine, bool toE
   std::vector<float>::iterator result;
   TxCalibrate::CalibratePreamble(2); // Set zoom to 4X.  Sample rate 48ksps.
   calTypeFlag = 1;                   // TX sideband
-//  int ringOutCounter = 0;
+                                     //  int ringOutCounter = 0;
   int refinePass{0};
 
   SetFreqCal(freqOffset);
@@ -386,8 +386,8 @@ void TxCalibrate::DoXmitCalibrate(int calMode, bool radio, bool refine, bool toE
         state = State::warmup;
         if (warmup == 1)         // Was 16.
           state = State::state0; // Proceed with initial calibration.
-//        if (warmup == 16 and refineCal)
-//          state = State::refineCal;
+                                 //        if (warmup == 16 and refineCal)
+                                 //          state = State::refineCal;
         break;
         /*
       case State::refineCal:
@@ -410,7 +410,7 @@ void TxCalibrate::DoXmitCalibrate(int calMode, bool radio, bool refine, bool toE
         amplitude = 1.0 - maxSweepAmp;                        // Begin sweep at low end and move upwards.
         GetEncoderValueLive(-2.0, 2.0, phase, xmitIncrement); // Display phase value during amplitude sweep.
         adjdB = 0;
-//        adjdB_avg = 0;
+        //        adjdB_avg = 0;
         index = 0;
         IQCalType = 0;                  // IQ Gain
         xmitIncrement = 0.01;           // Reset in case initial cal is run twice.
@@ -432,10 +432,10 @@ void TxCalibrate::DoXmitCalibrate(int calMode, bool radio, bool refine, bool toE
           // Update display to optimal value and change from red to white.
           GetEncoderValueLive(-2.0, 2.0, amplitude, xmitIncrement);
           // Save the sub_vector which will be used to refine the optimal result.
-//          for (int i = 0; i < 21; i = i + 1)
-//          {
-//            sub_vectorAmp[i] = (iOptimal - 10 * 0.001) + (0.001 * static_cast<float32_t>(i));
-//          }
+          //          for (int i = 0; i < 21; i = i + 1)
+          //          {
+          //            sub_vectorAmp[i] = (iOptimal - 10 * 0.001) + (0.001 * static_cast<float32_t>(i));
+          //          }
           IQCalType = 1;          // Prepare for phase.
           phase = -maxSweepPhase; // The starting value for phase.
           index = 0;
@@ -468,17 +468,17 @@ void TxCalibrate::DoXmitCalibrate(int calMode, bool radio, bool refine, bool toE
                                                       // Update display to optimal value and change from red to white.
           GetEncoderValueLive(-2.0, 2.0, phase, xmitIncrement);
           // Save the sub_vector which will be used to refine the optimal result.
-//          for (int i = 0; i < 21; i = i + 1)
-//          {
-//            sub_vectorPhase[i] = (qOptimal - 10 * 0.001) + (0.001 * static_cast<float32_t>(i));
-//          }
+          //          for (int i = 0; i < 21; i = i + 1)
+          //          {
+          //            sub_vectorPhase[i] = (qOptimal - 10 * 0.001) + (0.001 * static_cast<float32_t>(i));
+          //          }
           IQCalType = 0;
           adjdB = 0.0;
           index = 0;
-//          averageFlag = false;
-//          averageCount = 0;
+          //          averageFlag = false;
+          //          averageCount = 0;
           xmitIncrement = 0.01; // Use smaller increment in refinement.
-//          ringOutCounter = 0;
+                                //          ringOutCounter = 0;
           ////          firstPass = true;
           ////          state = State::ringOut; // Proceed to refine the gain channel.
           refinePass = 0;
@@ -493,35 +493,35 @@ void TxCalibrate::DoXmitCalibrate(int calMode, bool radio, bool refine, bool toE
         }
         state = State::initialSweepPhase;
         break;
-/*
-      case State::ringOut:
+        /*
+              case State::ringOut:
 
-        if (ringOutCounter > 10)
-        {
-          ringOutCounter = 0;
-          state = State::refineAmpPlus;
-          refinePass = 0;
-          amplitude = amplitude + 001; // Increment here.
-          adjdB_old = adjdB;
-          writeToCalData(amplitude, phase);
-          print = true;
-          Serial.printf("Increment IQ Gain\n");
-          Serial.printf("Last ringOut refineAmpPlus adjdB = %f ringOutCounter = %d amplitude = %f\n", adjdB, ringOutCounter, amplitude);
-          Serial.printf("Increment IQ Gain now!\n");
-          extraFFT = false;
-          break;
-        }
-        else
-        {
-          print = true;
-          ringOutCounter = ringOutCounter + 1;
-          Serial.printf("RING OUT adjdB = %f ringOutCounter = %d amplitude = %f\n", adjdB, ringOutCounter, amplitude);
-          state = State::ringOut;
-          //  break;
-        }
+                if (ringOutCounter > 10)
+                {
+                  ringOutCounter = 0;
+                  state = State::refineAmpPlus;
+                  refinePass = 0;
+                  amplitude = amplitude + 001; // Increment here.
+                  adjdB_old = adjdB;
+                  writeToCalData(amplitude, phase);
+                  print = true;
+                  Serial.printf("Increment IQ Gain\n");
+                  Serial.printf("Last ringOut refineAmpPlus adjdB = %f ringOutCounter = %d amplitude = %f\n", adjdB, ringOutCounter, amplitude);
+                  Serial.printf("Increment IQ Gain now!\n");
+                  extraFFT = false;
+                  break;
+                }
+                else
+                {
+                  print = true;
+                  ringOutCounter = ringOutCounter + 1;
+                  Serial.printf("RING OUT adjdB = %f ringOutCounter = %d amplitude = %f\n", adjdB, ringOutCounter, amplitude);
+                  state = State::ringOut;
+                  //  break;
+                }
 
-        break;
-        */
+                break;
+                */
 
       case State::refineAmpPlus:
 
@@ -632,26 +632,26 @@ void TxCalibrate::DoXmitCalibrate(int calMode, bool radio, bool refine, bool toE
 
         break;
 
-      /*
-      case State::average: // Stay in this state while averaging is in progress.  Used for refinement only.
-        if (averageCount > 5)
-        {
+        /*
+        case State::average: // Stay in this state while averaging is in progress.  Used for refinement only.
+          if (averageCount > 5)
+          {
+            if (IQCalType == 0)
+              state = State::refineAmp;
+            if (IQCalType == 1)
+              state = State::refinePhase;
+            averageCount = 0;
+            averageFlag = true; // Averaging is complete!
+            break;
+          }
+          averageCount = averageCount + 1;
+          averageFlag = false;
           if (IQCalType == 0)
             state = State::refineAmp;
           if (IQCalType == 1)
             state = State::refinePhase;
-          averageCount = 0;
-          averageFlag = true; // Averaging is complete!
           break;
-        }
-        averageCount = averageCount + 1;
-        averageFlag = false;
-        if (IQCalType == 0)
-          state = State::refineAmp;
-        if (IQCalType == 1)
-          state = State::refinePhase;
-        break;
-        */
+          */
 
       case State::setOptimal:
         count = 0; // In case automatic calibration is run again.
@@ -679,7 +679,7 @@ void TxCalibrate::DoXmitCalibrate(int calMode, bool radio, bool refine, bool toE
         else
         {
           autoCal = false; // Don't enter switch, but remain in manual loop.
-//          refineCal = false;
+                           //          refineCal = false;
           //            printCalType(autoCal, false);
         }
         break;
@@ -696,7 +696,6 @@ void TxCalibrate::DoXmitCalibrate(int calMode, bool radio, bool refine, bool toE
   } // end while
 } // End Transmit calibration
 
-
 /*****
   Purpose: Combined input/output for the purpose of calibrating the transmit IQ.
 
@@ -712,18 +711,14 @@ void TxCalibrate::DoXmitCarrierCalibrate(int calMode, bool radio, bool refine, b
   float32_t maxSweepAmp = 0.1;
   float32_t maxSweepPhase = 0.1;
   float adjdB_old{0};
-  carrIncrement = 0.010; // Initial carrier increment.
-  IQCalType = 0;         // Begin with I channel offset.
+  carrIncrement = 0.010;       // Initial carrier increment.
+  IQCalType = 0;               // Begin with I channel offset.
   TxCalibrate::mode = calMode; // CW or SSB
   TxCalibrate::radioCal = radio;
   TxCalibrate::refineCal = refine;
-  TxCalibrate::saveToEeprom = toEeprom;    // Save to EEPROM
+  TxCalibrate::saveToEeprom = toEeprom;   // Save to EEPROM
   std::vector<float32_t> sweepVector(21); // 0 + 450 * 2 / 5
   std::vector<float32_t> sweepVectorValue(21);
-//  std::vector<float32_t> sub_vectorIoffset = std::vector<float32_t>(21);
-//  std::vector<float32_t> sub_vectorQoffset = std::vector<float32_t>(21);
-//  std::vector<float> sub_vectorAmpResult = std::vector<float>(21);
-//  std::vector<float> sub_vectorPhaseResult = std::vector<float>(21);
   std::vector<float>::iterator result;
   int startTimer = 0;
   int refinePass{0};
@@ -822,11 +817,6 @@ void TxCalibrate::DoXmitCarrierCalibrate(int calMode, bool radio, bool refine, b
           qOptimal = qDCoffset;
           // Update display to optimal value and change from red to white.
           GetEncoderValueLive(-1.0, 1.0, iDCoffset, carrIncrement);
-          // Save the sub_vector which will be used to refine the optimal result.
-//          for (uint32_t i = 0; i < sub_vectorIoffset.size(); i = i + 1)
-//          {
-//            sub_vectorIoffset[i] = (iOptimal - 10.0 * 0.0005) + (0.0005 * static_cast<float32_t>(i));
-//          }
           IQCalType = 1; // Prepare for phase.
           index = 0;
           averageFlag = false;
@@ -856,10 +846,6 @@ void TxCalibrate::DoXmitCarrierCalibrate(int calMode, bool radio, bool refine, b
           qDCoffset = qOptimal;                       // Set to the discovered minimum.
           // Update display to optimal value and change from red to white.
           GetEncoderValueLive(-1.0, 1.0, qDCoffset, carrIncrement);
-//          for (uint32_t i = 0; i < sub_vectorQoffset.size(); i = i + 1)
-//          {
-//            sub_vectorQoffset[i] = (qOptimal - 10.0 * 0.0005) + (0.0005 * static_cast<float32_t>(i));
-//          }
           IQCalType = 0;
           adjdB = 0.0;
           index = 0;
@@ -1027,7 +1013,6 @@ void TxCalibrate::DoXmitCarrierCalibrate(int calMode, bool radio, bool refine, b
         else
         {
           autoCal = false; // Go back to manual mode.
-//          refineCal = false;
         }
         break;
       default:
@@ -1060,6 +1045,9 @@ void TxCalibrate::RadioCal(int mode, bool refineCal)
 {
   std::vector<int> ham_bands = {BAND_80M, BAND_40M, BAND_20M, BAND_17M, BAND_15M, BAND_12M, BAND_10M};
 
+  uint32_t currentBandTemp = ConfigData.currentBand;
+  uint32_t centerFreqTemp = ConfigData.centerFreq;
+
   // Warn the user if the radio is not calibrated and refine cal is attempted.
   if (((mode == 0) and refineCal and not CalData.CWradioCalComplete) or ((mode == 1) and refineCal and not CalData.SSBradioCalComplete))
   {
@@ -1088,6 +1076,9 @@ void TxCalibrate::RadioCal(int mode, bool refineCal)
     txcalibrater.DoXmitCalibrate(mode, true, refineCal, false);
     txcalibrater.DoXmitCarrierCalibrate(mode, true, refineCal, false);
   }
+
+  ConfigData.currentBand = currentBandTemp;
+  ConfigData.centerFreq = centerFreqTemp;
 
   // Set flag for initial calibration completed.
   if (mode == 0)
