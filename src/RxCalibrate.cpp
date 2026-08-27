@@ -63,7 +63,7 @@ void RxCalibrate::warmUpCal() {
   uint32_t count{ 0 };
   uint32_t i;
   // MakeFFTData() has to be called enough times for transients to settle out before computing FFT.
-  for (i = 0; i < 128; i = i + 1) {
+  for (i = 0; i < 32; i = i + 1) {
     fftActive = true;
     updateDisplayFlag = true;
     RxCalibrate::MakeFFTData();  // Note, FFT not called if buffers are not sufficiently filled.
@@ -75,7 +75,6 @@ void RxCalibrate::warmUpCal() {
   }
   updateDisplayFlag = true;    // This flag is used by the normal receiver process.
   fftActive = true;            // This is a flag local to this class.
-//  RxCalibrate::MakeFFTData();  // Now FFT will be calculated.
   updateDisplayFlag = false;
   fftActive = false;
   // Find peak of spectrum, which is 512 wide.  Use this to adjust spectrum peak to top of spectrum display.
@@ -83,6 +82,11 @@ void RxCalibrate::warmUpCal() {
 //    Serial.printf("RX rawSpectrumPeak = %d count = %d i = %d\n", rawSpectrumPeak, count, i);
 //    Serial.printf("RX index_of_max = %d\n", index_of_max);
   if (index_of_max < 380 or index_of_max > 388) Serial.printf("Problem with RX warmUpCal\n");
+
+  ADC_RX_I.clear();
+  ADC_RX_Q.clear();
+  Q_in_L_Ex.clear();
+  Q_in_R_Ex.clear();
 }
 
 
@@ -229,7 +233,6 @@ void RxCalibrate::writeToCalData(float ichannel, float qchannel) {
 void RxCalibrate::DoReceiveCalibrate(int calMode, bool radio, bool refine, bool toEeprom) {
   MenuSelect task = MenuSelect::DEFAULT;
   
-
   RxCalibrate::mode = calMode;           // CW or SSB.  This is an object state variable.
   RxCalibrate::radioCal = radio;         // Initial calibration of all bands.
   RxCalibrate::refineCal = refine;       // Refinement (using existing values a starting point) calibration for all bands.
@@ -242,15 +245,17 @@ void RxCalibrate::DoReceiveCalibrate(int calMode, bool radio, bool refine, bool 
     ResetFlipFlops();  // This function has delay.
   
   SetFreqCal(calFreqShift);
-  increment = 0.002;  // Used in initial sweeps.
+  increment = 0.01;  // Used in initial sweeps.
   IQCalType = 0;                // Start with IG Gain calibration.
   warmUpCal();                  // Finds the peak of the FFT to adjust in display.
   State state = State::warmup;  // Start calibration state machine in warmup state.
   float maxSweepAmp = 0.2;
   float maxSweepPhase = 0.1;
   int averageCount = 0;
+  int refinePass{0};
   float iOptimal = 1.0;
   float qOptimal = 0.0;
+  float adjdB_old{0};
   std::vector<float32_t> sweepVector(201);
   std::vector<float32_t> sweepVectorValue(201);
   std::vector<float> sub_vectorAmp = std::vector<float>(21);
@@ -258,7 +263,7 @@ void RxCalibrate::DoReceiveCalibrate(int calMode, bool radio, bool refine, bool 
   std::vector<float> sub_vectorAmpResult = std::vector<float>(21);
   std::vector<float> sub_vectorPhaseResult = std::vector<float>(21);
   int startTimer = 0;  // Used to time display of results.
-  bool averageFlag = false;
+//  bool averageFlag = false;
   std::vector<float>::iterator result;
   // Get current values for amplitude and phase.  This is for refinement only.
   if (mode == 0) {
@@ -284,7 +289,6 @@ void RxCalibrate::DoReceiveCalibrate(int calMode, bool radio, bool refine, bool 
 
   if (radioCal) {
     autoCal = true;
-//    printCalType(autoCal, false);
     count = 0;
     warmup = 0;
     index = 1;
@@ -297,7 +301,7 @@ void RxCalibrate::DoReceiveCalibrate(int calMode, bool radio, bool refine, bool 
   // Receive Calibration Loop
   while (true) {
     fftActive = true;
-    RxCalibrate::ShowSpectrum();
+    computeAdjdB();
 
      if((static_cast<int>(displayTimer) - lastDisplayTime) > 20) {
      evedisplay.drawReceiverCalScreen(pixelnew);
@@ -315,7 +319,6 @@ void RxCalibrate::DoReceiveCalibrate(int calMode, bool radio, bool refine, bool 
       // Activate automatic calibration (initial calibration).
       case MenuSelect::ZOOM:  // 2nd row, 1st column button
         autoCal = true;
-//        printCalType(autoCal, false);
         count = 0;
         warmup = 0;
         index = 1;
@@ -329,7 +332,6 @@ void RxCalibrate::DoReceiveCalibrate(int calMode, bool radio, bool refine, bool 
       case MenuSelect::FILTER:  // 3rd row, 1st column button
         refineCal = true;
         autoCal = true;
-//        printCalType(autoCal, false);
         count = 0;
         warmup = 0;
         index = 1;
@@ -389,7 +391,7 @@ void RxCalibrate::DoReceiveCalibrate(int calMode, bool radio, bool refine, bool 
             amplitude = 1.0 + maxSweepAmp;  //  so adjdB and adjdB_avg are forced upwards.
           }
           state = State::warmup;
-          if (warmup == 16) state = State::state0;
+          if (warmup == 1) state = State::state0;
           if (warmup == 16 && refineCal) state = State::refineCal;
           break;
         case State::refineCal:
@@ -401,26 +403,24 @@ void RxCalibrate::DoReceiveCalibrate(int calMode, bool radio, bool refine, bool 
             sub_vectorPhase[i] = (qOptimal - 10 * 0.001) + (0.001 * i);  // The next array to sweep.
           }
           IQCalType = 0;             // Start with IQ Gain.
-          state = State::refineAmp;  // Skip the initial sweeps.
+          state = State::refineAmpPlus;  // Skip the initial sweeps.
           break;
         case State::state0:
           // Starting values for sweeps.  First sweep is amplitude (gain).
           phase = 0.0;
           amplitude = 1.0 - maxSweepAmp;                                                // Begin sweep at low end and move upwards.
-                                                                                        ////          if (mode == 0)
           GetEncoderValueLive(-2.0, 2.0, phase, increment);  // Display the phase value.
-                                                                                        ////          if (mode == 1)
-                                                                                        ////            GetEncoderValueLive(-2.0, 2.0, phase, increment, (char *)"IQ Phase", false);
           adjdB = 0;
-          adjdB_avg = 0;
+//          adjdB_avg = 0;
           index = 0;
           IQCalType = 0;
-          increment = 0.002;               // Reset increment in case initial cal is run twice.
+          increment = 0.01;               // Reset increment in case initial cal is run twice.
           state = State::initialSweepAmp;  // Let this fall through.
 
         case State::initialSweepAmp:
           sweepVectorValue[index] = amplitude;
           sweepVector[index] = adjdB;
+//          Serial.printf(" At index = %d adjdB = %f\n", index, adjdB);
           index = index + 1;
           // Increment for next measurement.
           amplitude = amplitude + increment;  // Next one!
@@ -470,99 +470,155 @@ void RxCalibrate::DoReceiveCalibrate(int calMode, bool radio, bool refine, bool 
             }
             IQCalType = 0;
             adjdB = 0.0;
-            state = State::refineAmp;  // Proceed to refine the gain channel.
+            
             index = 0;
             averageFlag = false;
             averageCount = 0;
-            increment = 0.001;  // Use smaller increment in refinement.
+            increment = 0.001;  // Set this for manual.
+
+          computeAdjdB();  // This is to flush out transient from phase last set at extreme.
+          adjdB_old = adjdB;  // Must calculate current best adjdB before entering refineAmpPlus.
+          amplitude = amplitude + 0.001;  // Now increment amplitude.
+          refinePass = 0;
+          state = State::refineAmpPlus; // Proceed to refine the gain channel.
+//          state = State::exit;  // Proceed to refine the gain channel.
+
             break;
           }
           state = State::initialSweepPhase;
           break;
 
-        case State::refineAmp:
-          // Now sweep over the entire sub_vectorAmp array with averaging on. index starts at 0.
-          amplitude = sub_vectorAmp[index];  // Starting value.
-          // Don't record this until there is data.  So that will be AFTER this pass.
-          if (averageFlag) {
-            sub_vectorAmpResult[index] = adjdB_avg;
-            index = index + 1;
-          }
-          // Terminate when all values in sub_vectorAmp have been measured.
-          if (index == sub_vectorAmpResult.size()) {
-            // Find the index of the minimum and record as iOptimal.
-            result = std::min_element(sub_vectorAmpResult.begin(), sub_vectorAmpResult.end());
-            adjdBMinIndex = std::distance(sub_vectorAmpResult.begin(), result);
-            // iOptimal is simply the value of sub_vectorAmp[adjdBMinIndex].
-            iOptimal = sub_vectorAmp[adjdBMinIndex];  // -.001;
-            amplitude = iOptimal;                     // Set to optimal value before refining phase.
-            GetEncoderValueLive(-2.0, 2.0, amplitude, increment);
-            for (int i = 0; i < 21; i = i + 1) {
-              sub_vectorAmp[i] = (iOptimal - 10 * 0.001) + (0.001 * i);  // The next array to sweep.
-            }
-            IQCalType = 1;
-            index = 0;
-            averageFlag = false;
-            averageCount = 0;
-            count = count + 1;
-            if (count == 1 || count == 3) state = State::refinePhase;  // Alternate refinePhase and refineAmp.
-            break;
-          }
-          //          avgState = averagingState::refineAmp;
-          state = State::average;
+        case State::refineAmpPlus:
+
+        print = true;
+        Serial.printf("Enter refineAmpPlus adjdB = %f adjdB_old = %f amplitude = %f phase = %f\n", adjdB, adjdB_old, amplitude, phase);
+
+        if (adjdB < adjdB_old)
+        {
+          adjdB_old = adjdB;
+          amplitude = amplitude + 0.001;
+          Serial.printf("Increment refineAmpPlus adjdB = %f adjdB_old = %f amplitude = %f phase = %f\n", adjdB, adjdB_old, amplitude, phase);
+          state = State::refineAmpPlus;
+          break;
+        }
+        else // Prepare for refineAmpMinus.
+        {
+          amplitude = amplitude - 0.001 - 0.001; // Put back last increment and increment in minus direction.
+          Serial.printf("Exit refineAmpPlus adjdB = %f adjdB_old = %f amplitude = %f phase = %f\n", adjdB, adjdB_old, amplitude, phase);
+          print = false;
+          refinePass = refinePass + 1;
+//          state = State::exit;
+          state = State::refineAmpMinus;
+          break;
+        }
+
           break;
 
-        case State::refinePhase:
-          // Now sweep over the entire sub_vectorAmp array with averaging on. index starts at 0.
-          phase = sub_vectorPhase[index];  // Starting value.
-          // Don't record this until there is data.  So that will be AFTER this pass.
-          if (averageFlag) {
-            sub_vectorPhaseResult[index] = adjdB_avg;
-            index = index + 1;
+        case State::refineAmpMinus:
+
+                print = true;
+        Serial.printf("Enter refineAmpMinus adjdB = %f adjdB_old = %f amplitude = %f phase = %f\n", adjdB, adjdB_old, amplitude, phase);
+
+        if (adjdB < adjdB_old)
+        {
+          adjdB_old = adjdB;
+          amplitude = amplitude - 0.001;
+          Serial.printf("Increment refineAmpMinus adjdB = %f adjdB_old = %f amplitude = %f phase = %f\n", adjdB, adjdB_old, amplitude, phase);
+          state = State::refineAmpMinus;
+          break;
+        }
+        else // Prepare for refinePhasePlus.
+        {
+          amplitude = amplitude + 0.001; // Put back last increment and increment in minus direction.
+          phase = phase + 0.001;
+          Serial.printf("Exit refineAmpMinus adjdB = %f adjdB_old = %f amplitude = %f phase = %f\n", adjdB, adjdB_old, amplitude, phase);
+          print = false;
+          refinePass = refinePass + 1;
+//          state = State::exit;
+          state = State::refinePhasePlus;
+          break;
+        }
+
+          break;
+
+        case State::refinePhasePlus:
+
+                print = true;
+        Serial.printf("Enter refinePhasePlus adjdB = %f adjdB_old = %f amplitude = %f phase = %f\n", adjdB, adjdB_old, amplitude, phase);
+
+        if (adjdB < adjdB_old)
+        {
+          adjdB_old = adjdB;
+          phase = phase + 0.001;
+          Serial.printf("Increment refinePhasePlus adjdB = %f adjdB_old = %f amplitude = %f phase = %f\n", adjdB, adjdB_old, amplitude, phase);
+          state = State::refinePhasePlus;
+          break;
+        }
+        else
+        {
+          phase = phase - 0.001 - 0.001; // Put back last increment and increment in minus direction.
+          Serial.printf("Exit refinePhasePlus adjdB = %f adjdB_old = %f amplitude = %f phase = %f\n", adjdB, adjdB_old, amplitude, phase);
+          print = false;
+//                    state = State::exit;
+          state = State::refinePhaseMinus;
+          break;
+        }
+
+          break;
+
+        case State::refinePhaseMinus:
+
+                print = true;
+        Serial.printf("Enter refinePhaseMinus adjdB = %f adjdB_old = %f amplitude = %f phase = %f\n", adjdB, adjdB_old, amplitude, phase);
+
+        if (adjdB < adjdB_old)
+        {
+          adjdB_old = adjdB;
+          phase = phase - 0.001;
+          Serial.printf("Increment refinePhaseMinus adjdB = %f adjdB_old = %f amplitude = %f phase = %f\n", adjdB, adjdB_old, amplitude, phase);
+          state = State::refinePhaseMinus;
+          break;
+        }
+        else
+        {
+
+          phase = phase + 0.001; // Put back last increment.
+          Serial.printf("Exit refinePhaseMinus adjdB = %f adjdB_old = %f amplitude = %f phase = %f\n", adjdB, adjdB_old, amplitude, phase);
+          Serial.printf("refinePass = %d\n", refinePass);
+          print = false;
+          if (refinePass == 2)
+          {
+//            writeToCalData(amplitude, phase);
+            state = State::setOptimal;
           }
-          // Terminate when all values in sub_vectorAmp have been measured.
-          if (index == sub_vectorPhaseResult.size()) {
-            // Find the index of the minimum and record as iOptimal.
-            result = std::min_element(sub_vectorPhaseResult.begin(), sub_vectorPhaseResult.end());
-            adjdBMinIndex = std::distance(sub_vectorPhaseResult.begin(), result);
-            // qOptimal is simply the value of sub_vectorAmp[adjdBMinIndex].
-            index = 0;
-            qOptimal = sub_vectorPhase[adjdBMinIndex];  // - .001;
-            phase = qOptimal;
-            GetEncoderValueLive(-2.0, 2.0, phase, increment);
-            for (int i = 0; i < 21; i = i + 1) {
-              sub_vectorPhase[i] = (qOptimal - 10 * 0.001) + (0.001 * i);
-            }
-            IQCalType = 0;
-            averageFlag = 0;
-            averageCount = 0;
-            count = count + 1;
-            state = State::refineAmp;
-            if (count == 2) state = State::refineAmp;
-            if (count == 4) state = State::setOptimal;
-            break;
+          else
+          {
+            amplitude = amplitude + 0.001;
+            state = State::refineAmpPlus; // Proceed to next pass.
           }
-          state = State::average;
+          break;
+        }
+
           break;
 
         case State::average:  // Stay in this state while averaging is in progress.
           if (averageCount > 3) {
-            if (IQCalType == 0) state = State::refineAmp;
-            if (IQCalType == 1) state = State::refinePhase;
+            if (IQCalType == 0) state = State::refineAmpPlus;
+            if (IQCalType == 1) state = State::refinePhasePlus;
             averageCount = 0;
             averageFlag = true;  // Averaging is complete!
             break;
           }
           averageCount = averageCount + 1;
           averageFlag = false;
-          if (IQCalType == 0) state = State::refineAmp;
-          if (IQCalType == 1) state = State::refinePhase;
+          if (IQCalType == 0) state = State::refineAmpPlus;
+          if (IQCalType == 1) state = State::refinePhasePlus;
           break;
 
         case State::setOptimal:
           count = 0;  // In case automatic calibration is run again.
-          amplitude = iOptimal;
-          phase = qOptimal;
+//          amplitude = iOptimal;
+//          phase = qOptimal;
           writeToCalData(amplitude, phase);
           state = State::exit;
           startTimer = static_cast<int>(milliTimer);  // Start result view timer.
@@ -581,7 +637,6 @@ void RxCalibrate::DoReceiveCalibrate(int calMode, bool radio, bool refine, bool 
           } else {
             autoCal = false;  // Don't enter switch, but remain in manual loop.
             refineCal = false;
-    //        printCalType(autoCal, false);
           }
           break;
       }
@@ -677,6 +732,9 @@ void RxCalibrate::MakeFFTData() {
 
   // End of transmit code.  Begin receive code.
 
+//              Serial.printf("ADC_RX_I.available = %d\n", static_cast<uint32_t>(ADC_RX_I.available()));
+//            Serial.printf("ADC_RX_Q.available = %d\n", static_cast<uint32_t>(ADC_RX_Q.available()));
+
   // Get I16 audio blocks from the record queues and convert them to float.
   // Read in 16 blocks of 128 samples in I and Q if available.
   if (static_cast<uint32_t>(ADC_RX_I.available()) > 16 and static_cast<uint32_t>(ADC_RX_Q.available()) > 16) {
@@ -767,8 +825,11 @@ void RxCalibrate::ShowSpectrum()  //AFP 2-10-23
   }  // Receive calibration, USB.  KF5N
 
   //  There are 2 for-loops, one for the reference signal and another for the undesired sideband.
-  for (x1 = cal_bins[0] - capture_bins / 2; x1 < cal_bins[0] + capture_bins / 2; x1++) adjdB = PlotCalSpectrum(x1, cal_bins, capture_bins);
-  for (x1 = cal_bins[1] - capture_bins / 2; x1 < cal_bins[1] + capture_bins / 2; x1++) adjdB = PlotCalSpectrum(x1, cal_bins, capture_bins);
+//  for (
+    x1 = cal_bins[0] - capture_bins / 2;
+//     x1 < cal_bins[0] + capture_bins / 2; x1++) 
+     PlotCalSpectrum(x1, cal_bins, capture_bins);
+//  for (x1 = cal_bins[1] - capture_bins / 2; x1 < cal_bins[1] + capture_bins / 2; x1++) adjdB = PlotCalSpectrum(x1, cal_bins, capture_bins);
 }
 
 
@@ -785,10 +846,10 @@ void RxCalibrate::ShowSpectrum()  //AFP 2-10-23
   Return value;
     float, returns the adjusted value in dB
 *****/
-float RxCalibrate::PlotCalSpectrum(int x1, int cal_bins[3], int capture_bins) {
+void RxCalibrate::PlotCalSpectrum(int x1, int cal_bins[3], int capture_bins) {
   int16_t adjAmplitude = 0;  // Was float; cast to float in dB calculation.  KF5N
   int16_t refAmplitude = 0;  // Was float; cast to float in dB calculation.  KF5N
-  float alpha = 0.01;
+//  float alpha = 0.01;
 
   uint32_t index_of_max;  // This variable is not currently used, but it is required by the ARM max function.  KF5N
   int y_new_plot, y1_new_plot, y_old_plot, y_old2_plot;
@@ -835,9 +896,126 @@ float RxCalibrate::PlotCalSpectrum(int x1, int cal_bins[3], int capture_bins) {
   if (y1_new_plot > base_y) y1_new_plot = base_y;
 
   adjdB = (static_cast<float>(adjAmplitude) - static_cast<float>(refAmplitude)) / (1.95 * 2.0);  // Cast to float and calculate the dB level.  Needs further refinement for accuracy.  KF5N
-  adjdB_avg = adjdB * alpha + adjdBold * (1.0 - alpha);                                          // Exponential average.
+//  adjdB_avg = adjdB * alpha + adjdBold * (1.0 - alpha);                                          // Exponential average.
 
-  adjdBold = adjdB_avg;
+//  adjdBold = adjdB_avg;
 
-  return adjdB_avg;
+//  return adjdB_avg;
+}
+
+
+void RxCalibrate::computeAdjdB()
+{
+  if(print) Serial.printf("computeAdjdB\n");
+  float adjdB1{0.0};
+  float adjdB2{0.0};
+  int counter{0};
+  bool notComputed{true};
+  float epsilon = 0.1;
+
+  // Adjust exit criteria based on magnitude of adjdB.  Higher values exit more readily.
+
+  adjdB = 0.0;
+  // Compute initial value of adjdB.
+  ShowSpectrum();  // 1
+
+  adjdB1 = adjdB; // Initial value of adjdB1 computed by Showspectrum().
+
+  adjdBstate = computeAdjdB::notComputed;
+
+  while (notComputed)
+  {
+
+    ShowSpectrum();  // Compute a second value of adjdB.  2
+    adjdB2 = adjdB;
+
+    switch(adjdBstate)
+    {
+
+    case computeAdjdB::notComputed:
+
+if(print) Serial.printf("notComputed\n");
+
+      // Floating point values are equal.
+      if (fabs(adjdB1 - adjdB2) < epsilon)
+      {
+        adjdBstate = computeAdjdB::valuesEqual;
+        adjdB1 = adjdB2;
+    //    return;  // Assume value is stabilized.
+        break;
+      }
+
+      if (adjdB2 != adjdB1)
+      {
+        adjdB1 = adjdB2;
+        adjdBstate = computeAdjdB::adjdB2_ne_adjdB1;
+        break;
+      }
+
+      break;
+
+    case computeAdjdB::valuesEqual:
+
+if(print) Serial.printf("valuesEqual\n");
+
+      counter = counter + 1;
+      if(print) Serial.printf("Same value!\n");
+      if (counter == 3)
+      { // Same value 3 times in a row;       
+        adjdBstate = computeAdjdB::computed;
+        break;
+      }
+      else
+      {
+        adjdB1 = adjdB2;
+        adjdBstate = computeAdjdB::notComputed;
+        break;
+      }
+
+      break;
+
+    case computeAdjdB::adjdB2_ne_adjdB1:
+
+if(print) Serial.printf("adjdB2_ne_adjdB1\n");
+
+      // Bail out if the numbers get really low and noisy!
+      if((adjdB1 < -72.0) and (adjdB2 < -72.0) and autoCal) {
+        if(print) { 
+        Serial.printf("adjdB2_ne_adjdB1 adjdB1 = %f adjdB2 = %f\n", adjdB1, adjdB2);
+        Serial.printf("Bailed out < -70\n");
+        }
+        adjdB = -72.0;
+        return;  // No reason to do anything else.
+        break;
+      }
+
+
+      if (fabs(adjdB1 - adjdB2) > 1.0)
+      {
+        adjdB1 = adjdB2;
+        adjdBstate = computeAdjdB::notComputed;
+        break;
+      }
+
+      if (fabs(adjdB1 - adjdB2) < 1.0)
+      {
+     //   adjdBstate = computeAdjdB::computed;
+     if(print) Serial.printf("adjdB2_ne_adjdB1 adjdB1 = %f adjdB2 = %f\n", adjdB1, adjdB2);
+     return;  // No reason to do anything else.
+        break;
+      }
+
+      break;
+
+      case computeAdjdB::computed:
+
+ if(print)     Serial.printf("computed\n");
+
+if(print) Serial.printf("computed adjdB1 = %f adjdB2 = %f\n", adjdB1, adjdB2);
+
+      notComputed = false;
+
+      break;
+    }
+  } // end while
 }

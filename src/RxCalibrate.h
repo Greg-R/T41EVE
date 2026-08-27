@@ -16,13 +16,12 @@ You should have received a copy of the GNU General Public License along with T41
   "TEENSY CONVOLUTION SDR" substantially modified by Jack Purdum, W8TEE, and Al Peter, AC8GY
 
   This software is made available under the GNU GPLv3 license agreement. If commercial use of this
-  software is planned, we would appreciate it if the interested parties contact Jack Purdum, W8TEE, 
+  software is planned, we would appreciate it if the interested parties contact Jack Purdum, W8TEE,
   and Al Peter, AC8GY.
 
-  Any and all other uses, written or implied, by the GPLv3 license are forbidden without written 
+  Any and all other uses, written or implied, by the GPLv3 license are forbidden without written
   permission from from Jack Purdum, W8TEE, and Al Peter, AC8GY.
 */
-
 
 #pragma once
 
@@ -34,32 +33,32 @@ You should have received a copy of the GNU General Public License along with T41
 // Re-factored into class RxCalibrate.cpp.  This class does receive calibrate only.
 // Greg Raven KF5N October 20, 2025.
 
-class RxCalibrate {
+class RxCalibrate
+{
 public:
-
   // Blue and red bar variables.  These should be 256 (bins) apart.
   // These variables identify the center of the bars, not the left edge.
   // The exact bins should be 127 and 383, however, for some reason, the
   // peak is a couple of bins to the right.
-  int32_t rx_blue_usb = 385;  // Image frequency.
-  int32_t rx_red_usb = 129;   // Receive frequency. Exact bin 127.
-  int32_t capture_bins = 32;  // Make bar_width divisible by 2.
+  int32_t rx_blue_usb = 385; // Image frequency.
+  int32_t rx_red_usb = 129;  // Receive frequency. Exact bin 127.
+  int32_t capture_bins = 32; // Make bar_width divisible by 2.
   int32_t left_text_edge = 165;
 
-  uint32_t IQCalType = 0;  // 0 is IQ Gain; 1 is Phase.
+  uint32_t IQCalType = 0; // 0 is IQ Gain; 1 is Phase.
   bool refineCal = false;
   bool autoCal{false};
   bool radioCal = false;
   bool averageFlag = false;
   bool saveToEeprom = false;
   int val;
-  //float increment = 0.002;
+  // float increment = 0.002;
   int userScale, userZoomIndex, userxmtMode;
   int transmitPowerLevelTemp, cwFreqOffsetTemp, calFreqTemp;
-  uint16_t base_y = 460;  // 247
+  uint16_t base_y = 460; // 247
   int calTypeFlag = 0;
-  float adjdB = 0.0;
-  float adjdBold = 0.0;  // Used in exponential averager.  KF5N May 19, 2024
+  float adjdB{0.0};
+  float adjdBold = 0.0; // Used in exponential averager.  KF5N May 19, 2024
   float adjdB_avg = 0.0;
   uint32_t adjdBMinIndex;
   float32_t amplitude = 0.0;
@@ -73,6 +72,7 @@ public:
   bool corrChange = false;
   bool fftActive = false;
   bool fftSuccess = false;
+  bool print{false};
   elapsedMillis milliTimer;
   elapsedMillis displayTimer;
   int lastDisplayTime{0};
@@ -81,24 +81,38 @@ public:
   RadioMode tempMode;
   RadioState tempState;
 
-  enum class State { warmup,
-                     refineCal,
-                     state0,
-                     initialSweepAmp,
-                     initialSweepPhase,
-                     refineAmp,
-                     refinePhase,
-                     average,
-                     setOptimal,
-                     exit };
+  enum class State
+  {
+    warmup,
+    refineCal,
+    state0,
+    initialSweepAmp,
+    initialSweepPhase,
+    refineAmpPlus,
+    refineAmpMinus,
+    refinePhasePlus,
+    refinePhaseMinus,
+    average,
+    setOptimal,
+    exit
+  };
+
+    enum class computeAdjdB { notComputed,
+                        valuesEqual,
+                        adjdB2_ne_adjdB1,
+                        computed
+  };
+
+  computeAdjdB adjdBstate = computeAdjdB:: notComputed;
 
   void loadCalToneBuffers(float toneFreq);
   void MakeFFTData();
   void warmUpCal();
   void CalibratePreamble(int setZoom);
   void CalibrateEpilogue(bool radioCal, bool saveToEeprom);
-  void DoReceiveCalibrate(int calMode, bool radio, bool refine, bool toEeprom);  // Mode determines CW versus SSB.
+  void DoReceiveCalibrate(int calMode, bool radio, bool refine, bool toEeprom); // Mode determines CW versus SSB.
   void ShowSpectrum();
-  float PlotCalSpectrum(int x1, int cal_bins[3], int capture_bins);
+  void PlotCalSpectrum(int x1, int cal_bins[3], int capture_bins);
   void writeToCalData(float ichannel, float qchannel);
+  void computeAdjdB();
 };

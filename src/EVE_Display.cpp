@@ -1901,7 +1901,7 @@ void EVE_Display::drawReceiverCalScreen(int16_t *fftArray)
   EVE_cmd_number_burst(430, 80, 26, 0, ConfigData.transmitPowerLevel);
 
   // Draw current suppression in dBC.
-  dtostrf(rxcalibrater.adjdB_avg, 4, 1, buffer);
+  dtostrf(rxcalibrater.adjdB, 4, 2, buffer);
   EVE_color_a(255);
   EVE_cmd_text_burst(550, 150, 30, 0, buffer);
 

@@ -120,18 +120,18 @@ public:
   void MakeFFTData();
   void computeAdjdB();
   enum class State { warmup,
-                     refineCal,
+  //                   refineCal,
                      state0,
                      initialSweepAmp,
                      initialSweepPhase,
-                     ringOut,
-                     refineAmp,
+  //                   ringOut,
+  //                   refineAmp,
                      refineAmpPlus,
                      refineAmpMinus,
-                     refinePhase,
+  //                   refinePhase,
                      refinePhasePlus,
                      refinePhaseMinus,
-                     average,
+  //                   average,
                      setOptimal,
                      exit };
 
