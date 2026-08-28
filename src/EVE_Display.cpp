@@ -1533,12 +1533,12 @@ FLASHMEM void EVE_Display::transmitterCalStatic_cmd_list()
 
   // Draw the button push guides.
   EVE_color_rgb(0x00ff00);
-  EVE_cmd_text(550, 125, 28, 0, "Incr =");
+//  EVE_cmd_text(550, 125, 28, 0, "Incr =");
   EVE_cmd_text(660, 150, 30, 0, "dBC");
   EVE_cmd_text(550, 185, 28, 0, "User1: Gain/Phase");
-  EVE_cmd_text(550, 215, 28, 0, "User2: Increment");
-  EVE_cmd_text(550, 245, 28, 0, "Zoom: Auto-Cal");
-  EVE_cmd_text(550, 275, 28, 0, "Filter: Refine-Cal");
+//  EVE_cmd_text(550, 215, 28, 0, "User2: Increment");
+  EVE_cmd_text(550, 215, 28, 0, "Zoom: Auto-Cal");
+//  EVE_cmd_text(550, 275, 28, 0, "Filter: Refine-Cal");
 
   EVE_cmd_endlist();
 } // End of transmit/carrier calibration static.
@@ -1579,11 +1579,11 @@ void EVE_Display::drawTransmitterCalScreen(int16_t *fftArray)
   if (txcalibrater.calTypeFlag == 2)
     EVE_cmd_text(textX, 280, 30, 0, "Carrier");
 
-  if (txcalibrater.autoCal and not txcalibrater.refineCal)
+  if (txcalibrater.autoCal)
     EVE_cmd_text(textX, 320, 30, 0, "Auto Mode");
-  if (txcalibrater.refineCal)
-    EVE_cmd_text(textX, 320, 30, 0, "Refine Mode");
-  if (not txcalibrater.autoCal and not txcalibrater.refineCal)
+//  if (txcalibrater.refineCal)
+//    EVE_cmd_text(textX, 320, 30, 0, "Refine Mode");
+  if (not txcalibrater.autoCal)
     EVE_cmd_text(textX, 320, 30, 0, "Manual Mode");
 
   // Draw the red and blue boxes.  These have to be dynamic because
@@ -1737,6 +1737,7 @@ void EVE_Display::drawTransmitterCalScreen(int16_t *fftArray)
 
   EVE_cmd_text_burst(320, 5, 29, 0, buffer);
 
+  /*
   if (txcalibrater.calTypeFlag == 1)
   {
     dtostrf(txcalibrater.xmitIncrement, 4, 3, buffer);
@@ -1750,6 +1751,7 @@ void EVE_Display::drawTransmitterCalScreen(int16_t *fftArray)
     EVE_color_rgb(0xff0000);
     EVE_cmd_text(608, 125, 28, 0, buffer);
   }
+    */
 
   EVE_display_burst();
   EVE_cmd_swap_burst();

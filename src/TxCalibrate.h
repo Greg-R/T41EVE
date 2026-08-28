@@ -106,13 +106,16 @@ public:
                         SSB_CARRIER
   };
 
-  enum class computeAdjdB { notComputed,
-                        valuesEqual,
-                        adjdB2_ne_adjdB1,
+  enum class computeAdjdB { 
+    measureAdjdB2,
+    computeNextState,
+                        adjdB2_eq_adjdB1,
+                        adjdB2_lt_adjdB1,
+                        adjdB2_gt_adjdB1,
                         computed
   };
 
-  computeAdjdB adjdBstate = computeAdjdB:: notComputed;
+  computeAdjdB adjdBstate = computeAdjdB:: measureAdjdB2;
 
   void warmUpCal();
   void CalibratePreamble(int setZoom);

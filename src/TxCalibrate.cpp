@@ -422,6 +422,7 @@ void TxCalibrate::DoXmitCalibrate(int calMode, bool radio, bool refine, bool toE
         // Increment for next measurement.
         index = index + 1;
         amplitude = amplitude + xmitIncrement; // Next one!
+        if(adjdB > -35.0) amplitude = amplitude + 2.0 * xmitIncrement;
         // Done with initial sweep, move to initial sweep of phase.
         if (abs(amplitude - 1.0) > maxSweepAmp)
         {                                                                    // Needs to be subtracted from 1.0.
@@ -459,6 +460,7 @@ void TxCalibrate::DoXmitCalibrate(int calMode, bool radio, bool refine, bool toE
         index = index + 1;
         // Increment for the next measurement.
         phase = phase + xmitIncrement;
+        if(adjdB > 35.0) phase = phase + 2.0 * xmitIncrement;
         if (phase > maxSweepPhase)
         {
           result = std::min_element(sweepVector.begin(), sweepVector.end());
@@ -708,8 +710,8 @@ void TxCalibrate::DoXmitCalibrate(int calMode, bool radio, bool refine, bool toE
 
 void TxCalibrate::DoXmitCarrierCalibrate(int calMode, bool radio, bool refine, bool toEeprom)
 {
-  float32_t maxSweepAmp = 0.1;
-  float32_t maxSweepPhase = 0.1;
+  float32_t maxSweepAmp = 0.05;
+  float32_t maxSweepPhase = 0.05;
   float adjdB_old{0};
   carrIncrement = 0.010;       // Initial carrier increment.
   IQCalType = 0;               // Begin with I channel offset.
@@ -805,6 +807,10 @@ void TxCalibrate::DoXmitCarrierCalibrate(int calMode, bool radio, bool refine, b
         // Increment for next measurement.
         iDCoffset = iDCoffset + carrIncrement;
         qDCoffset = qDCoffset + carrIncrement;
+        if(adjdB > -25.0) {
+        iDCoffset = iDCoffset + 2.0 * carrIncrement;
+        qDCoffset = qDCoffset + 2.0 * carrIncrement;
+        }
         // Go to Q channel when I channel sweep is finished.
         if (iDCoffset > maxSweepAmp)
         {
@@ -838,6 +844,9 @@ void TxCalibrate::DoXmitCarrierCalibrate(int calMode, bool radio, bool refine, b
         index = index + 1;
         // Increment for the next measurement.
         qDCoffset = qDCoffset + carrIncrement;
+        if(adjdB > -25.0) {
+        qDCoffset = qDCoffset + 2.0 * carrIncrement;
+        }
         if (qDCoffset > maxSweepPhase)
         {
           result = std::min_element(sweepVector.begin(), sweepVector.end());
@@ -1105,8 +1114,7 @@ void TxCalibrate::MakeFFTData()
   float32_t *iBuffer = nullptr; // I and Q pointers needed for one-time read of record queues.
   float32_t *qBuffer = nullptr;
 
-  if (print)
-    Serial.printf("MakeFFTData\n");
+  //  if (print) Serial.printf("MakeFFTData\n");
 
   // Read incoming I and Q audio blocks from the SSB exciter.
   // Data gatekeeper.  Are there at least N_BLOCKS buffers in each channel available ?
@@ -1355,6 +1363,120 @@ void TxCalibrate::PlotCalSpectrum(int x1, int cal_bins[3], int capture_bins)
 
 void TxCalibrate::computeAdjdB()
 {
+  print = false;
+  if (print)
+    Serial.printf("computeAdjdB\n");
+  float adjdB1{0.0};
+  float adjdB2{0.0};
+  int equalCounter{0};
+  int worseCounter{0};
+  bool notComputed{true};
+  float epsilon = 0.1;
+
+  // Compute initial value of adjdB.
+  ShowSpectrum();
+
+  adjdB1 = adjdB; // Initial value of adjdB1 computed by Showspectrum().
+
+  adjdBstate = computeAdjdB::measureAdjdB2;
+
+  while (notComputed)
+  {
+
+    //    ShowSpectrum(); // Compute a second value of adjdB.  2
+    //    adjdB2 = adjdB;
+
+    switch (adjdBstate)
+    {
+
+    case computeAdjdB::measureAdjdB2:
+
+
+
+      ShowSpectrum(); // Compute adjdB2.
+
+Serial.printf("state measureAdjdB2 = %f\n", adjdB);
+
+      adjdB2 = adjdB;
+      adjdBstate = computeAdjdB::computeNextState;
+      break;
+
+    case computeAdjdB::computeNextState:
+
+      //   if (print)
+      //     Serial.printf("notComputed\n");
+
+      // Floating point values are equal.
+      if (fabs(adjdB2 - adjdB1) < epsilon)
+      {
+
+Serial.printf("fabs(adjdB2 - adjdB1) < epsilon adjdB2 = %f adjdB1 = %f\n", adjdB2, adjdB1);
+
+        equalCounter = equalCounter + 1;
+        if (equalCounter == 2)
+        {
+          equalCounter = 0;
+          adjdBstate = computeAdjdB::computed;
+          break;
+        }
+        adjdBstate = computeAdjdB::measureAdjdB2;
+        adjdB1 = adjdB2;
+        break;
+      }
+
+      // adjdB2 < adjdB1.  Improvement.  Always re-measure.
+      if (adjdB2 - adjdB1 < 0.0)
+      {
+
+Serial.printf("adjdB2 - adjdB1 < 0.0 adjdB2 = %f adjdB1 = %f\n", adjdB2, adjdB1);
+
+        adjdBstate = computeAdjdB::measureAdjdB2;
+        adjdB1 = adjdB2;
+        break;
+      }
+
+      // adjdB2 > adjdB1.  Worse.
+      if (adjdB2 - adjdB1 > 0.0)
+      {
+
+Serial.printf("adjdB2 - adjdB1 > 0.0 adjdB2 = %f adjdB1 = %f\n", adjdB2, adjdB1);
+
+        worseCounter = worseCounter + 1;
+        if (worseCounter == 2)
+        {
+          worseCounter = 0;
+          adjdBstate = computeAdjdB::computed;
+          break;
+        }
+        adjdBstate = computeAdjdB::measureAdjdB2;
+        adjdB1 = adjdB2;
+        break;
+      }
+
+      break;
+
+    case computeAdjdB::computed:
+
+    Serial.printf("computed\n");
+
+      if (print)
+        Serial.printf("computed\n");
+
+      if (print)
+        Serial.printf("computed adjdB1 = %f adjdB2 = %f\n", adjdB1, adjdB2);
+
+      notComputed = false;
+
+      return;
+
+      break;
+    }
+  } // end while
+}
+
+/*
+void TxCalibrate::computeAdjdB()
+{
   if (print)
     Serial.printf("computeAdjdB\n");
   float adjdB1{0.0};
@@ -1475,3 +1597,4 @@ void TxCalibrate::computeAdjdB()
     }
   } // end while
 }
+*/
