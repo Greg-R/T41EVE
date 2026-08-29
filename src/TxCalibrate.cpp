@@ -283,16 +283,11 @@ void TxCalibrate::DoXmitCalibrate(int calMode, bool radio, bool refine, bool toE
   IQCalType = 0;        // Begin with IQ gain optimization.
   std::vector<float32_t> sweepVector(21);
   std::vector<float32_t> sweepVectorValue(21);
-  //  std::vector<float32_t> sub_vectorAmp = std::vector<float>(21); // Can these arrays be commonized?
-  //  std::vector<float32_t> sub_vectorPhase = std::vector<float>(21);
-  //  std::vector<float> sub_vectorAmpResult = std::vector<float>(10);
-  //  std::vector<float> sub_vectorPhaseResult = std::vector<float>(10);
   elapsedMillis fiveSeconds;
   int startTimer = 0;
   TxCalibrate::autoCal = false;
   TxCalibrate::mode = calMode;          // CW or SSB.  This is an object state variable.
   TxCalibrate::radioCal = radio;        // Initial calibration of all bands.
-//  TxCalibrate::refineCal = refine;      // Refinement (using existing values a starting point) calibration for all bands.
   TxCalibrate::saveToEeprom = toEeprom; // Save to EEPROM
   std::vector<float>::iterator result;
   TxCalibrate::CalibratePreamble(2); // Set zoom to 4X.  Sample rate 48ksps.
@@ -371,16 +366,11 @@ void TxCalibrate::DoXmitCalibrate(int calMode, bool radio, bool refine, bool toE
         std::fill(sweepVectorValue.begin(), sweepVectorValue.end(), 0.0);
         std::fill(sweepVector.begin(), sweepVector.end(), 0.0);
         warmup = warmup + 1;
-//        if (not refineCal)
-//        {
           phase = 0.0 + maxSweepPhase;   //  Need to use these values during warmup
           amplitude = 1.0 + maxSweepAmp; //  so adjdB and adjdB_avg are forced upwards.
-//        }
         state = State::warmup;
         if (warmup == 1)         // Was 16.
           state = State::state0; // Proceed with initial calibration.
-                                 //        if (warmup == 16 and refineCal)
-                                 //          state = State::refineCal;
         break;
 
       case State::state0:
@@ -447,20 +437,10 @@ void TxCalibrate::DoXmitCalibrate(int calMode, bool radio, bool refine, bool toE
           phase = qOptimal;                           // Set to the discovered minimum.
                                                       // Update display to optimal value and change from red to white.
           GetEncoderValueLive(-2.0, 2.0, phase, xmitIncrement);
-          // Save the sub_vector which will be used to refine the optimal result.
-          //          for (int i = 0; i < 21; i = i + 1)
-          //          {
-          //            sub_vectorPhase[i] = (qOptimal - 10 * 0.001) + (0.001 * static_cast<float32_t>(i));
-          //          }
           IQCalType = 0;
           adjdB = 0.0;
           index = 0;
-          //          averageFlag = false;
-          //          averageCount = 0;
           xmitIncrement = 0.01; // Use smaller increment in refinement.
-                                //          ringOutCounter = 0;
-          ////          firstPass = true;
-          ////          state = State::ringOut; // Proceed to refine the gain channel.
           refinePass = 0;
           writeToCalData(amplitude, phase); // Optimal values at end of initial amplitude and phase sweeps.
           computeAdjdB();                   // This is to flush out transient from phase last set at extreme.
@@ -521,8 +501,6 @@ void TxCalibrate::DoXmitCalibrate(int calMode, bool radio, bool refine, bool toE
         }
         else
         {
-          // adjdB_old = adjdB;
-
           phase = phase - 0.001 - 0.001; // Put back last increment and increment in minus direction.
           state = State::refinePhaseMinus;
           break;
@@ -541,8 +519,6 @@ void TxCalibrate::DoXmitCalibrate(int calMode, bool radio, bool refine, bool toE
         }
         else
         {
-          // adjdB_old = adjdB;
-
           phase = phase + 0.001; // Put back last increment.
           if (refinePass == 2)
           {
@@ -569,7 +545,7 @@ void TxCalibrate::DoXmitCalibrate(int calMode, bool radio, bool refine, bool toE
         // Delay exit if in radio calibration to show calibration results for 5 seconds, and then exit.
         if (radioCal)
         {
-          if ((static_cast<int>(milliTimer) - startTimer) < 1000)
+          if ((static_cast<int>(milliTimer) - startTimer) < 100)
           { // Show calibration result for 5 seconds at conclusion during Radio Cal.
             state = State::exit;
             break;
@@ -619,7 +595,6 @@ void TxCalibrate::DoXmitCarrierCalibrate(int calMode, bool radio, bool refine, b
   IQCalType = 0;               // Begin with I channel offset.
   TxCalibrate::mode = calMode; // CW or SSB
   TxCalibrate::radioCal = radio;
-//  TxCalibrate::refineCal = refine;
   TxCalibrate::saveToEeprom = toEeprom;   // Save to EEPROM
   std::vector<float32_t> sweepVector(41); // 0 + 450 * 2 / 5
   std::vector<float32_t> sweepVectorValue(41);
@@ -633,7 +608,6 @@ void TxCalibrate::DoXmitCarrierCalibrate(int calMode, bool radio, bool refine, b
   radioState = RadioState::SSB_TRANSMIT_STATE;
   SetFreqCal(freqOffset);
   // Get current values into the iDCoffset and qDCoffset working variables.
-  // This is required for refinement.
   if (mode == 0)
   {
     iDCoffset = CalData.iDCoffsetCW[ConfigData.currentBand];
@@ -735,7 +709,6 @@ void TxCalibrate::DoXmitCarrierCalibrate(int calMode, bool radio, bool refine, b
           qDCoffset = -maxSweepPhase;       // The starting value for phase.
           adjdB_min = 0.0;
           state = State::initialSweepPhase; // Initial I channel sweep done; proceed to initial Q sweep.
-//          state = State::setOptimal;
           break;
         }
         state = State::initialSweepAmp; // Continue sweeping.
@@ -887,7 +860,7 @@ void TxCalibrate::DoXmitCarrierCalibrate(int calMode, bool radio, bool refine, b
         // Delay exit if in radio calibration to show calibration results for 5 seconds and then exit.
         if (radioCal)
         {
-          if ((static_cast<int>(milliTimer) - startTimer) < 1000)
+          if ((static_cast<int>(milliTimer) - startTimer) < 100)
           { // Show calibration result for 5 seconds at conclusion during Radio Cal.
             state = State::exit;
             break;
@@ -1244,10 +1217,6 @@ void TxCalibrate::computeAdjdB()
 
   while (notComputed)
   {
-
-    //    ShowSpectrum(); // Compute a second value of adjdB.  2
-    //    adjdB2 = adjdB;
-
     switch (adjdBstate)
     {
 
@@ -1264,7 +1233,6 @@ void TxCalibrate::computeAdjdB()
       // Floating point values are equal.
       if (fabs(adjdB2 - adjdB1) < epsilon)
       {
-
         equalCounter = equalCounter + 1;
         if (equalCounter == 2)
         {
@@ -1305,7 +1273,6 @@ void TxCalibrate::computeAdjdB()
     case computeAdjdB::computed:
 
       notComputed = false;
-
       return;
 
       break;

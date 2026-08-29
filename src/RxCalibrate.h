@@ -49,7 +49,6 @@ public:
   bool refineCal = false;
   bool autoCal{false};
   bool radioCal = false;
-  bool averageFlag = false;
   bool saveToEeprom = false;
   int val;
   int userScale, userZoomIndex, userxmtMode;
@@ -57,14 +56,13 @@ public:
   uint16_t base_y = 460; // 247
   int calTypeFlag = 0;
   float adjdB{0.0};
-//  float adjdBold = 0.0; // Used in exponential averager.  KF5N May 19, 2024
   float adjdB_avg = 0.0;
   uint32_t adjdBMinIndex;
   float32_t amplitude = 0.0;
   float32_t phase = 0.0;
   q15_t rawSpectrumPeak = 0;
   uint32_t index = 0;
-  uint32_t count = 0;
+//  uint32_t count = 0;
   uint32_t warmup = 0;
   float32_t increment{0};
   bool exitManual = false;
@@ -83,7 +81,6 @@ public:
   enum class State
   {
     warmup,
-    refineCal,
     state0,
     initialSweepAmp,
     initialSweepPhase,
@@ -91,20 +88,18 @@ public:
     refineAmpMinus,
     refinePhasePlus,
     refinePhaseMinus,
-    average,
     setOptimal,
     exit
   };
 
   enum class computeAdjdB
   {
-    notComputed,
-    valuesEqual,
-    adjdB2_ne_adjdB1,
+    measureAdjdB2,
+    computeNextState,
     computed
   };
 
-  computeAdjdB adjdBstate = computeAdjdB::notComputed;
+  computeAdjdB adjdBstate = computeAdjdB::measureAdjdB2;
 
   void loadCalToneBuffers(float toneFreq);
   void MakeFFTData();
