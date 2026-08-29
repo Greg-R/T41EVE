@@ -106,7 +106,7 @@ public:
   void warmUpCal();
   void CalibratePreamble(int setZoom);
   void CalibrateEpilogue(bool radioCal, bool saveToEeprom);
-  void DoReceiveCalibrate(int calMode, bool radio, bool refine, bool toEeprom); // Mode determines CW versus SSB.
+  void DoReceiveCalibrate(int calMode, bool radio, bool toEeprom); // Mode determines CW versus SSB.
   void ShowSpectrum();
   void PlotCalSpectrum(int x1, int cal_bins[3], int capture_bins);
   void writeToCalData(float ichannel, float qchannel);

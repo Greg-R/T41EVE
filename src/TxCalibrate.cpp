@@ -272,7 +272,7 @@ void TxCalibrate::writeToCalData(float ichannel, float qchannel)
    Return value:
       void
  *****/
-void TxCalibrate::DoXmitCalibrate(int calMode, bool radio, bool refine, bool toEeprom)
+void TxCalibrate::DoXmitCalibrate(int calMode, bool radio, bool toEeprom)
 {
   int freqOffset = 0; // Calibration tone same as regular modulation tone.
   float maxSweepAmp = 0.1;
@@ -585,7 +585,7 @@ void TxCalibrate::DoXmitCalibrate(int calMode, bool radio, bool refine, bool toE
       void
  *****/
 
-void TxCalibrate::DoXmitCarrierCalibrate(int calMode, bool radio, bool refine, bool toEeprom)
+void TxCalibrate::DoXmitCarrierCalibrate(int calMode, bool radio, bool toEeprom)
 {
   float32_t maxSweepAmp = 0.1;
   float32_t maxSweepPhase = 0.1;
@@ -671,7 +671,7 @@ void TxCalibrate::DoXmitCarrierCalibrate(int calMode, bool radio, bool refine, b
         index = 0;
         IQCalType = 0;
         adjdB_min = 0.0;
-        carrIncrement = 0.01;          // Reset in case initial cal is run twice.
+        carrIncrement = 0.005;          // Reset in case initial cal is run twice.
         state = State::initialSweepAmp; // Let this fall through.
 
       case State::initialSweepAmp:
@@ -883,10 +883,10 @@ void TxCalibrate::DoXmitCarrierCalibrate(int calMode, bool radio, bool refine, b
 
     task = MenuSelect::DEFAULT; // Reset task after it is used.
     //  Read encoder and update values.
-//    if (IQCalType == 0)
-//      iDCoffset = GetEncoderValueLive(-1.0, 1.0, iDCoffset, 0.0005);
-//    if (IQCalType == 1)
-//      qDCoffset = GetEncoderValueLive(-1.0, 1.0, qDCoffset, 0.0005);
+    if (IQCalType == 0)
+      iDCoffset = GetEncoderValueLive(-1.0, 1.0, iDCoffset, 0.0005);
+    if (IQCalType == 1)
+      qDCoffset = GetEncoderValueLive(-1.0, 1.0, qDCoffset, 0.0005);
     if (mode == 0)
     {
       CalData.iDCoffsetCW[ConfigData.currentBand] = iDCoffset;
@@ -902,18 +902,13 @@ void TxCalibrate::DoXmitCarrierCalibrate(int calMode, bool radio, bool refine, b
 } // End carrier calibration
 
 // Automatic calibration of all bands.  Greg KF5N June 4, 2024
-void TxCalibrate::RadioCal(int mode, bool refineCal)
+void TxCalibrate::RadioCal(int mode)
 {
   std::vector<int> ham_bands = {BAND_80M, BAND_40M, BAND_20M, BAND_17M, BAND_15M, BAND_12M, BAND_10M};
 
   uint32_t currentBandTemp = ConfigData.currentBand;
   uint32_t centerFreqTemp = ConfigData.centerFreq;
 
-  // Warn the user if the radio is not calibrated and refine cal is attempted.
-  if (((mode == 0) and not CalData.CWradioCalComplete) or ((mode == 1) and not CalData.SSBradioCalComplete))
-  {
-    return;
-  }
   // Calibrate all bands.
   for (int band : ham_bands)
   {
@@ -926,16 +921,16 @@ void TxCalibrate::RadioCal(int mode, bool refineCal)
     if (band < 2)
     {
       bands.bands[ConfigData.currentBand].sideband = Sideband::LOWER; // Calibrate lower sideband for 80M and 40M.
-      rxcalibrater.DoReceiveCalibrate(mode, true, refineCal, false);
-      txcalibrater.DoXmitCalibrate(mode, true, refineCal, false);
+      rxcalibrater.DoReceiveCalibrate(mode, true, false);
+      txcalibrater.DoXmitCalibrate(mode, true, false);
     }
     else
       bands.bands[ConfigData.currentBand].sideband = Sideband::UPPER;
 
     bands.bands[ConfigData.currentBand].sideband = Sideband::UPPER;
-    rxcalibrater.DoReceiveCalibrate(mode, true, refineCal, false); // Include 80M and 40M due to FT8.
-    txcalibrater.DoXmitCalibrate(mode, true, refineCal, false);
-    txcalibrater.DoXmitCarrierCalibrate(mode, true, refineCal, false);
+    rxcalibrater.DoReceiveCalibrate(mode, true, false); // Include 80M and 40M due to FT8.
+    txcalibrater.DoXmitCalibrate(mode, true, false);
+    txcalibrater.DoXmitCarrierCalibrate(mode, true, false);
   }
 
   ConfigData.currentBand = currentBandTemp;

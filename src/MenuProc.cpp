@@ -114,7 +114,7 @@ void MenuProc::CalibrateOptions()
     break;
 
   case 2:                                                    // CW IQ Receive Cal - Gain and Phase
-    rxcalibrater.DoReceiveCalibrate(0, false, false, false); // This function was significantly revised.  KF5N August 16, 2023
+    rxcalibrater.DoReceiveCalibrate(0, false, false); // This function was significantly revised.  KF5N August 16, 2023
     parameterAdjustFlag = false;                             // Save to EEPROM at conclusion of this function.
     evemenucontrol.runOptionFunction = false;                // Deactivate function.
     subMenuChoice = 0;
@@ -122,14 +122,14 @@ void MenuProc::CalibrateOptions()
 
   case 3: // CW Xmit Carrier calibration.  Parameters are (mode, radioCal, refineCal, saveToEeprom)
 
-    txcalibrater.DoXmitCarrierCalibrate(0, false, false, false);
+    txcalibrater.DoXmitCarrierCalibrate(0, false, false);
     parameterAdjustFlag = false;              // Save to EEPROM at conclusion of this function.
     evemenucontrol.runOptionFunction = false; // Deactivate function.
     subMenuChoice = 0;
     break;
 
   case 4:
-    txcalibrater.DoXmitCalibrate(0, false, false, false); // This function was significantly revised.  KF5N August 16, 2023
+    txcalibrater.DoXmitCalibrate(0, false, false); // This function was significantly revised.  KF5N August 16, 2023
     parameterAdjustFlag = false;                          // Save to EEPROM at conclusion of this function.
     evemenucontrol.runOptionFunction = false;             // Deactivate function.
     subMenuChoice = 0;
@@ -156,7 +156,7 @@ void MenuProc::CalibrateOptions()
     break;
 
   case 6:                                                    // SSB receive cal
-    rxcalibrater.DoReceiveCalibrate(1, false, false, false); // This function was significantly revised.  KF5N August 16, 2023
+    rxcalibrater.DoReceiveCalibrate(1, false, false); // This function was significantly revised.  KF5N August 16, 2023
     parameterAdjustFlag = false;                             // Save to EEPROM at conclusion of this function.
     evemenucontrol.runOptionFunction = false;                // Deactivate function.
     subMenuChoice = 0;
@@ -164,21 +164,21 @@ void MenuProc::CalibrateOptions()
     break;
 
   case 7: // SSB Carrier Cal
-    txcalibrater.DoXmitCarrierCalibrate(1, false, false, false);
+    txcalibrater.DoXmitCarrierCalibrate(1, false, false);
     parameterAdjustFlag = false;              // Save to EEPROM at conclusion of this function.
     evemenucontrol.runOptionFunction = false; // Deactivate function.
     subMenuChoice = 0;
     break;
 
   case 8: // SSB Transmit cal
-    txcalibrater.DoXmitCalibrate(1, false, false, false);
+    txcalibrater.DoXmitCalibrate(1, false, false);
     parameterAdjustFlag = false;              // Save to EEPROM at conclusion of this function.
     evemenucontrol.runOptionFunction = false; // Deactivate function.
     subMenuChoice = 0;
     break;
 
-  case 9: // CW fully automatic radio calibration.  (mode, initial cal = false, refinecal = true)
-    txcalibrater.RadioCal(0, false);
+  case 9: // CW fully automatic radio calibration.  (mode)
+    txcalibrater.RadioCal(0);
     calibrateFlag = false;
     parameterAdjustFlag = false;              // Save to EEPROM at conclusion of this function.
     evemenucontrol.runOptionFunction = false; // Deactivate function.
@@ -186,7 +186,7 @@ void MenuProc::CalibrateOptions()
     break;
 
   case 10: // SSB fully automatic radio calibration.
-    txcalibrater.RadioCal(1, false);
+    txcalibrater.RadioCal(1);
     calibrateFlag = false;
     parameterAdjustFlag = false;              // Save to EEPROM at conclusion of this function.
     evemenucontrol.runOptionFunction = false; // Deactivate function.

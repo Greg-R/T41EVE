@@ -248,13 +248,12 @@ void RxCalibrate::writeToCalData(float ichannel, float qchannel)
    Return value:
       void
  *****/
-void RxCalibrate::DoReceiveCalibrate(int calMode, bool radio, bool refine, bool toEeprom)
+void RxCalibrate::DoReceiveCalibrate(int calMode, bool radio, bool toEeprom)
 {
   MenuSelect task = MenuSelect::DEFAULT;
 
   RxCalibrate::mode = calMode;          // CW or SSB.  This is an object state variable.
   RxCalibrate::radioCal = radio;        // Initial calibration of all bands.
-  RxCalibrate::refineCal = refine;      // Refinement (using existing values a starting point) calibration for all bands.
   RxCalibrate::saveToEeprom = toEeprom; // Save to EEPROM
 
   loadCalToneBuffers(750.0);
