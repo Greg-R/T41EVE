@@ -16,15 +16,14 @@ You should have received a copy of the GNU General Public License along with T41
   "TEENSY CONVOLUTION SDR" substantially modified by Jack Purdum, W8TEE, and Al Peter, AC8GY
 
   This software is made available under the GNU GPLv3 license agreement. If commercial use of this
-  software is planned, we would appreciate it if the interested parties contact Jack Purdum, W8TEE, 
+  software is planned, we would appreciate it if the interested parties contact Jack Purdum, W8TEE,
   and Al Peter, AC8GY.
 
-  Any and all other uses, written or implied, by the GPLv3 license are forbidden without written 
+  Any and all other uses, written or implied, by the GPLv3 license are forbidden without written
   permission from from Jack Purdum, W8TEE, and Al Peter, AC8GY.
 */
 
 // Transmit calibrate class.  This calibrates both CW and SSB exciters.
-
 
 #pragma once
 
@@ -35,34 +34,33 @@ You should have received a copy of the GNU General Public License along with T41
 // Major clean-up of calibration.  KF5N August 16, 2023
 // Re-factor calibration into transmit and receive classes.  KF5N August 2025
 
-class TxCalibrate {
+class TxCalibrate
+{
 public:
-
-
   void DoXmitCalibrate(int calMode, bool radio, bool refine, bool toEeprom);
   void DoXmitCarrierCalibrate(int calMode, bool radio, bool refine, bool toEeprom);
-  const char *calFreqs[2]{ "750 Hz", "3.0 kHz" };
+  const char *calFreqs[2]{"750 Hz", "3.0 kHz"};
   void ShowSpectrum();
   void PlotCalSpectrum(int x1, int cal_bins[3], int capture_bins);
   void RadioCal(int mode, bool refineCal);
   void buttonTasks();
   void writeToCalData(float ichannel, float qchannel);
 
-//private:
+  // private:
 
   int32_t IQCalType = 0;
   int val;
-  float32_t xmitIncrement = 0.002;       // Increment for transmit calibration.
-  float32_t carrIncrement = 0.0005;  // Increment for carrier calibration.
+  float32_t xmitIncrement = 0.002;  // Increment for transmit calibration.
+  float32_t carrIncrement = 0.0005; // Increment for carrier calibration.
   int userScale, userZoomIndex;
   int transmitPowerLevelTemp, cwFreqOffsetTemp, calFreqTemp;
-  uint16_t base_y = 460;  // 247
+  uint16_t base_y = 460; // 247
   uint32_t calTypeFlag = 0;
   float adjdB = 0.0;
-  float adjdBold = 0.0;  // Used in exponential averager.  KF5N May 19, 2024
+  float adjdBold = 0.0; // Used in exponential averager.  KF5N May 19, 2024
   float adjdB_avg = 0.0;
   uint32_t adjdBMinIndex;
-  float sineBuffer[512];  // Used to generate CW tone.
+  float sineBuffer[512]; // Used to generate CW tone.
   q15_t rawSpectrumPeak = 0;
   uint32_t index = 0;
   uint32_t count = 0;
@@ -86,10 +84,10 @@ public:
   bool averageFlag = false;
   bool saveToEeprom = false;
   int averageCount = 0;
-  bool fftSuccess = false;  // A flag for debugging FFT inadequate data problems.
-  bool fftActive = true;    // This variable is used to deactive creation of the FFT result.
-                            // This is false when desired to push data through the system
-                            // to wring out the transient response.
+  bool fftSuccess = false; // A flag for debugging FFT inadequate data problems.
+  bool fftActive = true;   // This variable is used to deactive creation of the FFT result.
+                           // This is false when desired to push data through the system
+                           // to wring out the transient response.
   bool exitManual = false;
   bool firstPass{false};
   bool print{false};
@@ -98,45 +96,48 @@ public:
   // Blue and red bar variables:
   int32_t rx_blue_usb = 128;
   int32_t rx_red_usb = 384;
-  enum class Cal_Mode { CW_RECEIVE,
-                        CW_TRANSMIT,
-                        CW_CARRIER,
-                        SSB_RECEIVE,
-                        SSB_TRANSMIT,
-                        SSB_CARRIER
+  enum class Cal_Mode
+  {
+    CW_RECEIVE,
+    CW_TRANSMIT,
+    CW_CARRIER,
+    SSB_RECEIVE,
+    SSB_TRANSMIT,
+    SSB_CARRIER
   };
 
-  enum class computeAdjdB { 
+  enum class computeAdjdB
+  {
     measureAdjdB2,
     computeNextState,
-                        adjdB2_eq_adjdB1,
-                        adjdB2_lt_adjdB1,
-                        adjdB2_gt_adjdB1,
-                        computed
+    computed
   };
 
-  computeAdjdB adjdBstate = computeAdjdB:: measureAdjdB2;
+  computeAdjdB adjdBstate = computeAdjdB::measureAdjdB2;
 
   void warmUpCal();
   void CalibratePreamble(int setZoom);
   void CalibrateEpilogue();
   void MakeFFTData();
   void computeAdjdB();
-  enum class State { warmup,
-  //                   refineCal,
-                     state0,
-                     initialSweepAmp,
-                     initialSweepPhase,
-  //                   ringOut,
-  //                   refineAmp,
-                     refineAmpPlus,
-                     refineAmpMinus,
-  //                   refinePhase,
-                     refinePhasePlus,
-                     refinePhaseMinus,
-  //                   average,
-                     setOptimal,
-                     exit };
+  enum class State
+  {
+    warmup,
+    //                   refineCal,
+    state0,
+    initialSweepAmp,
+    initialSweepPhase,
+    //                   ringOut,
+    //                   refineAmp,
+    refineAmpPlus,
+    refineAmpMinus,
+    //                   refinePhase,
+    refinePhasePlus,
+    refinePhaseMinus,
+    //                   average,
+    setOptimal,
+    exit
+  };
 
   State state = State::exit;
 };

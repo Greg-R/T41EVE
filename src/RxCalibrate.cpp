@@ -411,7 +411,6 @@ void RxCalibrate::DoReceiveCalibrate(int calMode, bool radio, bool refine, bool 
           amplitude = 1.0 - maxSweepAmp;                                                // Begin sweep at low end and move upwards.
           GetEncoderValueLive(-2.0, 2.0, phase, increment);  // Display the phase value.
           adjdB = 0;
-//          adjdB_avg = 0;
           index = 0;
           IQCalType = 0;
           increment = 0.01;               // Reset increment in case initial cal is run twice.
@@ -420,7 +419,6 @@ void RxCalibrate::DoReceiveCalibrate(int calMode, bool radio, bool refine, bool 
         case State::initialSweepAmp:
           sweepVectorValue[index] = amplitude;
           sweepVector[index] = adjdB;
-//          Serial.printf(" At index = %d adjdB = %f\n", index, adjdB);
           index = index + 1;
           // Increment for next measurement.
           amplitude = amplitude + increment;  // Next one!
@@ -490,24 +488,18 @@ void RxCalibrate::DoReceiveCalibrate(int calMode, bool radio, bool refine, bool 
 
         case State::refineAmpPlus:
 
-        print = true;
-        Serial.printf("Enter refineAmpPlus adjdB = %f adjdB_old = %f amplitude = %f phase = %f\n", adjdB, adjdB_old, amplitude, phase);
-
         if (adjdB < adjdB_old)
         {
           adjdB_old = adjdB;
           amplitude = amplitude + 0.001;
-          Serial.printf("Increment refineAmpPlus adjdB = %f adjdB_old = %f amplitude = %f phase = %f\n", adjdB, adjdB_old, amplitude, phase);
           state = State::refineAmpPlus;
           break;
         }
         else // Prepare for refineAmpMinus.
         {
           amplitude = amplitude - 0.001 - 0.001; // Put back last increment and increment in minus direction.
-          Serial.printf("Exit refineAmpPlus adjdB = %f adjdB_old = %f amplitude = %f phase = %f\n", adjdB, adjdB_old, amplitude, phase);
           print = false;
           refinePass = refinePass + 1;
-//          state = State::exit;
           state = State::refineAmpMinus;
           break;
         }
@@ -516,14 +508,10 @@ void RxCalibrate::DoReceiveCalibrate(int calMode, bool radio, bool refine, bool 
 
         case State::refineAmpMinus:
 
-                print = true;
-        Serial.printf("Enter refineAmpMinus adjdB = %f adjdB_old = %f amplitude = %f phase = %f\n", adjdB, adjdB_old, amplitude, phase);
-
         if (adjdB < adjdB_old)
         {
           adjdB_old = adjdB;
           amplitude = amplitude - 0.001;
-          Serial.printf("Increment refineAmpMinus adjdB = %f adjdB_old = %f amplitude = %f phase = %f\n", adjdB, adjdB_old, amplitude, phase);
           state = State::refineAmpMinus;
           break;
         }
@@ -531,10 +519,8 @@ void RxCalibrate::DoReceiveCalibrate(int calMode, bool radio, bool refine, bool 
         {
           amplitude = amplitude + 0.001; // Put back last increment and increment in minus direction.
           phase = phase + 0.001;
-          Serial.printf("Exit refineAmpMinus adjdB = %f adjdB_old = %f amplitude = %f phase = %f\n", adjdB, adjdB_old, amplitude, phase);
           print = false;
           refinePass = refinePass + 1;
-//          state = State::exit;
           state = State::refinePhasePlus;
           break;
         }
@@ -543,23 +529,17 @@ void RxCalibrate::DoReceiveCalibrate(int calMode, bool radio, bool refine, bool 
 
         case State::refinePhasePlus:
 
-                print = true;
-        Serial.printf("Enter refinePhasePlus adjdB = %f adjdB_old = %f amplitude = %f phase = %f\n", adjdB, adjdB_old, amplitude, phase);
-
         if (adjdB < adjdB_old)
         {
           adjdB_old = adjdB;
           phase = phase + 0.001;
-          Serial.printf("Increment refinePhasePlus adjdB = %f adjdB_old = %f amplitude = %f phase = %f\n", adjdB, adjdB_old, amplitude, phase);
           state = State::refinePhasePlus;
           break;
         }
         else
         {
           phase = phase - 0.001 - 0.001; // Put back last increment and increment in minus direction.
-          Serial.printf("Exit refinePhasePlus adjdB = %f adjdB_old = %f amplitude = %f phase = %f\n", adjdB, adjdB_old, amplitude, phase);
           print = false;
-//                    state = State::exit;
           state = State::refinePhaseMinus;
           break;
         }
@@ -568,14 +548,10 @@ void RxCalibrate::DoReceiveCalibrate(int calMode, bool radio, bool refine, bool 
 
         case State::refinePhaseMinus:
 
-                print = true;
-        Serial.printf("Enter refinePhaseMinus adjdB = %f adjdB_old = %f amplitude = %f phase = %f\n", adjdB, adjdB_old, amplitude, phase);
-
         if (adjdB < adjdB_old)
         {
           adjdB_old = adjdB;
           phase = phase - 0.001;
-          Serial.printf("Increment refinePhaseMinus adjdB = %f adjdB_old = %f amplitude = %f phase = %f\n", adjdB, adjdB_old, amplitude, phase);
           state = State::refinePhaseMinus;
           break;
         }
@@ -583,12 +559,9 @@ void RxCalibrate::DoReceiveCalibrate(int calMode, bool radio, bool refine, bool 
         {
 
           phase = phase + 0.001; // Put back last increment.
-          Serial.printf("Exit refinePhaseMinus adjdB = %f adjdB_old = %f amplitude = %f phase = %f\n", adjdB, adjdB_old, amplitude, phase);
-          Serial.printf("refinePass = %d\n", refinePass);
           print = false;
           if (refinePass == 2)
           {
-//            writeToCalData(amplitude, phase);
             state = State::setOptimal;
           }
           else
@@ -731,9 +704,6 @@ void RxCalibrate::MakeFFTData() {
 
 
   // End of transmit code.  Begin receive code.
-
-//              Serial.printf("ADC_RX_I.available = %d\n", static_cast<uint32_t>(ADC_RX_I.available()));
-//            Serial.printf("ADC_RX_Q.available = %d\n", static_cast<uint32_t>(ADC_RX_Q.available()));
 
   // Get I16 audio blocks from the record queues and convert them to float.
   // Read in 16 blocks of 128 samples in I and Q if available.
@@ -906,7 +876,6 @@ void RxCalibrate::PlotCalSpectrum(int x1, int cal_bins[3], int capture_bins) {
 
 void RxCalibrate::computeAdjdB()
 {
-  if(print) Serial.printf("computeAdjdB\n");
   float adjdB1{0.0};
   float adjdB2{0.0};
   int counter{0};
@@ -934,8 +903,6 @@ void RxCalibrate::computeAdjdB()
 
     case computeAdjdB::notComputed:
 
-if(print) Serial.printf("notComputed\n");
-
       // Floating point values are equal.
       if (fabs(adjdB1 - adjdB2) < epsilon)
       {
@@ -956,10 +923,7 @@ if(print) Serial.printf("notComputed\n");
 
     case computeAdjdB::valuesEqual:
 
-if(print) Serial.printf("valuesEqual\n");
-
       counter = counter + 1;
-      if(print) Serial.printf("Same value!\n");
       if (counter == 3)
       { // Same value 3 times in a row;       
         adjdBstate = computeAdjdB::computed;
@@ -976,14 +940,8 @@ if(print) Serial.printf("valuesEqual\n");
 
     case computeAdjdB::adjdB2_ne_adjdB1:
 
-if(print) Serial.printf("adjdB2_ne_adjdB1\n");
-
       // Bail out if the numbers get really low and noisy!
       if((adjdB1 < -72.0) and (adjdB2 < -72.0) and autoCal) {
-        if(print) { 
-        Serial.printf("adjdB2_ne_adjdB1 adjdB1 = %f adjdB2 = %f\n", adjdB1, adjdB2);
-        Serial.printf("Bailed out < -70\n");
-        }
         adjdB = -72.0;
         return;  // No reason to do anything else.
         break;
@@ -999,8 +957,6 @@ if(print) Serial.printf("adjdB2_ne_adjdB1\n");
 
       if (fabs(adjdB1 - adjdB2) < 1.0)
       {
-     //   adjdBstate = computeAdjdB::computed;
-     if(print) Serial.printf("adjdB2_ne_adjdB1 adjdB1 = %f adjdB2 = %f\n", adjdB1, adjdB2);
      return;  // No reason to do anything else.
         break;
       }
@@ -1008,10 +964,6 @@ if(print) Serial.printf("adjdB2_ne_adjdB1\n");
       break;
 
       case computeAdjdB::computed:
-
- if(print)     Serial.printf("computed\n");
-
-if(print) Serial.printf("computed adjdB1 = %f adjdB2 = %f\n", adjdB1, adjdB2);
 
       notComputed = false;
 
