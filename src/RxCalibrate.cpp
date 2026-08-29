@@ -600,7 +600,7 @@ void RxCalibrate::DoReceiveCalibrate(int calMode, bool radio, bool refine, bool 
           // Delay exit if in radio calibration to show calibration results for 5 seconds.
           if (radioCal) {
 //            printCalType(autoCal, true);
-            if ((static_cast<int>(milliTimer) - startTimer) < 3000) {  // Show calibration result for 5 seconds at conclusion during Radio Cal.
+            if ((static_cast<int>(milliTimer) - startTimer) < 1000) {  // Show calibration result for 5 seconds at conclusion during Radio Cal.
               state = State::exit;
               break;
             } else {

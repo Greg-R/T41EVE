@@ -79,19 +79,19 @@ public:
   int mode = 0;
   MenuSelect task = MenuSelect::DEFAULT;
   bool autoCal = false;
-  bool refineCal = false;
+//  bool refineCal = false;
   bool radioCal = false;
-  bool averageFlag = false;
+//  bool averageFlag = false;
   bool saveToEeprom = false;
-  int averageCount = 0;
+//  int averageCount = 0;
   bool fftSuccess = false; // A flag for debugging FFT inadequate data problems.
   bool fftActive = true;   // This variable is used to deactive creation of the FFT result.
                            // This is false when desired to push data through the system
                            // to wring out the transient response.
   bool exitManual = false;
   bool firstPass{false};
-  bool print{false};
-  bool extraFFT{false};
+//  bool print{false};
+//  bool extraFFT{false};
 
   // Blue and red bar variables:
   int32_t rx_blue_usb = 128;
