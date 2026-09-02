@@ -247,8 +247,10 @@ void TxCalibrate::writeToCalData(float ichannel, float qchannel)
       CalData.IQCWPhaseCorrectionFactorLSB[ConfigData.currentBand] = qchannel;
     }
     else if (bands.bands[ConfigData.currentBand].sideband == Sideband::UPPER)
+    {
       CalData.IQCWAmpCorrectionFactorUSB[ConfigData.currentBand] = ichannel;
     CalData.IQCWPhaseCorrectionFactorUSB[ConfigData.currentBand] = qchannel;
+    }
   }
   if (mode == 1)
   {
@@ -258,8 +260,10 @@ void TxCalibrate::writeToCalData(float ichannel, float qchannel)
       CalData.IQSSBPhaseCorrectionFactorLSB[ConfigData.currentBand] = qchannel;
     }
     else if (bands.bands[ConfigData.currentBand].sideband == Sideband::UPPER)
+    {
       CalData.IQSSBAmpCorrectionFactorUSB[ConfigData.currentBand] = ichannel;
     CalData.IQSSBPhaseCorrectionFactorUSB[ConfigData.currentBand] = qchannel;
+    }
   }
 }
 
@@ -706,7 +710,7 @@ void TxCalibrate::DoXmitCarrierCalibrate(int calMode, bool radio, bool toEeprom)
           // Clear the vector before moving to phase.
           std::fill(sweepVectorValue.begin(), sweepVectorValue.end(), 0);
           std::fill(sweepVector.begin(), sweepVector.end(), 0.0);
-          qDCoffset = -maxSweepPhase;       // The starting value for phase.
+          qDCoffset = -maxSweepPhase + iDCoffset; // The starting value for phase.
           adjdB_min = 0.0;
           state = State::initialSweepPhase; // Initial I channel sweep done; proceed to initial Q sweep.
           break;
@@ -715,7 +719,7 @@ void TxCalibrate::DoXmitCarrierCalibrate(int calMode, bool radio, bool toEeprom)
         break;
 
       case State::initialSweepPhase:
-        sweepVectorValue[index] = qDCoffset; // Start at -maxSweepPhase.
+        sweepVectorValue[index] = qDCoffset; // Start at -maxSweepPhase + iDCoffset.
         sweepVector[index] = adjdB;
         if((adjdB < adjdB_min) and (adjdB < -20.0)) adjdB_min = adjdB;
         if((adjdB - adjdB_min) > 2.0) qDCoffset = maxSweepAmp;
@@ -908,6 +912,7 @@ void TxCalibrate::RadioCal(int mode)
 
   uint32_t currentBandTemp = ConfigData.currentBand;
   uint32_t centerFreqTemp = ConfigData.centerFreq;
+  Sideband sidebandTemp = bands.bands[ConfigData.currentBand].sideband;
 
   // Calibrate all bands.
   for (int band : ham_bands)
@@ -923,18 +928,23 @@ void TxCalibrate::RadioCal(int mode)
       bands.bands[ConfigData.currentBand].sideband = Sideband::LOWER; // Calibrate lower sideband for 80M and 40M.
       rxcalibrater.DoReceiveCalibrate(mode, true, false);
       txcalibrater.DoXmitCalibrate(mode, true, false);
+      txcalibrater.DoXmitCarrierCalibrate(mode, true, false);
     }
     else
       bands.bands[ConfigData.currentBand].sideband = Sideband::UPPER;
-
+    
+    // 20M and above.
     bands.bands[ConfigData.currentBand].sideband = Sideband::UPPER;
     rxcalibrater.DoReceiveCalibrate(mode, true, false); // Include 80M and 40M due to FT8.
     txcalibrater.DoXmitCalibrate(mode, true, false);
-    txcalibrater.DoXmitCarrierCalibrate(mode, true, false);
+    if(band > 1) txcalibrater.DoXmitCarrierCalibrate(mode, true, false);  // Don't re-do 80M and 40M.
   }
 
   ConfigData.currentBand = currentBandTemp;
   ConfigData.centerFreq = centerFreqTemp;
+  bands.bands[ConfigData.currentBand].sideband = sidebandTemp;
+
+  button.BandSet(ConfigData.currentBand);
 
   // Set flag for initial calibration completed.
   if (mode == 0)
