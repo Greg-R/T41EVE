@@ -249,7 +249,7 @@ void TxCalibrate::writeToCalData(float ichannel, float qchannel)
     else if (bands.bands[ConfigData.currentBand].sideband == Sideband::UPPER)
     {
       CalData.IQCWAmpCorrectionFactorUSB[ConfigData.currentBand] = ichannel;
-    CalData.IQCWPhaseCorrectionFactorUSB[ConfigData.currentBand] = qchannel;
+      CalData.IQCWPhaseCorrectionFactorUSB[ConfigData.currentBand] = qchannel;
     }
   }
   if (mode == 1)
@@ -262,7 +262,7 @@ void TxCalibrate::writeToCalData(float ichannel, float qchannel)
     else if (bands.bands[ConfigData.currentBand].sideband == Sideband::UPPER)
     {
       CalData.IQSSBAmpCorrectionFactorUSB[ConfigData.currentBand] = ichannel;
-    CalData.IQSSBPhaseCorrectionFactorUSB[ConfigData.currentBand] = qchannel;
+      CalData.IQSSBPhaseCorrectionFactorUSB[ConfigData.currentBand] = qchannel;
     }
   }
 }
@@ -370,8 +370,8 @@ void TxCalibrate::DoXmitCalibrate(int calMode, bool radio, bool toEeprom)
         std::fill(sweepVectorValue.begin(), sweepVectorValue.end(), 0.0);
         std::fill(sweepVector.begin(), sweepVector.end(), 0.0);
         warmup = warmup + 1;
-          phase = 0.0 + maxSweepPhase;   //  Need to use these values during warmup
-          amplitude = 1.0 + maxSweepAmp; //  so adjdB and adjdB_avg are forced upwards.
+        phase = 0.0 + maxSweepPhase;   //  Need to use these values during warmup
+        amplitude = 1.0 + maxSweepAmp; //  so adjdB and adjdB_avg are forced upwards.
         state = State::warmup;
         if (warmup == 1)         // Was 16.
           state = State::state0; // Proceed with initial calibration.
@@ -385,20 +385,23 @@ void TxCalibrate::DoXmitCalibrate(int calMode, bool radio, bool toEeprom)
         adjdB = 0;
         //        adjdB_avg = 0;
         index = 0;
-        IQCalType = 0;                  // IQ Gain
-        xmitIncrement = 0.01;           // Reset in case initial cal is run twice.
+        IQCalType = 0;        // IQ Gain
+        xmitIncrement = 0.01; // Reset in case initial cal is run twice.
         adjdB_min = 0.0;
         state = State::initialSweepAmp; // Let this fall through.
 
       case State::initialSweepAmp:
         sweepVectorValue[index] = amplitude;
         sweepVector[index] = adjdB;
-        if(adjdB < adjdB_min) adjdB_min = adjdB;
-        if((adjdB - adjdB_min) > 2) amplitude = maxSweepAmp;
+        if (adjdB < adjdB_min)
+          adjdB_min = adjdB;
+        if ((adjdB - adjdB_min) > 2)
+          amplitude = maxSweepAmp;
         // Increment for next measurement.
         index = index + 1;
         amplitude = amplitude + xmitIncrement; // Next one!
-        if(adjdB > -35.0) amplitude = amplitude + 2.0 * xmitIncrement;
+        if (adjdB > -35.0)
+          amplitude = amplitude + 2.0 * xmitIncrement;
         // Done with initial sweep, move to initial sweep of phase.
         if (abs(amplitude - 1.0) > maxSweepAmp)
         {                                                                    // Needs to be subtracted from 1.0.
@@ -414,7 +417,7 @@ void TxCalibrate::DoXmitCalibrate(int calMode, bool radio, bool toEeprom)
           // Clear the vector before moving to phase.
           std::fill(sweepVectorValue.begin(), sweepVectorValue.end(), 0.0);
           std::fill(sweepVector.begin(), sweepVector.end(), 0.0);
-          xmitIncrement = 0.01;             // The initial increment can be reduced because the sweep range is half.
+          xmitIncrement = 0.01; // The initial increment can be reduced because the sweep range is half.
           adjdB_old = 0.0;
           adjdB_min = 0.0;
           state = State::initialSweepPhase; // Initial sweeps done; proceed to refine phase.
@@ -427,12 +430,14 @@ void TxCalibrate::DoXmitCalibrate(int calMode, bool radio, bool toEeprom)
       case State::initialSweepPhase:
         sweepVectorValue[index] = phase;
         sweepVector[index] = adjdB;
-        if(adjdB < adjdB_min) adjdB_min = adjdB;
-        if((adjdB - adjdB_min) > 2) phase = maxSweepPhase;
+        if (adjdB < adjdB_min)
+          adjdB_min = adjdB;
+        if ((adjdB - adjdB_min) > 2)
+          phase = maxSweepPhase;
         index = index + 1;
         // Increment for the next measurement.
         phase = phase + xmitIncrement;
-//        if(adjdB > 35.0) phase = phase + 2.0 * xmitIncrement;
+        //        if(adjdB > 35.0) phase = phase + 2.0 * xmitIncrement;
         if (phase > maxSweepPhase)
         {
           result = std::min_element(sweepVector.begin(), sweepVector.end());
@@ -487,7 +492,7 @@ void TxCalibrate::DoXmitCalibrate(int calMode, bool radio, bool toEeprom)
         else
         {
           amplitude = amplitude + 0.001; // Put back last step.
-          phase = phase + 0.001; // Set for refinePhasePlus.
+          phase = phase + 0.001;         // Set for refinePhasePlus.
           state = State::refinePhasePlus;
           break;
         }
@@ -592,7 +597,7 @@ void TxCalibrate::DoXmitCalibrate(int calMode, bool radio, bool toEeprom)
 void TxCalibrate::DoXmitCarrierCalibrate(int calMode, bool radio, bool toEeprom)
 {
   float32_t maxSweepAmp = 0.1;
-  float32_t maxSweepPhase = 0.1;
+  float32_t maxSweepPhase = 0.05;
   float adjdB_old{0};
   float adjdB_min{0};
   carrIncrement = 0.005;       // Initial carrier increment.
@@ -661,8 +666,8 @@ void TxCalibrate::DoXmitCarrierCalibrate(int calMode, bool radio, bool toEeprom)
         std::fill(sweepVectorValue.begin(), sweepVectorValue.end(), 0);
         std::fill(sweepVector.begin(), sweepVector.end(), 0.0);
         warmup = warmup + 1;
-          qDCoffset = maxSweepPhase; //  Need to use these values during warmup
-          iDCoffset = maxSweepAmp;   //  so adjdB and adjdB_avg are forced upwards.
+        qDCoffset = maxSweepPhase; //  Need to use these values during warmup
+        iDCoffset = maxSweepAmp;   //  so adjdB and adjdB_avg are forced upwards.
         state = State::warmup;
         if (warmup == 1)
           state = State::state0;
@@ -681,16 +686,19 @@ void TxCalibrate::DoXmitCarrierCalibrate(int calMode, bool radio, bool toEeprom)
       case State::initialSweepAmp:
         sweepVectorValue[index] = iDCoffset; // Starting at -maxSweepAmp.
         sweepVector[index] = adjdB;          // Already computed in warm-up for index 0.
-        if((adjdB < adjdB_min) and (adjdB < -20.0)) adjdB_min = adjdB;
-        if((adjdB - adjdB_min) > 2.0) iDCoffset = maxSweepAmp;
+        if ((adjdB < adjdB_min) and (adjdB < -20.0))
+          adjdB_min = adjdB;
+        if ((adjdB - adjdB_min) > 2.0)
+          iDCoffset = maxSweepAmp;
         Serial.printf("adjdB = %f adjdB_min = %f\n", adjdB, adjdB_min);
         index = index + 1;
         // Increment for next measurement.
         iDCoffset = iDCoffset + carrIncrement;
         qDCoffset = qDCoffset + carrIncrement;
-        if(adjdB > -25.0) {
-        iDCoffset = iDCoffset + 2.0 * carrIncrement;
-        qDCoffset = qDCoffset + 2.0 * carrIncrement;
+        if (adjdB > -25.0)
+        {
+          iDCoffset = iDCoffset + 2.0 * carrIncrement;
+          qDCoffset = qDCoffset + 2.0 * carrIncrement;
         }
         // Go to Q channel when I channel sweep is finished.
         if (iDCoffset > maxSweepAmp)
@@ -721,14 +729,16 @@ void TxCalibrate::DoXmitCarrierCalibrate(int calMode, bool radio, bool toEeprom)
       case State::initialSweepPhase:
         sweepVectorValue[index] = qDCoffset; // Start at -maxSweepPhase + iDCoffset.
         sweepVector[index] = adjdB;
-        if((adjdB < adjdB_min) and (adjdB < -20.0)) adjdB_min = adjdB;
-        if((adjdB - adjdB_min) > 2.0) qDCoffset = maxSweepAmp;
+        if ((adjdB < adjdB_min) and (adjdB < -20.0))
+          adjdB_min = adjdB;
+        if ((adjdB - adjdB_min) > 2.0)
+          qDCoffset = maxSweepAmp;
         index = index + 1;
         // Increment for the next measurement.
         qDCoffset = qDCoffset + carrIncrement;
-//        if(adjdB > -25.0) {
-//        qDCoffset = qDCoffset + 2.0 * carrIncrement;
-//        }
+        //        if(adjdB > -25.0) {
+        //        qDCoffset = qDCoffset + 2.0 * carrIncrement;
+        //        }
         if (qDCoffset > maxSweepPhase)
         {
           result = std::min_element(sweepVector.begin(), sweepVector.end());
@@ -923,21 +933,29 @@ void TxCalibrate::RadioCal(int mode)
     ConfigData.centerFreq = TxRxFreq;
     SetFreq();
     SetBandRelay();
-    if (band < 2)
+    if (band < 2) // CW and SSB both calibrated LSB.
     {
       bands.bands[ConfigData.currentBand].sideband = Sideband::LOWER; // Calibrate lower sideband for 80M and 40M.
       rxcalibrater.DoReceiveCalibrate(mode, true, false);
+      txcalibrater.DoXmitCarrierCalibrate(mode, true, false);
+      txcalibrater.DoXmitCalibrate(mode, true, false);
+    }
+
+    if (band < 2 and mode == 1) // SSB calibrated USB (for FT8).
+    {
+      bands.bands[ConfigData.currentBand].sideband = Sideband::UPPER; // Calibrate lower sideband for 80M and 40M.
+      rxcalibrater.DoReceiveCalibrate(mode, true, false);
+      txcalibrater.DoXmitCarrierCalibrate(mode, true, false);
+      txcalibrater.DoXmitCalibrate(mode, true, false);
+    }
+
+    if (band > 1)
+    {
+      bands.bands[ConfigData.currentBand].sideband = Sideband::UPPER;
+      rxcalibrater.DoReceiveCalibrate(mode, true, false); // Include 80M and 40M due to FT8.
       txcalibrater.DoXmitCalibrate(mode, true, false);
       txcalibrater.DoXmitCarrierCalibrate(mode, true, false);
     }
-    else
-      bands.bands[ConfigData.currentBand].sideband = Sideband::UPPER;
-    
-    // 20M and above.
-    bands.bands[ConfigData.currentBand].sideband = Sideband::UPPER;
-    rxcalibrater.DoReceiveCalibrate(mode, true, false); // Include 80M and 40M due to FT8.
-    txcalibrater.DoXmitCalibrate(mode, true, false);
-    if(band > 1) txcalibrater.DoXmitCarrierCalibrate(mode, true, false);  // Don't re-do 80M and 40M.
   }
 
   ConfigData.currentBand = currentBandTemp;
@@ -1284,4 +1302,3 @@ void TxCalibrate::computeAdjdB()
     }
   } // end while
 }
-
