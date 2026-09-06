@@ -364,9 +364,9 @@ void TxCalibrate::DoXmitCalibrate(int calMode, bool radio, bool toEeprom)
 
     // This function takes care of button presses and resultant control of the rest of the process.
     // The buttons are polled by the while loop.
-    TxCalibrate::buttonTasks(); // This takes care of manual calls to the initial or refinement calibrations.
-                                // Exit from manual calibration by button push.
-    if (exitManual == true)
+    TxCalibrate::buttonTasks();
+
+    if (exitManual == true) // Exit from manual calibration by button push.
     {
       TxCalibrate::CalibrateEpilogue();
       return;
