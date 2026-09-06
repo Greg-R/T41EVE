@@ -1247,6 +1247,18 @@ void loop()
     if (radioState == RadioState::CW_TRANSMIT_STRAIGHT_STATE and lastState == RadioState::CW_RECEIVE_STATE)
       SetAudioOperatingState(radioState);
 
+    // This covers coming out of calibration.
+    if (radioState == RadioState::CW_RECEIVE_STATE and lastState == RadioState::NOSTATE)
+      SetAudioOperatingState(radioState);
+    if (radioState == RadioState::SSB_RECEIVE_STATE and lastState == RadioState::NOSTATE)
+      SetAudioOperatingState(radioState);
+    if (radioState == RadioState::FT8_RECEIVE_STATE and lastState == RadioState::NOSTATE)
+      SetAudioOperatingState(radioState);
+    if (radioState == RadioState::SAM_RECEIVE_STATE and lastState != RadioState::NOSTATE)
+      SetAudioOperatingState(radioState);
+    if (radioState == RadioState::AM_RECEIVE_STATE and lastState != RadioState::NOSTATE)
+      SetAudioOperatingState(radioState);
+
     if (radioState == RadioState::CW_RECEIVE_STATE and lastState == RadioState::CW_TRANSMIT_KEYER_STATE)
       SetAudioOperatingState(radioState);
     if (radioState == RadioState::CW_TRANSMIT_KEYER_STATE and lastState == RadioState::CW_RECEIVE_STATE)
