@@ -175,7 +175,7 @@ void TxCalibrate::CalibrateEpilogue()
     eeprom.CalDataWrite(); // Save calibration numbers and configuration.  KF5N August 12, 2023
   calOnFlag = false;
   fftOffset = 0; // Some reboots may be caused by large fftOffset values when Auto-Spectrum is on.
-  ResetFlipFlops();
+//  ResetFlipFlops();
   bands.bands[ConfigData.currentBand].sideband = tempSideband;
   lastState = RadioState::NOSTATE; // This is required due to the function deactivating the receiver.  This forces a pass through the receiver set-up code.  KF5N October 16, 2023
   radioState = tempState;
