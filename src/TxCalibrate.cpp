@@ -175,11 +175,9 @@ void TxCalibrate::CalibrateEpilogue()
     eeprom.CalDataWrite(); // Save calibration numbers and configuration.  KF5N August 12, 2023
   calOnFlag = false;
   fftOffset = 0; // Some reboots may be caused by large fftOffset values when Auto-Spectrum is on.
-                 //  ResetFlipFlops();
   bands.bands[ConfigData.currentBand].sideband = tempSideband;
   lastState = RadioState::NOSTATE; // This is required due to the function deactivating the receiver.  This forces a pass through the receiver set-up code.  KF5N October 16, 2023
   radioState = tempState;
-  SetAudioOperatingState(radioState); // Restore state.
   ConfigData.spectrum_zoom = userZoomIndex;
   button.ButtonZoom(); // Restore the user's zoom setting.  Note that this function also modifies ConfigData.spectrum_zoom.
   powerUp = true;
@@ -315,32 +313,31 @@ void TxCalibrate::DoXmitCalibrate(int calMode, bool radio, bool toEeprom)
   int refinePass{0};
 
   SetFreqCal(freqOffset);
-  // Get current values into the iOptimal and qOptimal amplitude and phase working variables.
-  // This is only useful for refinement.
+  // Get current values into the amplitude and phase working variables.
   if (mode == 0)
   {
     if (bands.bands[ConfigData.currentBand].sideband == Sideband::LOWER)
     {
-      iOptimal = amplitude = CalData.IQCWAmpCorrectionFactorLSB[ConfigData.currentBand];
-      qOptimal = phase = CalData.IQCWPhaseCorrectionFactorLSB[ConfigData.currentBand];
+      amplitude = CalData.IQCWAmpCorrectionFactorLSB[ConfigData.currentBand];
+      phase = CalData.IQCWPhaseCorrectionFactorLSB[ConfigData.currentBand];
     }
     else if (bands.bands[ConfigData.currentBand].sideband == Sideband::UPPER)
     {
-      iOptimal = amplitude = CalData.IQCWAmpCorrectionFactorUSB[ConfigData.currentBand];
-      qOptimal = phase = CalData.IQCWPhaseCorrectionFactorUSB[ConfigData.currentBand];
+      amplitude = CalData.IQCWAmpCorrectionFactorUSB[ConfigData.currentBand];
+      phase = CalData.IQCWPhaseCorrectionFactorUSB[ConfigData.currentBand];
     }
   }
   else if (mode == 1)
   {
     if (bands.bands[ConfigData.currentBand].sideband == Sideband::LOWER)
     {
-      iOptimal = amplitude = CalData.IQSSBAmpCorrectionFactorLSB[ConfigData.currentBand];
-      qOptimal = phase = CalData.IQSSBPhaseCorrectionFactorLSB[ConfigData.currentBand];
+      amplitude = CalData.IQSSBAmpCorrectionFactorLSB[ConfigData.currentBand];
+      phase = CalData.IQSSBPhaseCorrectionFactorLSB[ConfigData.currentBand];
     }
     else if (bands.bands[ConfigData.currentBand].sideband == Sideband::UPPER)
     {
-      iOptimal = amplitude = CalData.IQSSBAmpCorrectionFactorUSB[ConfigData.currentBand];
-      qOptimal = phase = CalData.IQSSBPhaseCorrectionFactorUSB[ConfigData.currentBand];
+      amplitude = CalData.IQSSBAmpCorrectionFactorUSB[ConfigData.currentBand];
+      phase = CalData.IQSSBPhaseCorrectionFactorUSB[ConfigData.currentBand];
     }
   }
   // Run this so Phase shows from beginning.  Get the value for the current sideband.
@@ -407,7 +404,7 @@ void TxCalibrate::DoXmitCalibrate(int calMode, bool radio, bool toEeprom)
       case State::initialSweepAmp:
         sweepVectorValue[index] = amplitude;
         sweepVector[index] = adjdB;
-        if (adjdB < adjdB_min)
+        if ((adjdB < adjdB_min) and (adjdB < -20.0))
           adjdB_min = adjdB;
         if ((adjdB - adjdB_min) > 2)
           amplitude = maxSweepAmp;
@@ -444,7 +441,7 @@ void TxCalibrate::DoXmitCalibrate(int calMode, bool radio, bool toEeprom)
       case State::initialSweepPhase:
         sweepVectorValue[index] = phase;
         sweepVector[index] = adjdB;
-        if (adjdB < adjdB_min)
+        if ((adjdB < adjdB_min) and (adjdB < -20.0))
           adjdB_min = adjdB;
         if ((adjdB - adjdB_min) > 2)
           phase = maxSweepPhase;
@@ -463,7 +460,7 @@ void TxCalibrate::DoXmitCalibrate(int calMode, bool radio, bool toEeprom)
           IQCalType = 0;
           adjdB = 0.0;
           index = 0;
-          xmitIncrement = 0.01; // Use smaller increment in refinement.
+          xmitIncrement = 0.01;
           refinePass = 0;
           writeToCalData(amplitude, phase); // Optimal values at end of initial amplitude and phase sweeps.
           computeAdjdB();                   // This is to flush out transient from phase last set at extreme.
@@ -626,7 +623,6 @@ void TxCalibrate::DoXmitCarrierCalibrate(int calMode, bool radio, bool toEeprom)
   TxCalibrate::CalibratePreamble(2); // Set zoom to 4X.  Note this is using 48ksps sample rate.
   int freqOffset = 0;                // Calibration tone same as regular modulation tone.
   calTypeFlag = 2;                   // Carrier calibration
-                                     //  ResetFlipFlops();
   radioState = RadioState::SSB_TRANSMIT_STATE;
   SetFreqCal(freqOffset);
   // Get current values into the iDCoffset and qDCoffset working variables.
@@ -887,7 +883,7 @@ void TxCalibrate::DoXmitCarrierCalibrate(int calMode, bool radio, bool toEeprom)
         if (radioCal)
         {
           if ((static_cast<int>(milliTimer) - startTimer) < 100)
-          { // Show calibration at conclusion during Radio Cal.
+          { // Show calibration result at conclusion during Radio Cal.
             state = State::exit;
             break;
           }
