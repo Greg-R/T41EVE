@@ -71,6 +71,7 @@ void MenuProc::CalibrateOptions()
 
   case 0:                                    // Calibrate Frequency  - uses WWV
     evemenucontrol.runOptionFunction = true; // Runs in loop().
+    evemenucontrol.runInDSP = true;
     parameterAdjustFlag = true;              // Prevents multiple EEPROM writes.
     CalData.freqCorrectionFactor = GetEncoderValueLive(-200000, 200000, CalData.freqCorrectionFactor, increment);
     if (CalData.freqCorrectionFactor != freqCorrectionFactorOld)
@@ -86,6 +87,7 @@ void MenuProc::CalibrateOptions()
         calibrateFlag = false;
         parameterAdjustFlag = false;              // Save to EEPROM at conclusion of this function.
         evemenucontrol.runOptionFunction = false; // Deactivate function.
+        evemenucontrol.runInDSP = false;
         subMenuChoice = 0;
       }
     }
@@ -94,6 +96,7 @@ void MenuProc::CalibrateOptions()
 
   case 1:                                    // CW PA Cal.  Set using encoder.
     evemenucontrol.runOptionFunction = true; // Runs in loop().
+    evemenucontrol.runInDSP = true;
     parameterAdjustFlag = true;              // Prevents multiple EEPROM writes.
     CalData.CWPowerCalibrationFactor[ConfigData.currentBand] = GetEncoderValueLive(0.0, 1.0, CalData.CWPowerCalibrationFactor[ConfigData.currentBand], 0.01);
     ConfigData.powerOutCW[ConfigData.currentBand] = sqrt(ConfigData.transmitPowerLevel / 20.0) * CalData.CWPowerCalibrationFactor[ConfigData.currentBand];
@@ -107,6 +110,7 @@ void MenuProc::CalibrateOptions()
         calibrateFlag = false;
         parameterAdjustFlag = false;
         evemenucontrol.runOptionFunction = false; // Deactivate function.
+        evemenucontrol.runInDSP = false;
         subMenuChoice = 0;
       }
     }
@@ -114,29 +118,32 @@ void MenuProc::CalibrateOptions()
     break;
 
   case 2:                                                    // CW IQ Receive Cal - Gain and Phase
+    evemenucontrol.runOptionFunction = false;                // Deactivate function.
+    evemenucontrol.runInDSP = false;
     rxcalibrater.DoReceiveCalibrate(0, false, false); // This function was significantly revised.  KF5N August 16, 2023
     parameterAdjustFlag = false;                             // Save to EEPROM at conclusion of this function.
-    evemenucontrol.runOptionFunction = false;                // Deactivate function.
     subMenuChoice = 0;
     break;
 
   case 3: // CW Xmit Carrier calibration.  Parameters are (mode, radioCal, refineCal, saveToEeprom)
-
+    evemenucontrol.runOptionFunction = false; // Deactivate function.
+    evemenucontrol.runInDSP = false;
     txcalibrater.DoXmitCarrierCalibrate(0, false, false);
     parameterAdjustFlag = false;              // Save to EEPROM at conclusion of this function.
-    evemenucontrol.runOptionFunction = false; // Deactivate function.
     subMenuChoice = 0;
     break;
 
   case 4:
+    evemenucontrol.runOptionFunction = false;             // Deactivate function.
+    evemenucontrol.runInDSP = false;
     txcalibrater.DoXmitCalibrate(0, false, false); // This function was significantly revised.  KF5N August 16, 2023
     parameterAdjustFlag = false;                          // Save to EEPROM at conclusion of this function.
-    evemenucontrol.runOptionFunction = false;             // Deactivate function.
     subMenuChoice = 0;
     break;
 
   case 5:                                    // SSB PA Cal.  Set using encoder.
     evemenucontrol.runOptionFunction = true; // Runs in loop().
+    evemenucontrol.runInDSP = true;
     parameterAdjustFlag = true;              // Prevents multiple EEPROM writes.
     CalData.SSBPowerCalibrationFactor[ConfigData.currentBand] = GetEncoderValueLive(0.0, 1.0, CalData.SSBPowerCalibrationFactor[ConfigData.currentBand], 0.01);
     ConfigData.powerOutSSB[ConfigData.currentBand] = sqrt(ConfigData.transmitPowerLevel / 20.0) * CalData.SSBPowerCalibrationFactor[ConfigData.currentBand];
@@ -149,6 +156,7 @@ void MenuProc::CalibrateOptions()
         calibrateFlag = false;
         parameterAdjustFlag = false;              // Save to EEPROM at conclusion of this function.
         evemenucontrol.runOptionFunction = false; // Deactivate function.
+        evemenucontrol.runInDSP = false;
         subMenuChoice = 0;
       }
     }
@@ -159,6 +167,7 @@ void MenuProc::CalibrateOptions()
     rxcalibrater.DoReceiveCalibrate(1, false, false); // This function was significantly revised.  KF5N August 16, 2023
     parameterAdjustFlag = false;                             // Save to EEPROM at conclusion of this function.
     evemenucontrol.runOptionFunction = false;                // Deactivate function.
+    evemenucontrol.runInDSP = false;
     subMenuChoice = 0;
 
     break;
@@ -167,6 +176,7 @@ void MenuProc::CalibrateOptions()
     txcalibrater.DoXmitCarrierCalibrate(1, false, false);
     parameterAdjustFlag = false;              // Save to EEPROM at conclusion of this function.
     evemenucontrol.runOptionFunction = false; // Deactivate function.
+    evemenucontrol.runInDSP = false;
     subMenuChoice = 0;
     break;
 
@@ -174,6 +184,7 @@ void MenuProc::CalibrateOptions()
     txcalibrater.DoXmitCalibrate(1, false, false);
     parameterAdjustFlag = false;              // Save to EEPROM at conclusion of this function.
     evemenucontrol.runOptionFunction = false; // Deactivate function.
+    evemenucontrol.runInDSP = false;
     subMenuChoice = 0;
     break;
 
@@ -182,6 +193,7 @@ void MenuProc::CalibrateOptions()
     calibrateFlag = false;
     parameterAdjustFlag = false;              // Save to EEPROM at conclusion of this function.
     evemenucontrol.runOptionFunction = false; // Deactivate function.
+    evemenucontrol.runInDSP = false;
     subMenuChoice = 0;
     break;
 
@@ -190,11 +202,13 @@ void MenuProc::CalibrateOptions()
     calibrateFlag = false;
     parameterAdjustFlag = false;              // Save to EEPROM at conclusion of this function.
     evemenucontrol.runOptionFunction = false; // Deactivate function.
+    evemenucontrol.runInDSP = false;
     subMenuChoice = 0;
     break;
 
   case 11:                                   // dBm level cal.
     evemenucontrol.runOptionFunction = true; // Runs in loop().
+    evemenucontrol.runInDSP = true;
     CalData.dBm_calibration = GetEncoderValueLive(0, 100, CalData.dBm_calibration, 1);
     if (CalData.dBm_calibration != freqCorrectionFactorOld)
     {
@@ -208,6 +222,7 @@ void MenuProc::CalibrateOptions()
         calibrateFlag = false;
         parameterAdjustFlag = false;              // Save to EEPROM at conclusion of this function.
         evemenucontrol.runOptionFunction = false; // Deactivate function.
+        evemenucontrol.runInDSP = false;
         subMenuChoice = 0;
       }
     }
@@ -218,11 +233,13 @@ void MenuProc::CalibrateOptions()
     calibrateFlag = false;
     parameterAdjustFlag = false;              // Save to EEPROM at conclusion of this function.
     evemenucontrol.runOptionFunction = false; // Deactivate function.
+    evemenucontrol.runInDSP = false;
     subMenuChoice = 0;
     break;
 
   case 13:                                   // Set button repeat rate
     evemenucontrol.runOptionFunction = true; // Runs in loop().
+    evemenucontrol.runInDSP = true;
     CalData.buttonRepeatDelay = 1000 * GetEncoderValueLive(0, 5000, CalData.buttonRepeatDelay / 1000, 1);
     menu = button.readButton();
     if (menu != MenuSelect::BOGUS_PIN_READ)
@@ -232,6 +249,7 @@ void MenuProc::CalibrateOptions()
         calibrateFlag = false;
         parameterAdjustFlag = false;              // Save to EEPROM at conclusion of this function.
         evemenucontrol.runOptionFunction = false; // Deactivate function.
+        evemenucontrol.runInDSP = false;
         subMenuChoice = 0;
       }
     }
@@ -242,6 +260,7 @@ void MenuProc::CalibrateOptions()
     calibrateFlag = false;
     parameterAdjustFlag = false;              // Save to EEPROM at conclusion of this function.
     evemenucontrol.runOptionFunction = false; // Deactivate function.
+    evemenucontrol.runInDSP = false;
     subMenuChoice = 0;
     return; // Do not save to EEPROM.
     break;

@@ -301,6 +301,7 @@ struct EVEMenuControl
   bool subMenuSelect{false};
   bool runOptionFunction{false};
   bool runButtonFunction{false};
+  bool runInDSP{false};
 };
 
 extern EVEMenuControl evemenucontrol;
