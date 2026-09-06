@@ -63,7 +63,6 @@ public:
   float sineBuffer[512]; // Used to generate CW tone.
   q15_t rawSpectrumPeak = 0;
   uint32_t index = 0;
-  uint32_t count = 0;
   uint32_t warmup = 0;
   bool corrChange = false;
   Sideband tempSideband;

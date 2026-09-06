@@ -175,7 +175,7 @@ void TxCalibrate::CalibrateEpilogue()
     eeprom.CalDataWrite(); // Save calibration numbers and configuration.  KF5N August 12, 2023
   calOnFlag = false;
   fftOffset = 0; // Some reboots may be caused by large fftOffset values when Auto-Spectrum is on.
-//  ResetFlipFlops();
+                 //  ResetFlipFlops();
   bands.bands[ConfigData.currentBand].sideband = tempSideband;
   lastState = RadioState::NOSTATE; // This is required due to the function deactivating the receiver.  This forces a pass through the receiver set-up code.  KF5N October 16, 2023
   radioState = tempState;
@@ -194,7 +194,6 @@ void TxCalibrate::buttonTasks()
   // Activate initial automatic calibration.
   case MenuSelect::ZOOM: // 2nd row, 1st column button
     TxCalibrate::autoCal = true;
-    count = 0;
     warmup = 0;
     index = 0;
     state = State::warmup;
@@ -202,7 +201,6 @@ void TxCalibrate::buttonTasks()
   // Automatic calibration using previously stored values.
   case MenuSelect::FILTER: // 3rd row, 1st column button
     TxCalibrate::autoCal = true;
-    count = 0;
     warmup = 0;
     index = 0;
     state = State::warmup;
@@ -265,6 +263,24 @@ void TxCalibrate::writeToCalData(float ichannel, float qchannel)
       CalData.IQSSBPhaseCorrectionFactorUSB[ConfigData.currentBand] = qchannel;
     }
   }
+
+  // Apply amplitude and phase corrections.
+  AudioNoInterrupts();
+  if (TxCalibrate::mode == 0)
+  {
+    if (bands.bands[ConfigData.currentBand].sideband == Sideband::LOWER)
+      cessb1.setIQCorrections(true, CalData.IQCWAmpCorrectionFactorLSB[ConfigData.currentBandA], CalData.IQCWPhaseCorrectionFactorLSB[ConfigData.currentBandA], 0.0);
+    if (bands.bands[ConfigData.currentBand].sideband == Sideband::UPPER)
+      cessb1.setIQCorrections(true, CalData.IQCWAmpCorrectionFactorUSB[ConfigData.currentBandA], CalData.IQCWPhaseCorrectionFactorUSB[ConfigData.currentBandA], 0.0);
+  }
+  if (TxCalibrate::mode == 1)
+  {
+    if (bands.bands[ConfigData.currentBand].sideband == Sideband::LOWER)
+      cessb1.setIQCorrections(true, CalData.IQSSBAmpCorrectionFactorLSB[ConfigData.currentBandA], CalData.IQSSBPhaseCorrectionFactorLSB[ConfigData.currentBandA], 0.0);
+    if (bands.bands[ConfigData.currentBand].sideband == Sideband::UPPER)
+      cessb1.setIQCorrections(true, CalData.IQSSBAmpCorrectionFactorUSB[ConfigData.currentBandA], CalData.IQSSBPhaseCorrectionFactorUSB[ConfigData.currentBandA], 0.0);
+  }
+  AudioInterrupts();
 }
 
 /*****
@@ -296,7 +312,6 @@ void TxCalibrate::DoXmitCalibrate(int calMode, bool radio, bool toEeprom)
   std::vector<float>::iterator result;
   TxCalibrate::CalibratePreamble(2); // Set zoom to 4X.  Sample rate 48ksps.
   calTypeFlag = 1;                   // TX sideband
-                                     //  int ringOutCounter = 0;
   int refinePass{0};
 
   SetFreqCal(freqOffset);
@@ -335,7 +350,6 @@ void TxCalibrate::DoXmitCalibrate(int calMode, bool radio, bool toEeprom)
   if (radioCal)
   {
     autoCal = true;
-    count = 0;
     warmup = 0;
     index = 0; // Why is index = 1???
     IQCalType = 0;
@@ -544,18 +558,17 @@ void TxCalibrate::DoXmitCalibrate(int calMode, bool radio, bool toEeprom)
         break;
 
       case State::setOptimal:
-        count = 0; // In case automatic calibration is run again.
         // Write the optimal values to the data structure.
         writeToCalData(iOptimal, qOptimal);
         state = State::exit;
         startTimer = static_cast<int>(milliTimer); // Start result view timer.
         break;
       case State::exit:
-        // Delay exit if in radio calibration to show calibration results for 5 seconds, and then exit.
+        // Delay exit if in radio calibration to show calibration results, and then exit.
         if (radioCal)
         {
           if ((static_cast<int>(milliTimer) - startTimer) < 100)
-          { // Show calibration result for 5 seconds at conclusion during Radio Cal.
+          { // Show calibration result at conclusion during Radio Cal.
             state = State::exit;
             break;
           }
@@ -634,7 +647,6 @@ void TxCalibrate::DoXmitCarrierCalibrate(int calMode, bool radio, bool toEeprom)
   if (radioCal)
   {
     autoCal = true;
-    count = 0;
     warmup = 0;
     index = 0;
     IQCalType = 0;
@@ -871,11 +883,11 @@ void TxCalibrate::DoXmitCarrierCalibrate(int calMode, bool radio, bool toEeprom)
         startTimer = static_cast<int>(milliTimer); // Start result view timer.
         break;
       case State::exit:
-        // Delay exit if in radio calibration to show calibration results for 5 seconds and then exit.
+        // Delay exit if in radio calibration to show calibration results and then exit.
         if (radioCal)
         {
           if ((static_cast<int>(milliTimer) - startTimer) < 100)
-          { // Show calibration result for 5 seconds at conclusion during Radio Cal.
+          { // Show calibration at conclusion during Radio Cal.
             state = State::exit;
             break;
           }
@@ -923,6 +935,7 @@ void TxCalibrate::RadioCal(int mode)
   uint32_t currentBandTemp = ConfigData.currentBand;
   uint32_t centerFreqTemp = ConfigData.centerFreq;
   Sideband sidebandTemp = bands.bands[ConfigData.currentBand].sideband;
+  RadioMode modeTemp = bands.bands[ConfigData.currentBand].mode;
 
   // Calibrate all bands.
   for (int band : ham_bands)
@@ -943,7 +956,7 @@ void TxCalibrate::RadioCal(int mode)
 
     if (band < 2 and mode == 1) // SSB calibrated USB (for FT8).
     {
-      bands.bands[ConfigData.currentBand].sideband = Sideband::UPPER; // Calibrate lower sideband for 80M and 40M.
+      bands.bands[ConfigData.currentBand].sideband = Sideband::UPPER; // Calibrate upper sideband for 80M and 40M.
       rxcalibrater.DoReceiveCalibrate(mode, true, false);
       txcalibrater.DoXmitCarrierCalibrate(mode, true, false);
       txcalibrater.DoXmitCalibrate(mode, true, false);
@@ -961,6 +974,9 @@ void TxCalibrate::RadioCal(int mode)
   ConfigData.currentBand = currentBandTemp;
   ConfigData.centerFreq = centerFreqTemp;
   bands.bands[ConfigData.currentBand].sideband = sidebandTemp;
+  ConfigData.lastSideband[ConfigData.currentBand] = sidebandTemp;
+  bands.bands[ConfigData.currentBand].mode = modeTemp;
+  SetBandRelay();
 
   button.BandSet(ConfigData.currentBand);
 
@@ -1014,7 +1030,7 @@ void TxCalibrate::MakeFFTData()
   if (bands.bands[ConfigData.currentBand].sideband == Sideband::UPPER)
     cessb1.setSideband(true);
 
-  // Apply amplitude and phase corrections.
+  /* Apply amplitude and phase corrections.
   AudioNoInterrupts();
   if (TxCalibrate::mode == 0)
   {
@@ -1031,6 +1047,7 @@ void TxCalibrate::MakeFFTData()
       cessb1.setIQCorrections(true, CalData.IQSSBAmpCorrectionFactorUSB[ConfigData.currentBandA], CalData.IQSSBPhaseCorrectionFactorUSB[ConfigData.currentBandA], 0.0);
   }
   AudioInterrupts();
+  */
 
   //  This is the correct place in the data stream to inject the scaling for power.
   if (mode == 0)
