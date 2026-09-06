@@ -663,7 +663,7 @@ void TxCalibrate::DoXmitCarrierCalibrate(int calMode, bool radio, bool toEeprom)
       {
       case State::warmup:
         autoCal = true;
-        std::fill(sweepVectorValue.begin(), sweepVectorValue.end(), 0);
+        std::fill(sweepVectorValue.begin(), sweepVectorValue.end(), 0.0);
         std::fill(sweepVector.begin(), sweepVector.end(), 0.0);
         warmup = warmup + 1;
         qDCoffset = maxSweepPhase; //  Need to use these values during warmup
@@ -716,7 +716,7 @@ void TxCalibrate::DoXmitCarrierCalibrate(int calMode, bool radio, bool toEeprom)
           index = 0;
           adjdB = 0;
           // Clear the vector before moving to phase.
-          std::fill(sweepVectorValue.begin(), sweepVectorValue.end(), 0);
+          std::fill(sweepVectorValue.begin(), sweepVectorValue.end(), 0.0);
           std::fill(sweepVector.begin(), sweepVector.end(), 0.0);
           qDCoffset = -maxSweepPhase + iDCoffset; // The starting value for phase.
           adjdB_min = 0.0;
