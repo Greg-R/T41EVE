@@ -95,7 +95,7 @@ void FilterSetSSB() {
 *****/
 void EncoderCenterTuneISR() {
 
- // centerTune and centerTuneResult are globals.
+ // centerTuneFlag and centerTuneResult are globals.
 
   centerTuneFlag = true;
   centerTuneResult = tuneEncoder.process();  // Read the encoder
