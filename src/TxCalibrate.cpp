@@ -47,7 +47,7 @@ void TxCalibrate::warmUpCal()
   // MakeFFTData() has to be called enough times for transients to settle out before computing FFT.
   for (i = 0; i < 32; i = i + 1)
   {
-    fftActive = true;
+//    fftActive = true;
     updateDisplayFlag = true;
     TxCalibrate::MakeFFTData(); // Note, FFT not called if buffers are not sufficiently filled.
 
@@ -62,7 +62,7 @@ void TxCalibrate::warmUpCal()
       break; // If five in a row, exit the loop.  Warm-up is complete.
   } // End peak detection loop.
 
-  fftActive = true;
+//  fftActive = true;
   updateDisplayFlag = false;
   // Find peak of spectrum, which is 512 wide.  Use this to adjust spectrum peak to top of spectrum display.
   arm_max_q15(pixelnew, 512, &rawSpectrumPeak, &index_of_max);
@@ -358,7 +358,7 @@ void TxCalibrate::DoXmitCalibrate(int calMode, bool radio, bool toEeprom)
   // Transmit Calibration Loop
   while (true)
   {
-    fftActive = true;
+//    fftActive = true;
     computeAdjdB();
     evedisplay.drawTransmitterCalScreen(pixelnew);
 
@@ -654,7 +654,7 @@ void TxCalibrate::DoXmitCarrierCalibrate(int calMode, bool radio, bool toEeprom)
   // Carrier Calibration Loop
   while (true)
   {
-    fftActive = true;
+//    fftActive = true;
     computeAdjdB();
     evedisplay.drawTransmitterCalScreen(pixelnew);
     TxCalibrate::buttonTasks(); // This takes care of manual calls to the initial or refinement calibrations.
@@ -1129,7 +1129,7 @@ void TxCalibrate::MakeFFTData()
 
     // This process started because there are 2048 samples available.  Perform FFT.
     updateDisplayFlag = true;
-    if (fftActive)
+//    if (fftActive)
       ZoomFFTExe(2048);
     fftSuccess = true;
   } // End of receive code

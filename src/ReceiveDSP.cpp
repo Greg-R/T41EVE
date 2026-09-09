@@ -72,11 +72,11 @@ bool ReceiveDSP::ProcessIQData() {
 
     // Set frequency here only to minimize interruption to signal stream during tuning.
     // This code was unnecessary in the revised tuning scheme.  KF5N July 22, 2023
-    if (centerTuneFlag == 1) {  //  This flag is set by EncoderFineTune() and also by Direct Freq Entry.
+////    if (centerTuneFlag == 1) {  //  This flag is set by EncoderFineTune() and also by Direct Freq Entry.
 ////      display.DrawBandWidthIndicatorBar();
 ////      display.ShowFrequency();
-    }                    //AFP 10-04-22
-    centerTuneFlag = 0;  //AFP 10-04-22
+////    }                    //AFP 10-04-22
+////    centerTuneFlag = 0;  //AFP 10-04-22
     if (resetTuningFlag == 1) {
       ResetTuning();
     }
@@ -194,9 +194,9 @@ bool ReceiveDSP::ProcessIQData() {
       ZoomFFTExe(BUFFER_SIZE * N_BLOCKS);
     }
 
-    if (calibrateFlag == true) {  // This is required for frequency calibration as it runs with the receiver active.
-      menuProc.CalibrateOptions();
-    }
+//    if (calibrateFlag == true) {  // This is required for frequency calibration as it runs with the receiver active.
+//      menuProc.CalibrateOptions();
+//    }
     // This handles functions selected from the second level of menus.
     if (evemenucontrol.runInDSP == true) {  // This is required for Morse decode sensitivity adjustment with receiver active.
       functionPtr[mainMenuIndex]();  // The top menu item to run.

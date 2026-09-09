@@ -1029,14 +1029,14 @@ FLASHMEM void setup()
   si5351.init(SI5351_CRYSTAL_LOAD_10PF, Si_5351_crystal, CalData.freqCorrectionFactor); // JJP  7/14/23
   si5351.set_ms_source(SI5351_CLK2, SI5351_PLLB);                                       // Allows CLK1 and CLK2 to exceed 100 MHz simultaneously.
   si5351.drive_strength(SI5351_CLK0, SI5351_DRIVE_8MA);
-//  si5351.output_enable(SI5351_CLK2, 1);
+  //  si5351.output_enable(SI5351_CLK2, 1);
   si5351.drive_strength(SI5351_CLK2, SI5351_DRIVE_8MA); // CWP AFP 10-13-22
 
   // Start with the last frequency in the last band.
   ConfigData.currentFreqA = ConfigData.lastFrequencies[ConfigData.currentBand][VFO_A];
   ConfigData.currentFreqB = ConfigData.lastFrequencies[ConfigData.currentBand][VFO_B];
 
-//  SetFreq();
+  //  SetFreq();
   // Reset flip-flops in QSD2 and QSE2.
   ResetFlipFlops();
 
@@ -1110,6 +1110,7 @@ float audioBW{0.0};
 uint32_t receiverMute = 10;
 bool drawSpectrum = false;
 uint32_t displayUpdateCounter{0};
+uint32_t drawDisplayCounter{0};
 uint32_t menuCounter{0};
 void loop()
 {
@@ -1154,12 +1155,14 @@ void loop()
   {
   case EVE_Display::Screens::receiver:
     // Push RF spectrum and waterfall to the display.
-    if (displayUpdateCounter > 20000)
+//    if (displayUpdateCounter > 20000)
+    if(drawDisplayCounter > 7)
     {
       evedisplay.drawReceiverScreen(pixelnew, display.waterfall, audioYPixel);
       evedisplay.moveBitmapCells();
       evedisplay.writeWaterFalltoRAM_G(display.waterfall);
       displayUpdateCounter = 0;
+      drawDisplayCounter = 0;
       updateDisplayFlag = true;
     }
     displayUpdateCounter = displayUpdateCounter + 1;
@@ -1214,17 +1217,6 @@ void loop()
     radioState = RadioState::AM_RECEIVE_STATE;
   if (bands.bands[ConfigData.currentBand].mode == RadioMode::SAM_MODE)
     radioState = RadioState::SAM_RECEIVE_STATE;
-
-  /* Top menu button read.
-  // SSB and FT8 transmit operate via the main loop().  CW modes operate within independent while loops.  Don't stop in SSB and FT8 modes to read the buttons.
-  if ((radioState != RadioState::SSB_TRANSMIT_STATE) and (radioState != RadioState::FT8_TRANSMIT_STATE)
-   and (calibrateFlag == false) and (evemenucontrol.runOptionFunction == false) and (evemenucontrol.runButtonFunction == false) )
-  {
-    menu = readButton();
-    if (menu != MenuSelect::BOGUS_PIN_READ)
-      button.ExecuteButtonPress(menu);
-  }
-  */
 
   // Transition to new state if required and only if the radio state has changed.
   if (lastState != radioState)
@@ -1321,20 +1313,16 @@ void loop()
   case RadioState::FT8_RECEIVE_STATE:
   case RadioState::SSB_RECEIVE_STATE:
     if (lastState != radioState)
-    {                           // G0ORX 01092023
+    {
       enableTransmitter(false); // Disable transmitter.
     }
-    //    if((static_cast<uint32_t>(ADC_RX_I.available()) > 15) and (static_cast<uint32_t>(ADC_RX_Q.available()) > 15)) {
-    //      updateDisplayFlag = true;
-    //      process.ProcessIQData();
-    //    display.ShowSpectrum(drawSpectrum);
-    //    }
 
     if ((static_cast<uint32_t>(ADC_RX_I.available()) > 15) and (static_cast<uint32_t>(ADC_RX_Q.available()) > 15))
     {
       process.ProcessIQData();
       display.ShowSpectrum(drawSpectrum);
       updateDisplayFlag = false;
+      drawDisplayCounter = drawDisplayCounter + 1;
     }
 
     break;
@@ -1406,7 +1394,6 @@ void loop()
       updateDisplayFlag = false;
     }
 
-    //    display.ShowSpectrum(drawSpectrum); // if removed CW signal on is 2 mS
     break;
 
   case RadioState::CW_TRANSMIT_STRAIGHT_STATE:
@@ -1417,9 +1404,6 @@ void loop()
     cwTimer = millis();
     while (millis() - cwTimer <= static_cast<uint32_t>(ConfigData.cwTransmitDelay))
     { // Start CW transmit timer.
-
-      //    button.InputParameterEncoderNoWhile(1, 20, 1, "TX Power", ConfigData.transmitPowerLevel);
-      //    initPowerCoefficients();
 
       if (digitalRead(KEYER_DIT_INPUT_TIP) == LOW or straightKeyStart)
       { // AFP 09-25-22  Turn on CW signal
@@ -1554,20 +1538,17 @@ void loop()
       speakerVolume.setGain(volumeLog[ConfigData.speakerVolume]);
 
     volumeChangeFlag = false;
-    //   display.UpdateVolumeField();
   }
 
-  if (audioGraphicsFlag)
-  {
-    //    display.UpdateAudioGraphics();
+//  if (audioGraphicsFlag)
+//  {
+//    audioGraphicsFlag = false;
+//  }
 
-    audioGraphicsFlag = false;
-  }
-
-  if (centerTune)
+  if (centerTuneFlag)
   {
     SetFreq();
-    centerTune = false;
+    centerTuneFlag = false;
   }
 
 #ifdef LOOP_TIMER

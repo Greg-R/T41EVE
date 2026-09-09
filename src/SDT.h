@@ -721,7 +721,7 @@ extern uint32_t zoom_display;
 extern int16_t pixelnew[];
 extern bool encoderFilterFlag;   // Set by EncoderFilter() isr.
 extern bool audioCompensateFlag; // Set by FilterSetSSB().
-extern bool audioGraphicsFlag;
+// extern bool audioGraphicsFlag;
 extern bool ft8EnableFlag;
 extern bool startRxFlag;
 extern uint32_t displayUpdateCounter;
@@ -806,7 +806,7 @@ extern float32_t bin;
 extern float32_t biquad_lowpass1_state[];
 extern float32_t biquad_lowpass1_coeffs[];
 extern float32_t /*DMAMEM*/ buffer_spec_FFT[];
-extern bool centerTune;
+//extern bool centerTune;
 extern uint32_t centerTuneResult;
 extern float32_t c[];
 extern float32_t c1[];

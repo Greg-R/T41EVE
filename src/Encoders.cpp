@@ -82,7 +82,7 @@ void FilterSetSSB() {
   FilterBandwidth();
   audioCompensateFlag = true;  // Compensate for volume due to filter setting.  Done in loop().
   encoderFilterFlag = false;   // The flag is set by the EncoderFilter() isr.
-  audioGraphicsFlag = true;    // Need to adjust things in the display.  Done in loop().
+//  audioGraphicsFlag = true;    // Need to adjust things in the display.  Done in loop().
 }
 
 
@@ -97,7 +97,7 @@ void EncoderCenterTuneISR() {
 
  // centerTune and centerTuneResult are globals.
 
-  centerTune = true;
+  centerTuneFlag = true;
   centerTuneResult = tuneEncoder.process();  // Read the encoder
   int32_t tuneChange{0};
 
@@ -122,7 +122,7 @@ void EncoderCenterTuneISR() {
   if (ConfigData.centerFreq < 300000) ConfigData.centerFreq = 300000;
   TxRxFreq = ConfigData.centerFreq + NCOFreq;
   ConfigData.lastFrequencies[ConfigData.currentBand][ConfigData.activeVFO] = TxRxFreq;
-  centerTuneFlag = false;
+////  centerTuneFlag = false;
 
   if (ConfigData.activeVFO == VFO_A) {
     ConfigData.currentFreqA = ConfigData.centerFreq + NCOFreq;  //AFP 10-05-22
@@ -310,7 +310,7 @@ void EncoderFineTune() {
   }
 
   NCOFreq = NCOFreq + ConfigData.fineTuneStep * fineTuneEncoderMove;  // Increment NCOFreq per encoder movement.
-  centerTuneFlag = 1;                                                 // This is used in ReceiveDSP.cpp.  Greg KF5N May 16, 2024
+////  centerTuneFlag = 1;                                                 // This is used in ReceiveDSP.cpp.  Greg KF5N May 16, 2024
   // ============  AFP 10-28-22
   if (ConfigData.activeVFO == VFO_A) {
     ConfigData.currentFreqA = ConfigData.centerFreq + NCOFreq;  //AFP 10-05-22
@@ -322,13 +322,13 @@ void EncoderFineTune() {
   // ===============  Recentering at band edges ==========
   if (ConfigData.spectrum_zoom != 0) {
     if (NCOFreq >= static_cast<int32_t>((95000 / (1 << ConfigData.spectrum_zoom))) || NCOFreq < static_cast<int32_t>((-93000 / (1 << ConfigData.spectrum_zoom)))) {  // 47500 with 2x zoom.
-      centerTuneFlag = 0;
+////      centerTuneFlag = 0;
       resetTuningFlag = 1;
       return;
     }
   } else {
     if (NCOFreq > 142000 || NCOFreq < -43000) {  // Offset tuning window in zoom 1x
-      centerTuneFlag = 0;
+////      centerTuneFlag = 0;
       resetTuningFlag = 1;
       return;
     }
@@ -336,7 +336,7 @@ void EncoderFineTune() {
   fineTuneEncoderMove = 0L;
   TxRxFreq = ConfigData.centerFreq + NCOFreq;  // KF5N
 
-  audioGraphicsFlag = true;
+//  audioGraphicsFlag = true;
 }
 #else
 /*****

@@ -67,7 +67,7 @@ public:
   float32_t increment{0};
   bool exitManual = false;
   bool corrChange = false;
-  bool fftActive = false;
+//  bool fftActive = false;
   bool fftSuccess = false;
   bool print{false};
   elapsedMillis milliTimer;

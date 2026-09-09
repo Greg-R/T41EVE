@@ -28,6 +28,10 @@ You should have received a copy of the GNU General Public License along with T41
 #include "SDT.h"
 
 /*****
+
+Note September 7, 2026.  This function is semi-obsolete.  It needs to be pared down!!!  Greg KF5N
+This function is still used in the case of 8 and 16 zooms which require more than 2048 samples.
+
   Purpose: Show Spectrum display with auto RF gain.  Harry GM3RVL, January 16, 2024
             Note that this routine calls the Audio process Function during each display cycle,
             for each of the 512 display frequency bins.  This means that the audio is refreshed at the maximum rate
@@ -49,14 +53,13 @@ void Display::ShowSpectrum(bool drawSpectrum)
   int k;
   int middleSlice = centerLine / 2; // Approximate center element
   int x1 = 0;                       // AFP
-              //   int h = SPECTRUM_HEIGHT + 7;
   int y1_new{0};
   int test1;
   updateDisplayCounter = 0;
   updateDisplayFlag = false;
   spectrumErased = false;
   bool plotInProgress = false;
-  bool blocksAvailable = false;
+  bool blocksAvailable = true;
 
   for (x1 = 0; x1 < 512; x1++)
   { // Bins on the ends are junk, don't plot.
@@ -68,8 +71,8 @@ void Display::ShowSpectrum(bool drawSpectrum)
     }
     // Draws the main Spectrum, Waterfall and Audio displays
 
-    // Is there enough data to calculate an FFT?
-    blocksAvailable = (static_cast<uint32_t>(ADC_RX_I.available()) > 15) and (static_cast<uint32_t>(ADC_RX_Q.available()) > 15);
+    // Is there enough data to calculate an FFT?.  This function is not called unless this is true!  Greg KF5N September 2026
+//    blocksAvailable = (static_cast<uint32_t>(ADC_RX_I.available()) > 15) and (static_cast<uint32_t>(ADC_RX_Q.available()) > 15);
 
     // 1X zoom.
     if ((ConfigData.spectrum_zoom == 0) and (not plotInProgress) and blocksAvailable)
@@ -173,7 +176,6 @@ void Display::ShowSpectrum(bool drawSpectrum)
       }
     }
 
-
     test1 = -y1_new + 236; // Nudged waterfall towards blue.  KF5N July 23, 2023
 
     if (test1 < 0)
@@ -194,7 +196,6 @@ void Display::ShowSpectrum(bool drawSpectrum)
     audioFFToffset = audioFFToffset + 1;
   }
 
-    
 } // End ShowSpectrum()
 
 // DB2OO, 30-AUG-23: this variable determines the pixels per S step. In the original code it was 12.2 pixels !?

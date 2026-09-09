@@ -1114,7 +1114,7 @@ void Button::ButtonFrequencyEntry()
     ConfigData.currentFreqA = TxRxFreq;
   if (ConfigData.activeVFO == VFO_B)
     ConfigData.currentFreqB = TxRxFreq;
-  centerTuneFlag = 1; // Put back in so tuning bar is refreshed.  KF5N July 31, 2023
+////  centerTuneFlag = 1; // Put back in so tuning bar is refreshed.  KF5N July 31, 2023
                       //  SetFreq();           // Used here instead of centerTuneFlag.  KF5N July 22, 2023
   // This determines if the entered frequency is permanent or temporary.
   if (save_last_frequency == true and valid_frequency == true)

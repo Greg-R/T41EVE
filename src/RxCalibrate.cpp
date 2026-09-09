@@ -67,7 +67,7 @@ void RxCalibrate::warmUpCal()
   // MakeFFTData() has to be called enough times for transients to settle out before computing FFT.
   for (i = 0; i < 32; i = i + 1)
   {
-    fftActive = true;
+//    fftActive = true;
     updateDisplayFlag = true;
     RxCalibrate::MakeFFTData(); // Note, FFT not called if buffers are not sufficiently filled.
     arm_max_q15(pixelnew, 512, &rawSpectrumPeak, &index_of_max);
@@ -81,9 +81,9 @@ void RxCalibrate::warmUpCal()
       break; // If five in a row, exit the loop.  Warm-up is complete.
   }
   updateDisplayFlag = true; // This flag is used by the normal receiver process.
-  fftActive = true;         // This is a flag local to this class.
+//  fftActive = true;         // This is a flag local to this class.
   updateDisplayFlag = false;
-  fftActive = false;
+//  fftActive = false;
   // Find peak of spectrum, which is 512 wide.  Use this to adjust spectrum peak to top of spectrum display.
   arm_max_q15(pixelnew, 512, &rawSpectrumPeak, &index_of_max);
   //    Serial.printf("RX rawSpectrumPeak = %d count = %d i = %d\n", rawSpectrumPeak, count, i);
@@ -322,7 +322,7 @@ void RxCalibrate::DoReceiveCalibrate(int calMode, bool radio, bool toEeprom)
   // Receive Calibration Loop
   while (true)
   {
-    fftActive = true;
+//    fftActive = true;
     computeAdjdB();
 
     if ((static_cast<int>(displayTimer) - lastDisplayTime) > 20)
@@ -761,7 +761,7 @@ void RxCalibrate::MakeFFTData()
 
     // This process started because there are 2048 samples available.  Perform FFT.
     updateDisplayFlag = true;
-    if (fftActive)
+//    if (fftActive)
       CalcZoom1Magn(); // Receiver calibration uses 1X zoom.
     FreqShift1();      // 48 kHz shift
     fftSuccess = true;
