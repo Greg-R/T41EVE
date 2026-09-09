@@ -136,7 +136,7 @@ void EncoderCenterTuneISR() {
 
 
 /*****
-  Purpose: Encoder volume control.  Sets ConfigData.audioVolume between 0 and 100.
+  Purpose: Encoder volume control ISR.  Sets ConfigData.audioVolume between 0 and 100.
 
   Parameter list:
     void
@@ -335,8 +335,6 @@ void EncoderFineTune() {
   }
   fineTuneEncoderMove = 0L;
   TxRxFreq = ConfigData.centerFreq + NCOFreq;  // KF5N
-
-//  audioGraphicsFlag = true;
 }
 #else
 /*****

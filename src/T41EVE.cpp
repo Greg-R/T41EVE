@@ -1541,11 +1541,6 @@ void loop()
     volumeChangeFlag = false;
   }
 
-//  if (audioGraphicsFlag)
-//  {
-//    audioGraphicsFlag = false;
-//  }
-
   if (centerTuneFlag)
   {
     SetFreq();
@@ -1556,7 +1551,7 @@ void loop()
   loopCounter = loopCounter + 1;
   if (loopCounter > 4000000) // uint32_t 2^32 = 4294967296
   {
-    Serial.printf("Loop us = %u\n", (static_cast<uint32_t>(usec1) - usec1Old));
+    Serial.printf("Loop us = %u\n", (static_cast<uint32_t>(usec1) - static_cast<uint32_t>(usec1Old)));
     loopCounter = 0;
     Serial.printf("AudioProcessorUsageMax() = %d\n", static_cast<uint32_t>(AudioProcessorUsageMax()));
     AudioProcessorUsageMaxReset();
@@ -1565,10 +1560,6 @@ void loop()
     //        Serial.printf("evenmenucontrol.runOptionFunction = %d\n", evemenucontrol.runOptionFunction);
     //        Serial.printf("evenmenucontrol.subMenuSelect = %d\n", evemenucontrol.subMenuSelect);
     //        Serial.printf("evenmenucontrol.subMenuChoice = %d\n", menuProc.subMenuChoice);
-      Serial.printf("evedisplay.screenSelect = %d\n", static_cast<int>(evedisplay.screenSelect));
-      Serial.printf("drawDisplayCounter = %d\n", drawDisplayCounter);
-      Serial.printf("ADC_RX_I.available = %d\n", static_cast<uint32_t>(ADC_RX_I.available()));
-      Serial.printf("ADC_RX_Q.available = %d\n", static_cast<uint32_t>(ADC_RX_Q.available()));
   }
   usec1Old = usec1;
 #endif

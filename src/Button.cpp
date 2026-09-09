@@ -74,7 +74,7 @@ void ButtonISR()
   int filteredADCValue;
 
   buttonFilterRegister = buttonFilterRegister - (buttonFilterRegister >> BUTTON_FILTER_SHIFT) + analogRead(BUSY_ANALOG_PIN);
-  filteredADCValue = (int)(buttonFilterRegister >> BUTTON_FILTER_SHIFT);
+  filteredADCValue = static_cast<int>(buttonFilterRegister >> BUTTON_FILTER_SHIFT);
 
   switch (buttonState)
   {
