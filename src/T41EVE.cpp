@@ -1165,17 +1165,17 @@ void loop()
       drawDisplayCounter = 0;
       updateDisplayFlag = true;
     }
-    displayUpdateCounter = displayUpdateCounter + 1;
+//    displayUpdateCounter = displayUpdateCounter + 1;
     break;
 
   case EVE_Display::Screens::buttonEntry:
 
-    if (displayUpdateCounter > 20000)
+    if (drawDisplayCounter > 7)
     {
       evedisplay.drawButtonEntryScreen();
-      displayUpdateCounter = 0;
+      drawDisplayCounter = 0;
     }
-    displayUpdateCounter = displayUpdateCounter + 1;
+    drawDisplayCounter = drawDisplayCounter + 1;
     break;
 
   case EVE_Display::Screens::encoderEntry:
@@ -1392,6 +1392,7 @@ void loop()
       process.ProcessIQData();
       display.ShowSpectrum(drawSpectrum);
       updateDisplayFlag = false;
+      drawDisplayCounter = drawDisplayCounter + 1;
     }
 
     break;
@@ -1553,7 +1554,7 @@ void loop()
 
 #ifdef LOOP_TIMER
   loopCounter = loopCounter + 1;
-  if (loopCounter > 4000000000) // uint32_t 2^32 = 4294967296
+  if (loopCounter > 4000000) // uint32_t 2^32 = 4294967296
   {
     Serial.printf("Loop us = %u\n", (static_cast<uint32_t>(usec1) - usec1Old));
     loopCounter = 0;
@@ -1564,6 +1565,10 @@ void loop()
     //        Serial.printf("evenmenucontrol.runOptionFunction = %d\n", evemenucontrol.runOptionFunction);
     //        Serial.printf("evenmenucontrol.subMenuSelect = %d\n", evemenucontrol.subMenuSelect);
     //        Serial.printf("evenmenucontrol.subMenuChoice = %d\n", menuProc.subMenuChoice);
+      Serial.printf("evedisplay.screenSelect = %d\n", static_cast<int>(evedisplay.screenSelect));
+      Serial.printf("drawDisplayCounter = %d\n", drawDisplayCounter);
+      Serial.printf("ADC_RX_I.available = %d\n", static_cast<uint32_t>(ADC_RX_I.available()));
+      Serial.printf("ADC_RX_Q.available = %d\n", static_cast<uint32_t>(ADC_RX_Q.available()));
   }
   usec1Old = usec1;
 #endif
