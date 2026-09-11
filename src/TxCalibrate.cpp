@@ -698,7 +698,7 @@ void TxCalibrate::DoXmitCarrierCalibrate(int calMode, bool radio, bool toEeprom)
           adjdB_min = adjdB;
         if ((adjdB - adjdB_min) > 2.0)
           iDCoffset = maxSweepAmp;
-        Serial.printf("adjdB = %f adjdB_min = %f\n", adjdB, adjdB_min);
+//        Serial.printf("adjdB = %f adjdB_min = %f\n", adjdB, adjdB_min);
         index = index + 1;
         // Increment for next measurement.
         iDCoffset = iDCoffset + carrIncrement;
