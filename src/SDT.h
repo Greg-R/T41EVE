@@ -46,6 +46,7 @@ You should have received a copy of the GNU General Public License along with T41
 #include <string>
 #include <algorithm>
 #include <memory>
+#include <queue>
 
 // User section which is customizable.
 // This includes the EVE display #define, so it must
@@ -504,6 +505,7 @@ extern struct calibration_t CalData;
 #include "MenuProc.h"
 #include "Demod.h"
 #include "EVE_Display.h"
+#include "Sequencer.h"
 
 //------------------------- Global CW Filter declarations ----------
 #define IIR_CW_NUMSTAGES 4

@@ -901,6 +901,28 @@ void enableTransmitter(bool transmitOn)
   keyPressedOn = false; // Reset isr().
 }
 
+bool displayUpdate{false};
+void DisplayRefresh()
+{
+//  Serial.printf("DisplayRefresh\n");
+  displayUpdate = true;
+}
+
+using namespace Sequencer;
+
+using callable_holder = std::function<void()>;
+using task_seq = Sequencer::task<callable_holder>;
+using seq = Sequencer::sequencer<task_seq>;
+
+task<callable_holder> display_refresh(DisplayRefresh, 100);
+
+void DisplayRefreshISR()
+{
+  seq::add(display_refresh);
+}
+
+IntervalTimer displayRefresh;
+
 bool powerUp = false;
 uint32_t afterPowerUp = 0;
 /*****
@@ -1084,6 +1106,10 @@ FLASHMEM void setup()
   isTransmitterKeyed();
   keyPressedOn = false; // Ignore key interrupts which may happen due to start-up transients.
 
+  seq::clear();
+  displayRefresh.priority(255);
+  displayRefresh.begin(DisplayRefreshISR, 50000); // Begin the display refresh timer.
+
   Serial.printf("End of setup()\n");
 }
 //============================================================== END setup() =================================================================
@@ -1109,6 +1135,7 @@ uint32_t loopCounter = 0;
 float audioBW{0.0};
 uint32_t receiverMute = 10;
 bool drawSpectrum = false;
+bool adcQueue{false};
 uint32_t displayUpdateCounter{0};
 uint32_t drawDisplayCounter{0};
 uint32_t menuCounter{0};
@@ -1118,6 +1145,10 @@ void loop()
   long ditTimerOff; // AFP 09-22-22
   bool cwKeyDown;
   unsigned long cwBlockIndex;
+
+  //  noInterrupts();
+  seq::run();
+  //  interrupts();
 
   // Top menu button read.
   // SSB and FT8 transmit operate via the main loop().  CW modes operate within independent while loops.
@@ -1155,8 +1186,10 @@ void loop()
   {
   case EVE_Display::Screens::receiver:
     // Push RF spectrum and waterfall to the display.
-//    if (displayUpdateCounter > 20000)
-    if(drawDisplayCounter > 7)
+    //    if (displayUpdateCounter > 20000)
+    //    if(drawDisplayCounter > 7 and displayUpdate)
+    // if(drawDisplayCounter > 7)
+    if (displayUpdate and adcQueue)
     {
       evedisplay.drawReceiverScreen(pixelnew, display.waterfall, audioYPixel);
       evedisplay.moveBitmapCells();
@@ -1164,8 +1197,10 @@ void loop()
       displayUpdateCounter = 0;
       drawDisplayCounter = 0;
       updateDisplayFlag = true;
+      displayUpdate = false;
+      seq::clear();
     }
-//    displayUpdateCounter = displayUpdateCounter + 1;
+    displayUpdateCounter = displayUpdateCounter + 1;
     break;
 
   case EVE_Display::Screens::buttonEntry:
@@ -1192,6 +1227,8 @@ void loop()
   default:
     break;
   }
+
+  adcQueue = false;
 
   //  Radio state detection before entering the primary radio loop.
   if (bands.bands[ConfigData.currentBand].mode == RadioMode::SSB_MODE and digitalRead(PTT) == HIGH)
@@ -1323,6 +1360,7 @@ void loop()
       display.ShowSpectrum(drawSpectrum);
       updateDisplayFlag = false;
       drawDisplayCounter = drawDisplayCounter + 1;
+      adcQueue = true;
     }
 
     break;
@@ -1393,6 +1431,7 @@ void loop()
       display.ShowSpectrum(drawSpectrum);
       updateDisplayFlag = false;
       drawDisplayCounter = drawDisplayCounter + 1;
+      adcQueue = true;
     }
 
     break;
@@ -1400,7 +1439,9 @@ void loop()
   case RadioState::CW_TRANSMIT_STRAIGHT_STATE:
     enableTransmitter(true);
     evedisplay.drawTransmitterScreen();
+    displayRefresh.end();
 
+    seq::clear();
     cwKeyDown = false; // false initiates CW_SHAPING_RISE.
     cwTimer = millis();
     while (millis() - cwTimer <= static_cast<uint32_t>(ConfigData.cwTransmitDelay))
@@ -1438,6 +1479,9 @@ void loop()
       }
     } // End CW straight key while loop.
     enableTransmitter(false);
+    seq::clear();
+    displayRefresh.begin(DisplayRefreshISR, 50000);
+
     break;
 
   case RadioState::CW_TRANSMIT_KEYER_STATE:
