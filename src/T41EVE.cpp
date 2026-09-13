@@ -1107,7 +1107,7 @@ FLASHMEM void setup()
   keyPressedOn = false; // Ignore key interrupts which may happen due to start-up transients.
 
   seq::clear();
-  displayRefresh.priority(255);
+//  displayRefresh.priority(255);
   displayRefresh.begin(DisplayRefreshISR, 50000); // Begin the display refresh timer.
 
   Serial.printf("End of setup()\n");
@@ -1194,9 +1194,9 @@ void loop()
       evedisplay.drawReceiverScreen(pixelnew, display.waterfall, audioYPixel);
       evedisplay.moveBitmapCells();
       evedisplay.writeWaterFalltoRAM_G(display.waterfall);
-      displayUpdateCounter = 0;
-      drawDisplayCounter = 0;
-      updateDisplayFlag = true;
+//      displayUpdateCounter = 0;
+//      drawDisplayCounter = 0;
+//      updateDisplayFlag = true;
       displayUpdate = false;
       seq::clear();
     }
@@ -1358,8 +1358,8 @@ void loop()
     {
       process.ProcessIQData();
       display.ShowSpectrum(drawSpectrum);
-      updateDisplayFlag = false;
-      drawDisplayCounter = drawDisplayCounter + 1;
+//      updateDisplayFlag = false;
+//      drawDisplayCounter = drawDisplayCounter + 1;
       adcQueue = true;
     }
 
@@ -1429,8 +1429,8 @@ void loop()
     {
       process.ProcessIQData();
       display.ShowSpectrum(drawSpectrum);
-      updateDisplayFlag = false;
-      drawDisplayCounter = drawDisplayCounter + 1;
+//      updateDisplayFlag = false;
+//      drawDisplayCounter = drawDisplayCounter + 1;
       adcQueue = true;
     }
 
