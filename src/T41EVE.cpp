@@ -1134,9 +1134,9 @@ uint32_t loopCounter = 0;
 *****/
 //float audioBW{0.0};
 uint32_t receiverMute = 10;
-bool drawSpectrum = false;
-bool adcQueue{false};
-uint32_t displayUpdateCounter{0};
+//bool drawSpectrum = false;
+//bool adcQueue{false};
+//uint32_t displayUpdateCounter{0};
 uint32_t drawDisplayCounter{0};
 uint32_t menuCounter{0};
 void loop()
@@ -1184,18 +1184,15 @@ void loop()
   {
   case EVE_Display::Screens::receiver:
     // Push RF spectrum and waterfall to the display.
-    //    if (displayUpdateCounter > 20000)
-    //    if(drawDisplayCounter > 7 and displayUpdate)
      if(drawDisplayCounter > 7)
     {
-      evedisplay.drawReceiverScreen(pixelnew, display.waterfall, audioYPixel);
+      evedisplay.drawReceiverScreen(pixelnew, process.waterfall, audioYPixel);
       evedisplay.moveBitmapCells();
-      evedisplay.writeWaterFalltoRAM_G(display.waterfall);
-      displayUpdateCounter = 0;
+      evedisplay.writeWaterFalltoRAM_G(process.waterfall);
       drawDisplayCounter = 0;
       updateDisplayFlag = true;
     }
-    displayUpdateCounter = displayUpdateCounter + 1;
+
     break;
 
   case EVE_Display::Screens::buttonEntry:
@@ -1210,12 +1207,12 @@ void loop()
 
   case EVE_Display::Screens::encoderEntry:
 
-    if (displayUpdateCounter > 20000)
-    {
+//    if (displayUpdateCounter > 20000)
+//    {
       evedisplay.drawEncoderEntryScreen(false);
-      displayUpdateCounter = 0;
-    }
-    displayUpdateCounter = displayUpdateCounter + 1;
+//      displayUpdateCounter = 0;
+//    }
+//    displayUpdateCounter = displayUpdateCounter + 1;
 
     break;
 
@@ -1328,7 +1325,7 @@ void loop()
       receiverMute = 3; // Determines duration of mute.
       speakerScale.setGain(SPEAKERSCALE);
       headphoneScale.setGain(HEADPHONESCALE);
-      drawSpectrum = true; // Delay drawing the spectrum until the FFT transients are decreased.
+//      drawSpectrum = true; // Delay drawing the spectrum until the FFT transients are decreased.
       Serial.printf("afterPowerUp executed\n");
     }
   }
@@ -1349,8 +1346,7 @@ void loop()
 
     if ((static_cast<uint32_t>(ADC_RX_I.available()) > 15) and (static_cast<uint32_t>(ADC_RX_Q.available()) > 15))
     {
-      process.ProcessIQData();
-      display.ShowSpectrum();
+      process.StreamAudioMakeSpectrums();
       updateDisplayFlag = false;
       drawDisplayCounter = drawDisplayCounter + 1;
     }
@@ -1419,8 +1415,7 @@ void loop()
 
     if ((static_cast<uint32_t>(ADC_RX_I.available()) > 15) and (static_cast<uint32_t>(ADC_RX_Q.available()) > 15))
     {
-      process.ProcessIQData();
-      display.ShowSpectrum();
+      process.StreamAudioMakeSpectrums();
       updateDisplayFlag = false;
       drawDisplayCounter = drawDisplayCounter + 1;
     }

@@ -856,7 +856,8 @@ void Button::ButtonSelectSideband()
     break;
   }
   SetFreq();
-  encoderFilterFlag = true;
+  FilterSetSSB();
+//  encoderFilterFlag = true;
   //  display.BandInformation();
 }
 
@@ -1144,11 +1145,11 @@ void Button::ButtonFrequencyEntry()
 *****/
 void Button::ExecuteModeChange()
 {
-  encoderFilterFlag = true;
   NCOFreq = 0;
   fftOffset = 0;
   SetBandRelay(); // Set relays in LPF for current band.
   SetFreq();      // Must update frequency, for example moving from SSB to CW, the RX LO is shifted.  KF5N
+  FilterSetSSB();
   powerUp = true;
 }
 
@@ -1459,7 +1460,7 @@ void Button::InputParameterEncoderNoWhile(int32_t minValue, int32_t maxValue, in
     evedisplay.screenSelect = EVE_Display::Screens::receiver;
     parameterAdjustFlag = false;
     menuProc.subMenuChoice = 0;
-    displayUpdateCounter = 0;
+//    displayUpdateCounter = 0;
     audioFFToffset = 100; // This a re-initialization since the receiver screen was not used.
   }
 }

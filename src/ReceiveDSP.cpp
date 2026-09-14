@@ -504,3 +504,196 @@ audioOutQueue.play(float_buffer_L, 2048);
 //  }               // end of if(audio blocks available)
 //  return false;   // Audio blocks were NOT processed!
 }
+
+
+/*****
+Note September 7, 2026.  This function is semi-obsolete.  It needs to be pared down!!!  Greg KF5N
+This function is still used in the case of 8 and 16 zooms which require more than 2048 samples.
+
+  Purpose: Show Spectrum display with auto RF gain.  Harry GM3RVL, January 16, 2024
+            Note that this routine calls the Audio process Function during each display cycle,
+            for each of the 512 display frequency bins.  This means that the audio is refreshed at the maximum rate
+            and does not have to wait for the display to complete drawing the full spectrum.
+            However, the display data are only updated ONCE during each full display cycle,
+            ensuring consistent data for the erase/draw cycle at each frequency point.
+
+  Parameter list:
+    void
+
+  Return value;
+    void
+*****/
+void ReceiveDSP::StreamAudioMakeSpectrums()
+{
+  int AudioH_max = 0, AudioH_max_box = 0; // Used to center audio spectrum.
+  int audio_hist[256]{0};                 // All values are initialized to zero using this syntax.
+  int k;
+  int middleSlice = centerLine / 2; // Approximate center element
+  int wfall{0};
+
+  updateDisplayCounter = 0;
+  updateDisplayFlag = false;
+
+  //  Zoom is tricky.  1X, 2X, and 4X can compute FFT with 2048 samples.
+  //  8X and 16X need more samples, and thus require multiple passes of the DSP code.
+
+  // 1X zoom.
+  if (ConfigData.spectrum_zoom == 0)
+  {
+    updateDisplayFlag = true;
+  }
+  // 2X zoom.
+  if (ConfigData.spectrum_zoom == 1)
+  {
+    updateDisplayFlag = true;
+  }
+  // 4X zoom.
+  if (ConfigData.spectrum_zoom == 2)
+  {
+    updateDisplayFlag = true;
+  }
+  // 8X zoom.
+  if (ConfigData.spectrum_zoom == 3)
+  {
+    updateDisplayCounter = updateDisplayCounter + 1;
+    if (updateDisplayCounter == 3)
+    {
+      updateDisplayFlag = true;
+    }
+  }
+  // 16X zoom.
+  if (ConfigData.spectrum_zoom == 4)
+  {
+    updateDisplayCounter = updateDisplayCounter + 1;
+    if (updateDisplayCounter == 7)
+    {
+      updateDisplayFlag = true;
+    }
+  }
+
+  if (startRxFlag)
+    updateDisplayFlag = false; // Don't process data the first time after coming out of transmit mode.
+  startRxFlag = false;
+
+  // Collect a histogram of audio spectral values.  This is used to keep the audio spectrum in the viewable area.
+  // 247??? is the spectral display bottom.  129 is the audio spectrum display top.
+  for (int x1 = 0; x1 < 256; x1 = x1 + 1)
+  {
+    if ((x1 < 256) and (audioYPixel[x1] > 0)) //  Collect audio frequency distribution to find noise floor.
+    {
+      k = audioYPixel[x1]; // +40 to get 10 bins below zero - want to straddle zero to make the entire spectrum viewable.
+      audio_hist[k] += 1;  // Add (accumulate) to the bin.
+                           //       if(x1 == 50) Serial.printf("audio_hist[k] = %d AudioH_max = %d\n", audio_hist[k], AudioH_max);
+      if (audio_hist[k] > AudioH_max)
+      {                             // FH_max starts at 0.
+        AudioH_max = audio_hist[k]; // Reset FH_max to the current bin value.
+        AudioH_max_box = k;         // Index of FH_max.  this corresponds to the noise floor.
+                                    //        Serial.printf("k = %d AudioH_max_box = %d\n", k, AudioH_max_box);
+      }
+    } //  HB finish
+
+    // Draw audio spectrum.  The audio spectrum width is smaller than the RF spectrum width.
+    // The audio spectrum arrays are generated in ReceiveDSP.cpp by method ProcessIQData().
+    if (x1 < 253)
+    { // AFP 09-01-22
+      if (audioYPixel[x1] != 0)
+      {
+        if (audioYPixel[x1] > CLIP_AUDIO_PEAK) // audioSpectrumHeight = 118
+          audioYPixel[x1] = CLIP_AUDIO_PEAK;
+        if (x1 == middleSlice)
+        {
+          smeterLength = y_new;
+        }
+      }
+    }
+  }
+
+  for (int x = 0; x < 512; x = x + 1)
+  {
+    wfall = -pixelnew[x] + 236;
+    if (wfall < 0)
+      wfall = 0;
+    if (wfall > 116)
+      wfall = 116;
+    waterfall[x] = signalToRGB332(static_cast<int32_t>((static_cast<float32_t>(wfall) * 2.2)));
+  }
+
+  // Manage audio spectral display graphics.  Keep the spectrum within the viewable area.
+  if (AudioH_max_box > 30)
+  { // HB. Adjust rfGainAllBands 15 and 13 to alter to move target base up and down. UPPERPIXTARGET = 15
+    audioFFToffset = audioFFToffset - 1;
+  }
+  if (AudioH_max_box < 28)
+  { // LOWERPIXTARGET = 13
+    audioFFToffset = audioFFToffset + 1;
+  }
+
+} // End 
+
+
+uint8_t ReceiveDSP::convert_rgb565_to_rgb332(uint16_t rgb565_color)
+{
+  // 1. Extract the original 5-bit Red, 6-bit Green, and 5-bit Blue components
+  // Red: Mask the top 5 bits (0b1111100000000000), then shift right 11 bits
+  uint8_t r5 = (rgb565_color & 0xF800) >> 11;
+  // Green: Mask the middle 6 bits (0b0000011111100000), then shift right 5 bits
+  uint8_t g6 = (rgb565_color & 0x07E0) >> 5;
+  // Blue: Mask the bottom 5 bits (0b0000000000011111)
+  uint8_t b5 = rgb565_color & 0x001F;
+
+  // 2. Downscale components to the new bit depths (3 bits Red, 3 bits Green, 2 bits Blue)
+  // Simple right shift truncates the least significant bits.
+  uint8_t r3 = r5 >> 2; // Lose 2 LSBs (5 bits -> 3 bits)
+  uint8_t g3 = g6 >> 3; // Lose 3 LSBs (6 bits -> 3 bits)
+  uint8_t b2 = b5 >> 3; // Lose 3 LSBs (5 bits -> 2 bits)
+
+  // 3. Combine the new components into a single 8-bit value
+  // Shift R3 to the top 3 bits, G3 to the middle 3 bits, B2 to the bottom 2 bits, and combine with OR
+  uint8_t rgb332_color = (r3 << 5) | (g3 << 2) | b2;
+
+  return rgb332_color;
+}
+
+uint8_t ReceiveDSP::signalToRGB332(uint8_t signal)
+{
+  uint8_t red = 0;
+  uint8_t green = 0;
+  uint8_t blue = 0;
+
+  if (signal < 51)
+  {
+    // black -> blue
+    blue = signal * 3 / 51;
+  }
+  else if (signal < 102)
+  {
+    // blue -> cyan
+    uint8_t t = signal - 51;
+    blue = 3;
+    green = t * 7 / 51;
+  }
+  else if (signal < 153)
+  {
+    // cyan -> green
+    uint8_t t = signal - 102;
+    blue = (51 - t) * 3 / 51;
+    green = 7;
+  }
+  else if (signal < 204)
+  {
+    // green -> yellow
+    uint8_t t = signal - 153;
+    green = 7;
+    red = t * 7 / 51;
+  }
+  else
+  {
+    // yellow -> red
+    uint8_t t = signal - 204;
+    green = (51 - t) * 7 / 51;
+    red = 7;
+  }
+
+  // rrrgggbb
+  return (red << 5) | (green << 2) | blue;
+}

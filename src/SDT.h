@@ -721,8 +721,8 @@ extern uint8_t NR_Kim;
 extern uint32_t SampleRate;
 extern uint32_t zoom_display;
 extern int16_t pixelnew[];
-extern bool encoderFilterFlag;   // Set by EncoderFilter() isr.
-extern bool audioCompensateFlag; // Set by FilterSetSSB().
+//extern bool encoderFilterFlag;   // Set by EncoderFilter() isr.
+//extern bool audioCompensateFlag; // Set by FilterSetSSB().
 // extern bool audioGraphicsFlag;
 extern bool ft8EnableFlag;
 extern bool startRxFlag;

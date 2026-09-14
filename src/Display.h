@@ -36,7 +36,7 @@ public:
   uint32_t TEMP_Y_OFFSET{465}; // 480 * 0.97 = 465
   const uint32_t SPECTRUM_RES{512};
   int16_t spectrum_x = 10;
-  uint8_t waterfall[MAX_WATERFALL_WIDTH]{0};
+  
   int maxYPlot;
   int filterWidthX; // The current filter X.
   uint8_t write_analog_gain = 0;
@@ -45,31 +45,27 @@ public:
   float xExpand = 1.4;      //
   int16_t spectrum_pos_centre_f = 64 * xExpand;
   int pos_centre_f = 64;
-  int smeterLength;
+  
   float CPU_temperature = 0.0;
   float32_t processor_load{0};
   double elapsed_micros_mean;
-  int centerLine = (MAX_WATERFALL_WIDTH + SPECTRUM_LEFT_X) / 2 + 1; // The FFT is plotted starting at x = 3.
-  bool spectrumErased{false};
+
   int16_t smeterPad{0};
   float32_t dbm;
   char timeBuffer[15];
 
-  void ShowSpectrum(); // Draws the RF and audio spectrums.
+//  void ShowSpectrum(); // Draws the RF and audio spectrums.
   void DisplaydbM();                    // Display signal level in dBm.
   void ShowTempAndLoad();               // Display the current temperature and load figures for Teensy 4.1.
   void RedrawAll();                     // This function redraws the entire display.
   void DisplayClock();
 
 private:
-  const int32_t CLIP_AUDIO_PEAK{115}; // The pixel value where audio peak overwrites S-meter
+
   const uint32_t INCREMENT_X{WATERFALL_RIGHT_X + 25};
   const uint32_t INCREMENT_Y{WATERFALL_TOP_Y + 70};
   const uint32_t SMETER_X{WATERFALL_RIGHT_X + 16};
   const float32_t SMETER_Y{YPIXELS * 0.22}; // 480 * 0.22 = 106
-
-  uint8_t convert_rgb565_to_rgb332(uint16_t rgb565_color);
-  uint8_t signalToRGB332(uint8_t signal);
 
   float32_t pixel_per_khz{0};
   int pos_left{0};

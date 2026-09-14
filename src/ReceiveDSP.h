@@ -31,7 +31,16 @@ class ReceiveDSP {
 
 public:
 
+uint8_t waterfall[MAX_WATERFALL_WIDTH]{0};
+int smeterLength{0};
+  const int32_t CLIP_AUDIO_PEAK{115}; // The pixel value where audio peak overwrites S-meter
+  int centerLine = (MAX_WATERFALL_WIDTH + SPECTRUM_LEFT_X) / 2 + 1; // The FFT is plotted starting at x = 3.
+
   bool ProcessIQData();
+  void StreamAudioMakeSpectrums();
+
+  uint8_t convert_rgb565_to_rgb332(uint16_t rgb565_color);
+  uint8_t signalToRGB332(uint8_t signal);
 
   char atom, currentAtom;
   int8_t first_block = 1;

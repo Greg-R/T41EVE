@@ -16,80 +16,63 @@ You should have received a copy of the GNU General Public License along with T41
   "TEENSY CONVOLUTION SDR" substantially modified by Jack Purdum, W8TEE, and Al Peter, AC8GY
 
   This software is made available under the GNU GPLv3 license agreement. If commercial use of this
-  software is planned, we would appreciate it if the interested parties contact Jack Purdum, W8TEE, 
+  software is planned, we would appreciate it if the interested parties contact Jack Purdum, W8TEE,
   and Al Peter, AC8GY.
 
-  Any and all other uses, written or implied, by the GPLv3 license are forbidden without written 
+  Any and all other uses, written or implied, by the GPLv3 license are forbidden without written
   permission from from Jack Purdum, W8TEE, and Al Peter, AC8GY.
 */
 
 // Mode control struct members.
 
-
 #include "SDT.h"
 
-
-void ModeControl::CWReceiveMode() {
+void ModeControl::CWReceiveMode()
+{
   startRxFlag = true;
   SetFreq();
-//  display.BandInformation();  // Updates center frequency, band, mode, and sideband at top of spectrum.
-
-  encoderFilterFlag = true;
+  FilterSetSSB();
 }
 
-
-void ModeControl::CWTransmitMode() {
-//  display.EraseRFSpectrum();
+void ModeControl::CWTransmitMode()
+{
   SetFreq();
 }
 
-
-void ModeControl::SSBReceiveMode() {
+void ModeControl::SSBReceiveMode()
+{
   startRxFlag = true;
   SetFreq();
-//  display.BandInformation();  // Updates center frequency, band, mode, and sideband at top of spectrum.
-
-  encoderFilterFlag = true;
+  FilterSetSSB();
 }
 
-
-void ModeControl::SSBTransmitMode() {
-//  display.EraseRFSpectrum();
+void ModeControl::SSBTransmitMode()
+{
   SetFreq();
 }
 
-
-void ModeControl::FT8ReceiveMode() {
-
+void ModeControl::FT8ReceiveMode()
+{
+  startRxFlag = true;
   SetFreq();
-//  display.BandInformation();  // Updates center frequency, band, mode, and sideband at top of spectrum.
-
-  encoderFilterFlag = true;
-//  display.ShowBandwidth();
+  FilterSetSSB();
 }
 
-
-void ModeControl::FT8TransmitMode() {
- // display.EraseRFSpectrum();
+void ModeControl::FT8TransmitMode()
+{
   SetFreq();
 }
 
-
-void ModeControl::AMReceiveMode() {
-
+void ModeControl::AMReceiveMode()
+{
+  startRxFlag = true;
   SetFreq();
-//  display.BandInformation();  // Updates center frequency, band, mode, and sideband at top of spectrum.
-
-  encoderFilterFlag = true;
-//  display.ShowBandwidth();
+  FilterSetSSB();
 }
 
-
-void ModeControl::SAMReceiveMode() {
-
+void ModeControl::SAMReceiveMode()
+{
+  startRxFlag = true;
   SetFreq();
-//  display.BandInformation();  // Updates center frequency, band, mode, and sideband at top of spectrum.
-
-  encoderFilterFlag = true;
-//  display.ShowBandwidth();
+  FilterSetSSB();
 }
