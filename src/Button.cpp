@@ -797,7 +797,6 @@ void Button::ButtonZoom()
   fftOffset = 0; // This helps solve a problem with moving from 1X to 2X zoom.
   ZoomFFTPrep();
   ResetTuning(); // AFP 10-11-22
-  ////  display.UpdateAudioGraphics();
 }
 
 /*****

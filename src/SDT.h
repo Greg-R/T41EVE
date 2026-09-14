@@ -763,6 +763,7 @@ extern bool switchFilterSideband; // AFP 1-28-21
 extern int x2;                    // AFP
 extern int zeta_help;
 extern bool updateDisplayFlag;
+extern bool displayRefreshFlag;
 extern int updateDisplayCounter;
 
 extern const int DEC2STATESIZE;

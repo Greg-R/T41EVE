@@ -328,7 +328,8 @@ int newCursorPosition = 0;
 int oldCursorPosition = 256;
 bool switchFilterSideband = false;
 
-bool updateDisplayFlag = false;
+bool updateDisplayFlag{false};
+bool displayRefreshFlag{false};
 int updateDisplayCounter = 0;
 
 const int BW_indicator_y = SPECTRUM_TOP_Y + SPECTRUM_HEIGHT + 2;
@@ -1132,11 +1133,11 @@ uint32_t loopCounter = 0;
   Return value:
     void
 *****/
-//float audioBW{0.0};
+// float audioBW{0.0};
 uint32_t receiverMute = 10;
-//bool drawSpectrum = false;
-//bool adcQueue{false};
-//uint32_t displayUpdateCounter{0};
+// bool drawSpectrum = false;
+// bool adcQueue{false};
+// uint32_t displayUpdateCounter{0};
 uint32_t drawDisplayCounter{0};
 uint32_t menuCounter{0};
 void loop()
@@ -1184,13 +1185,12 @@ void loop()
   {
   case EVE_Display::Screens::receiver:
     // Push RF spectrum and waterfall to the display.
-     if(drawDisplayCounter > 7)
+    if (drawDisplayCounter > 7)
     {
       evedisplay.drawReceiverScreen(pixelnew, process.waterfall, audioYPixel);
       evedisplay.moveBitmapCells();
       evedisplay.writeWaterFalltoRAM_G(process.waterfall);
       drawDisplayCounter = 0;
-      updateDisplayFlag = true;
     }
 
     break;
@@ -1207,12 +1207,12 @@ void loop()
 
   case EVE_Display::Screens::encoderEntry:
 
-//    if (displayUpdateCounter > 20000)
-//    {
-      evedisplay.drawEncoderEntryScreen(false);
-//      displayUpdateCounter = 0;
-//    }
-//    displayUpdateCounter = displayUpdateCounter + 1;
+    //    if (displayUpdateCounter > 20000)
+    //    {
+    evedisplay.drawEncoderEntryScreen(false);
+    //      displayUpdateCounter = 0;
+    //    }
+    //    displayUpdateCounter = displayUpdateCounter + 1;
 
     break;
 
@@ -1325,7 +1325,7 @@ void loop()
       receiverMute = 3; // Determines duration of mute.
       speakerScale.setGain(SPEAKERSCALE);
       headphoneScale.setGain(HEADPHONESCALE);
-//      drawSpectrum = true; // Delay drawing the spectrum until the FFT transients are decreased.
+      //      drawSpectrum = true; // Delay drawing the spectrum until the FFT transients are decreased.
       Serial.printf("afterPowerUp executed\n");
     }
   }
@@ -1346,9 +1346,11 @@ void loop()
 
     if ((static_cast<uint32_t>(ADC_RX_I.available()) > 15) and (static_cast<uint32_t>(ADC_RX_Q.available()) > 15))
     {
-      process.StreamAudioMakeSpectrums();
-      updateDisplayFlag = false;
       drawDisplayCounter = drawDisplayCounter + 1;
+      if (drawDisplayCounter == displayInterval)
+        displayRefreshFlag = true;
+      process.StreamAudioMakeSpectrums();
+      displayRefreshFlag = false;
     }
 
     break;
@@ -1415,9 +1417,11 @@ void loop()
 
     if ((static_cast<uint32_t>(ADC_RX_I.available()) > 15) and (static_cast<uint32_t>(ADC_RX_Q.available()) > 15))
     {
-      process.StreamAudioMakeSpectrums();
-      updateDisplayFlag = false;
       drawDisplayCounter = drawDisplayCounter + 1;
+      if (drawDisplayCounter == displayInterval)
+        displayRefreshFlag = true;
+      process.StreamAudioMakeSpectrums();
+      displayRefreshFlag = false;
     }
 
     break;
@@ -1541,42 +1545,42 @@ void loop()
   }
 #endif
 
-/*
-  if (audioCompensateFlag)
-  {
-    // Compensate for audio filter setting.
-    // Nominal bandwidth is 2.8kHz.  This will be the 0 dB reference.
-    // The upper and lower frequency limits are bands[ConfigData.currentBand].FLoCut and bands[ConfigData.currentBand].FHiCut.
-    if (bands.bands[ConfigData.currentBand].mode == RadioMode::SSB_MODE or bands.bands[ConfigData.currentBand].mode == RadioMode::CW_MODE or bands.bands[ConfigData.currentBand].mode == RadioMode::FT8_MODE)
-      audioBW = bands.bands[ConfigData.currentBand].FHiCut - bands.bands[ConfigData.currentBand].FLoCut;
-    else if (bands.bands[ConfigData.currentBand].mode == RadioMode::AM_MODE or bands.bands[ConfigData.currentBand].mode == RadioMode::SAM_MODE)
-      audioBW = bands.bands[ConfigData.currentBand].FAMCut;
+  /*
+    if (audioCompensateFlag)
+    {
+      // Compensate for audio filter setting.
+      // Nominal bandwidth is 2.8kHz.  This will be the 0 dB reference.
+      // The upper and lower frequency limits are bands[ConfigData.currentBand].FLoCut and bands[ConfigData.currentBand].FHiCut.
+      if (bands.bands[ConfigData.currentBand].mode == RadioMode::SSB_MODE or bands.bands[ConfigData.currentBand].mode == RadioMode::CW_MODE or bands.bands[ConfigData.currentBand].mode == RadioMode::FT8_MODE)
+        audioBW = bands.bands[ConfigData.currentBand].FHiCut - bands.bands[ConfigData.currentBand].FLoCut;
+      else if (bands.bands[ConfigData.currentBand].mode == RadioMode::AM_MODE or bands.bands[ConfigData.currentBand].mode == RadioMode::SAM_MODE)
+        audioBW = bands.bands[ConfigData.currentBand].FAMCut;
 
-    process.audioGainCompensate = 2800.0 / audioBW;
-    audioCompensateFlag = false;
-  }
+      process.audioGainCompensate = 2800.0 / audioBW;
+      audioCompensateFlag = false;
+    }
 
-  if (volumeChangeFlag == true)
-  {
-    // Update volume if ONLY one audio output is active.
-    if (ConfigData.audioOut == AudioState::SPEAKER)
-      speakerVolume.setGain(volumeLog[ConfigData.speakerVolume]);
-    if (ConfigData.audioOut == AudioState::HEADPHONE)
-      headphoneVolume.setGain(volumeLog[ConfigData.headphoneVolume]);
-    // In the case of BOTH, volume controls speaker only.  This is intended for monitoring FT8.
-    if (ConfigData.audioOut == AudioState::BOTH)
-      speakerVolume.setGain(volumeLog[ConfigData.speakerVolume]);
+    if (volumeChangeFlag == true)
+    {
+      // Update volume if ONLY one audio output is active.
+      if (ConfigData.audioOut == AudioState::SPEAKER)
+        speakerVolume.setGain(volumeLog[ConfigData.speakerVolume]);
+      if (ConfigData.audioOut == AudioState::HEADPHONE)
+        headphoneVolume.setGain(volumeLog[ConfigData.headphoneVolume]);
+      // In the case of BOTH, volume controls speaker only.  This is intended for monitoring FT8.
+      if (ConfigData.audioOut == AudioState::BOTH)
+        speakerVolume.setGain(volumeLog[ConfigData.speakerVolume]);
 
-    volumeChangeFlag = false;
-  }
+      volumeChangeFlag = false;
+    }
 
-  if (centerTuneFlag)
-  {
-    SetFreq();
-    centerTuneFlag = false;
-  }
+    if (centerTuneFlag)
+    {
+      SetFreq();
+      centerTuneFlag = false;
+    }
 
-  */
+    */
 
 #ifdef LOOP_TIMER
   loopCounter = loopCounter + 1;
