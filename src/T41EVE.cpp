@@ -1108,7 +1108,7 @@ FLASHMEM void setup()
 
   seq::clear();
 //  displayRefresh.priority(255);
-  displayRefresh.begin(DisplayRefreshISR, 50000); // Begin the display refresh timer.
+//  displayRefresh.begin(DisplayRefreshISR, 50000); // Begin the display refresh timer.
 
   Serial.printf("End of setup()\n");
 }
@@ -1123,8 +1123,8 @@ uint32_t loopCounter = 0;
 #endif
 
 /*****
-  Purpose: Code here executes forever, or until: 1) power is removed, 2) user does a reset, 3) a component
-           fails, or 4) the cows come home.
+  Purpose: This was originally a sequenced display.  Taking that out to see
+           if the volume and tuning encoders behave.
 
   Parameter list:
     void
@@ -1188,15 +1188,15 @@ void loop()
     // Push RF spectrum and waterfall to the display.
     //    if (displayUpdateCounter > 20000)
     //    if(drawDisplayCounter > 7 and displayUpdate)
-    // if(drawDisplayCounter > 7)
-    if (displayUpdate and adcQueue)
+     if(drawDisplayCounter > 7)
+//    if (displayUpdate and adcQueue)
     {
       evedisplay.drawReceiverScreen(pixelnew, display.waterfall, audioYPixel);
       evedisplay.moveBitmapCells();
       evedisplay.writeWaterFalltoRAM_G(display.waterfall);
-//      displayUpdateCounter = 0;
-//      drawDisplayCounter = 0;
-//      updateDisplayFlag = true;
+      displayUpdateCounter = 0;
+      drawDisplayCounter = 0;
+      updateDisplayFlag = true;
       displayUpdate = false;
       seq::clear();
     }
@@ -1358,9 +1358,9 @@ void loop()
     {
       process.ProcessIQData();
       display.ShowSpectrum(drawSpectrum);
-//      updateDisplayFlag = false;
-//      drawDisplayCounter = drawDisplayCounter + 1;
-      adcQueue = true;
+      updateDisplayFlag = false;
+      drawDisplayCounter = drawDisplayCounter + 1;
+ //     adcQueue = true;
     }
 
     break;
@@ -1429,9 +1429,9 @@ void loop()
     {
       process.ProcessIQData();
       display.ShowSpectrum(drawSpectrum);
-//      updateDisplayFlag = false;
-//      drawDisplayCounter = drawDisplayCounter + 1;
-      adcQueue = true;
+      updateDisplayFlag = false;
+      drawDisplayCounter = drawDisplayCounter + 1;
+//      adcQueue = true;
     }
 
     break;

@@ -28,7 +28,7 @@ You should have received a copy of the GNU General Public License along with T41
 #include "SDT.h"
 
 float adjustVolEncoder;
-const float32_t ENCODER_FACTOR{ 0.25 };  // Use 0.25f with cheap encoders that have 4 detents per step.
+const float32_t ENCODER_FACTOR{ 0.5 };  // Use 0.25f with cheap encoders that have 4 detents per step.  0.5 with Bourns.
 boolean centerTune{false};
 uint32_t centerTuneResult{0};
 
