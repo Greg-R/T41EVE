@@ -45,7 +45,7 @@ This function is still used in the case of 8 and 16 zooms which require more tha
   Return value;
     void
 *****/
-void Display::ShowSpectrum(bool drawSpectrum)
+void Display::ShowSpectrum()
 {
 
   int AudioH_max = 0, AudioH_max_box = 0; // Used to center audio spectrum.

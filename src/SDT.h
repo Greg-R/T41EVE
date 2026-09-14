@@ -962,9 +962,11 @@ void DrawKeyboard();
 
 void EncoderFineTune();
 void EncoderFilter();
+void EncoderFilterISR();
 void EncoderCenterTuneISR();
 void EncoderCenterTune();
 void EncoderVolume();
+void EncoderVolumeISR();
 void EqualizerRecOptions();
 void EqualizerXmtOptions();
 void FilterBandwidth();

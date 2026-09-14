@@ -55,7 +55,7 @@ public:
   float32_t dbm;
   char timeBuffer[15];
 
-  void ShowSpectrum(bool drawSpectrum); // Draws the RF and audio spectrums.
+  void ShowSpectrum(); // Draws the RF and audio spectrums.
   void DisplaydbM();                    // Display signal level in dBm.
   void ShowTempAndLoad();               // Display the current temperature and load figures for Teensy 4.1.
   void RedrawAll();                     // This function redraws the entire display.

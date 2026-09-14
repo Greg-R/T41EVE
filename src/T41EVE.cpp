@@ -901,12 +901,13 @@ void enableTransmitter(bool transmitOn)
   keyPressedOn = false; // Reset isr().
 }
 
+/*
 bool displayUpdate{false};
 void DisplayRefresh()
 {
 //  Serial.printf("DisplayRefresh\n");
   displayUpdate = true;
-}
+*/
 
 using namespace Sequencer;
 
@@ -914,6 +915,7 @@ using callable_holder = std::function<void()>;
 using task_seq = Sequencer::task<callable_holder>;
 using seq = Sequencer::sequencer<task_seq>;
 
+/*
 task<callable_holder> display_refresh(DisplayRefresh, 100);
 
 void DisplayRefreshISR()
@@ -922,6 +924,7 @@ void DisplayRefreshISR()
 }
 
 IntervalTimer displayRefresh;
+*/
 
 bool powerUp = false;
 uint32_t afterPowerUp = 0;
@@ -967,11 +970,11 @@ FLASHMEM void setup()
   attachInterrupt(digitalPinToInterrupt(TUNE_ENCODER_B), EncoderCenterTuneISR, CHANGE);
 
   volumeEncoder.begin(true);
-  attachInterrupt(digitalPinToInterrupt(VOLUME_ENCODER_A), EncoderVolume, CHANGE);
-  attachInterrupt(digitalPinToInterrupt(VOLUME_ENCODER_B), EncoderVolume, CHANGE);
+  attachInterrupt(digitalPinToInterrupt(VOLUME_ENCODER_A), EncoderVolumeISR, CHANGE);
+  attachInterrupt(digitalPinToInterrupt(VOLUME_ENCODER_B), EncoderVolumeISR, CHANGE);
   filterEncoder.begin(true);
-  attachInterrupt(digitalPinToInterrupt(FILTER_ENCODER_A), EncoderFilter, CHANGE);
-  attachInterrupt(digitalPinToInterrupt(FILTER_ENCODER_B), EncoderFilter, CHANGE);
+  attachInterrupt(digitalPinToInterrupt(FILTER_ENCODER_A), EncoderFilterISR, CHANGE);
+  attachInterrupt(digitalPinToInterrupt(FILTER_ENCODER_B), EncoderFilterISR, CHANGE);
   fineTuneEncoder.begin(true);
   attachInterrupt(digitalPinToInterrupt(FINETUNE_ENCODER_A), EncoderFineTune, CHANGE);
   attachInterrupt(digitalPinToInterrupt(FINETUNE_ENCODER_B), EncoderFineTune, CHANGE);
@@ -1105,10 +1108,7 @@ FLASHMEM void setup()
   // Don't start up if key/paddle or PTT is closed.  Warn the user to resolve and restart.
   isTransmitterKeyed();
   keyPressedOn = false; // Ignore key interrupts which may happen due to start-up transients.
-
   seq::clear();
-//  displayRefresh.priority(255);
-//  displayRefresh.begin(DisplayRefreshISR, 50000); // Begin the display refresh timer.
 
   Serial.printf("End of setup()\n");
 }
@@ -1132,7 +1132,7 @@ uint32_t loopCounter = 0;
   Return value:
     void
 *****/
-float audioBW{0.0};
+//float audioBW{0.0};
 uint32_t receiverMute = 10;
 bool drawSpectrum = false;
 bool adcQueue{false};
@@ -1146,9 +1146,7 @@ void loop()
   bool cwKeyDown;
   unsigned long cwBlockIndex;
 
-  //  noInterrupts();
   seq::run();
-  //  interrupts();
 
   // Top menu button read.
   // SSB and FT8 transmit operate via the main loop().  CW modes operate within independent while loops.
@@ -1189,7 +1187,6 @@ void loop()
     //    if (displayUpdateCounter > 20000)
     //    if(drawDisplayCounter > 7 and displayUpdate)
      if(drawDisplayCounter > 7)
-//    if (displayUpdate and adcQueue)
     {
       evedisplay.drawReceiverScreen(pixelnew, display.waterfall, audioYPixel);
       evedisplay.moveBitmapCells();
@@ -1197,8 +1194,6 @@ void loop()
       displayUpdateCounter = 0;
       drawDisplayCounter = 0;
       updateDisplayFlag = true;
-      displayUpdate = false;
-      seq::clear();
     }
     displayUpdateCounter = displayUpdateCounter + 1;
     break;
@@ -1227,8 +1222,6 @@ void loop()
   default:
     break;
   }
-
-  adcQueue = false;
 
   //  Radio state detection before entering the primary radio loop.
   if (bands.bands[ConfigData.currentBand].mode == RadioMode::SSB_MODE and digitalRead(PTT) == HIGH)
@@ -1357,10 +1350,9 @@ void loop()
     if ((static_cast<uint32_t>(ADC_RX_I.available()) > 15) and (static_cast<uint32_t>(ADC_RX_Q.available()) > 15))
     {
       process.ProcessIQData();
-      display.ShowSpectrum(drawSpectrum);
+      display.ShowSpectrum();
       updateDisplayFlag = false;
       drawDisplayCounter = drawDisplayCounter + 1;
- //     adcQueue = true;
     }
 
     break;
@@ -1428,10 +1420,9 @@ void loop()
     if ((static_cast<uint32_t>(ADC_RX_I.available()) > 15) and (static_cast<uint32_t>(ADC_RX_Q.available()) > 15))
     {
       process.ProcessIQData();
-      display.ShowSpectrum(drawSpectrum);
+      display.ShowSpectrum();
       updateDisplayFlag = false;
       drawDisplayCounter = drawDisplayCounter + 1;
-//      adcQueue = true;
     }
 
     break;
@@ -1439,7 +1430,6 @@ void loop()
   case RadioState::CW_TRANSMIT_STRAIGHT_STATE:
     enableTransmitter(true);
     evedisplay.drawTransmitterScreen();
-    displayRefresh.end();
 
     seq::clear();
     cwKeyDown = false; // false initiates CW_SHAPING_RISE.
@@ -1479,14 +1469,13 @@ void loop()
       }
     } // End CW straight key while loop.
     enableTransmitter(false);
-    seq::clear();
-    displayRefresh.begin(DisplayRefreshISR, 50000);
 
     break;
 
   case RadioState::CW_TRANSMIT_KEYER_STATE:
     enableTransmitter(true);
     evedisplay.drawTransmitterScreen();
+    seq::clear();
 
     cwTimer = millis();
     while (millis() - cwTimer <= static_cast<uint32_t>(ConfigData.cwTransmitDelay))
@@ -1557,6 +1546,7 @@ void loop()
   }
 #endif
 
+/*
   if (audioCompensateFlag)
   {
     // Compensate for audio filter setting.
@@ -1590,6 +1580,8 @@ void loop()
     SetFreq();
     centerTuneFlag = false;
   }
+
+  */
 
 #ifdef LOOP_TIMER
   loopCounter = loopCounter + 1;
