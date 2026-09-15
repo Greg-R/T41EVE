@@ -1140,6 +1140,7 @@ uint32_t receiverMute = 10;
 // uint32_t displayUpdateCounter{0};
 uint32_t drawDisplayCounter{0};
 uint32_t menuCounter{0};
+int32_t zoomCount{0};
 void loop()
 {
   MenuSelect menu;
@@ -1346,11 +1347,46 @@ void loop()
 
     if ((static_cast<uint32_t>(ADC_RX_I.available()) > 15) and (static_cast<uint32_t>(ADC_RX_Q.available()) > 15))
     {
-      drawDisplayCounter = drawDisplayCounter + 1;
-      if (drawDisplayCounter == displayInterval)
-        displayRefreshFlag = true;
-      process.StreamAudioMakeSpectrums();
-      displayRefreshFlag = false;
+      if (ConfigData.spectrum_zoom == 0 or ConfigData.spectrum_zoom == 1 or ConfigData.spectrum_zoom == 2)
+      {
+        drawDisplayCounter = drawDisplayCounter + 1;
+        if (drawDisplayCounter == displayInterval)
+          displayRefreshFlag = true;
+        process.StreamAudioMakeSpectrums();
+        displayRefreshFlag = false;
+      }
+      if (ConfigData.spectrum_zoom == 3) // 8X
+      {
+        drawDisplayCounter = drawDisplayCounter + 1;
+        if (drawDisplayCounter == displayInterval)
+          displayRefreshFlag = true;
+
+        zoomCount = zoomCount + 1;
+        if (zoomCount == 4 and drawDisplayCounter == displayInterval)
+        {
+          displayRefreshFlag = true;
+          zoomCount = 0;
+        }
+        process.StreamAudioMakeSpectrums();
+        displayRefreshFlag = false;
+      }
+
+      if (ConfigData.spectrum_zoom == 4) // 16X
+      {
+        drawDisplayCounter = drawDisplayCounter + 1;
+        if (drawDisplayCounter == displayInterval)
+          displayRefreshFlag = true;
+
+        zoomCount = zoomCount + 1;
+        if (zoomCount == 8 and drawDisplayCounter == displayInterval)
+        {
+          displayRefreshFlag = true;
+          zoomCount = 0;
+        }
+        process.StreamAudioMakeSpectrums();
+        displayRefreshFlag = false;
+      }
+
     }
 
     break;
@@ -1417,11 +1453,45 @@ void loop()
 
     if ((static_cast<uint32_t>(ADC_RX_I.available()) > 15) and (static_cast<uint32_t>(ADC_RX_Q.available()) > 15))
     {
-      drawDisplayCounter = drawDisplayCounter + 1;
-      if (drawDisplayCounter == displayInterval)
-        displayRefreshFlag = true;
-      process.StreamAudioMakeSpectrums();
-      displayRefreshFlag = false;
+      if (ConfigData.spectrum_zoom == 0 or ConfigData.spectrum_zoom == 1 or ConfigData.spectrum_zoom == 2)
+      {
+        drawDisplayCounter = drawDisplayCounter + 1;
+        if (drawDisplayCounter == displayInterval)
+          displayRefreshFlag = true;
+        process.StreamAudioMakeSpectrums();
+        displayRefreshFlag = false;
+      }
+      if (ConfigData.spectrum_zoom == 3) // 8X
+      {
+        drawDisplayCounter = drawDisplayCounter + 1;
+        if (drawDisplayCounter == displayInterval)
+          displayRefreshFlag = true;
+
+        zoomCount = zoomCount + 1;
+        if (zoomCount == 4 and drawDisplayCounter == displayInterval)
+        {
+          displayRefreshFlag = true;
+          zoomCount = 0;
+        }
+        process.StreamAudioMakeSpectrums();
+        displayRefreshFlag = false;
+      }
+
+      if (ConfigData.spectrum_zoom == 4) // 16X
+      {
+        drawDisplayCounter = drawDisplayCounter + 1;
+        if (drawDisplayCounter == displayInterval)
+          displayRefreshFlag = true;
+
+        zoomCount = zoomCount + 1;
+        if (zoomCount == 8 and drawDisplayCounter == displayInterval)
+        {
+          displayRefreshFlag = true;
+          zoomCount = 0;
+        }
+        process.StreamAudioMakeSpectrums();
+        displayRefreshFlag = false;
+      }
     }
 
     break;

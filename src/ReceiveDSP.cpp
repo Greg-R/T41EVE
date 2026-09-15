@@ -577,7 +577,13 @@ void ReceiveDSP::StreamAudioMakeSpectrums()
   //  Zoom is tricky.  1X, 2X, and 4X can compute FFT with 2048 samples.
   //  8X and 16X need more samples, and thus require multiple passes of the DSP code.
 
-  // 1X zoom.
+    if (displayRefreshFlag)
+      updateDisplayFlag = true; // Run FFT.
+    else
+      updateDisplayFlag = false;
+    ProcessIQData();
+
+  /* 1X zoom.
   if (ConfigData.spectrum_zoom == 0)
   {
     if (displayRefreshFlag)
@@ -607,14 +613,15 @@ void ReceiveDSP::StreamAudioMakeSpectrums()
   // 8X zoom.
   if (ConfigData.spectrum_zoom == 3)
   {
-    ProcessIQData();
-    ProcessIQData();
-    ProcessIQData();
+//    ProcessIQData();
+//    ProcessIQData();
+//    ProcessIQData();
     if (displayRefreshFlag)
       updateDisplayFlag = true; // Run FFT.
     else
       updateDisplayFlag = false;
     ProcessIQData();
+    zoomCount = zoomCount + 1;
   }
   // 16X zoom.
   if (ConfigData.spectrum_zoom == 4)
@@ -632,6 +639,7 @@ void ReceiveDSP::StreamAudioMakeSpectrums()
       updateDisplayFlag = false;
     ProcessIQData();
   }
+    */
 
   if (startRxFlag)
     updateDisplayFlag = false; // Don't process data the first time after coming out of transmit mode.
