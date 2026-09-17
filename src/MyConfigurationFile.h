@@ -77,7 +77,7 @@ constexpr uint32_t IMAGE_CORNER_Y = 40;   // ImageHeight = 302 Therefore 480 - 3
 constexpr uint32_t RAY_LENGTH = 190;
 
 // Number of intervals between display updates.  Higher number is slower.
-constexpr uint32_t displayInterval{7};
+constexpr uint32_t displayInterval{9};
 
 // Customizable definitions for center and fine tune defaults and increments.  Larry K3PTO June 24, 2024
 constexpr uint32_t CENTER_TUNE_DEFAULT = 1000;  // Set to the desired default in the CENTER_TUNE_ARRAY.

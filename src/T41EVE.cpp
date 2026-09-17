@@ -1133,11 +1133,7 @@ uint32_t loopCounter = 0;
   Return value:
     void
 *****/
-// float audioBW{0.0};
 uint32_t receiverMute = 10;
-// bool drawSpectrum = false;
-// bool adcQueue{false};
-// uint32_t displayUpdateCounter{0};
 uint32_t drawDisplayCounter{0};
 uint32_t menuCounter{0};
 int32_t zoomCount{0};
@@ -1186,7 +1182,7 @@ void loop()
   {
   case EVE_Display::Screens::receiver:
     // Push RF spectrum and waterfall to the display.
-    if (drawDisplayCounter > 7)
+    if (drawDisplayCounter > displayInterval)
     {
       evedisplay.drawReceiverScreen(pixelnew, process.waterfall, audioYPixel);
       evedisplay.moveBitmapCells();
@@ -1198,7 +1194,7 @@ void loop()
 
   case EVE_Display::Screens::buttonEntry:
 
-    if (drawDisplayCounter > 7)
+    if (drawDisplayCounter > displayInterval)
     {
       evedisplay.drawButtonEntryScreen();
       drawDisplayCounter = 0;
@@ -1249,6 +1245,7 @@ void loop()
   // Transition to new state if required and only if the radio state has changed.
   if (lastState != radioState)
   {
+    Serial.printf("State update\n");
     // Avoid changing the audio system if possible.
     // If moving from one receive state to another, audio system update is not required.  Demodulation selection is done in ReceiverDSP.
     // So updating the audio system is only required when moving from receive to transmit, or vice versa.

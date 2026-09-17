@@ -485,7 +485,7 @@ void EncoderFineTune()
 }
 #endif
 
-// This function is attached to interrupts (in the .ino file).
+// Read the encoder.
 void EncoderFilter()
 {
   int32_t result;

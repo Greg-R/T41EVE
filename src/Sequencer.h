@@ -53,7 +53,7 @@ namespace Sequencer
     static void add(Task task)
     {
       noInterrupts();
-      pq.push(task);
+    if(pq.size() < 20) pq.push(task);
       interrupts();
     }
 
@@ -75,6 +75,10 @@ namespace Sequencer
       {
         pq.pop();
       }
+    }
+    static int size()
+    {
+      return static_cast<int>(pq.size());
     }
 
   private:

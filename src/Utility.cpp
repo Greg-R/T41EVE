@@ -507,7 +507,7 @@ void SaveAnalogSwitchValues() {
 
   for (uint32_t index = 0; index < NUMBER_OF_SWITCHES;) {
 
-    Serial.printf("index = %d\n", index);
+//    Serial.printf("index = %d\n", index);
 
     if (button.buttonInterruptsEnabled) {
       while ((value = button.ReadSelectedPushButton()) == -1) {
