@@ -778,7 +778,7 @@ FLASHMEM void EVE_Display::receiverStatic_cmd_list()
 
   // Current version.
   EVE_color_rgb(0x00ff00);
-  EVE_cmd_text(705, 5, 27, 0, ConfigData.versionSettings);
+  EVE_cmd_text(690, 5, 27, 0, ConfigData.versionSettings);
 
   // Spectrum center line.
   EVE_begin(EVE_LINES);
