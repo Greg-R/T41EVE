@@ -1167,6 +1167,7 @@ void loop()
           button.ExecuteButtonPress(menu);
       }
     }
+    Serial.printf("menuCounter = %d\n", menuCounter);
     // This handles functions selected from the second level of menus.
     if (evemenucontrol.runOptionFunction == true)
     {
@@ -1199,18 +1200,15 @@ void loop()
       evedisplay.drawButtonEntryScreen();
       drawDisplayCounter = 0;
     }
-    drawDisplayCounter = drawDisplayCounter + 1;
     break;
 
   case EVE_Display::Screens::encoderEntry:
 
-    //    if (displayUpdateCounter > 20000)
-    //    {
-    evedisplay.drawEncoderEntryScreen(false);
-    //      displayUpdateCounter = 0;
-    //    }
-    //    displayUpdateCounter = displayUpdateCounter + 1;
-
+    if (drawDisplayCounter > displayInterval)
+    {
+      evedisplay.drawEncoderEntryScreen(false);
+      drawDisplayCounter = 0;
+    }
     break;
 
   default:
@@ -1383,7 +1381,6 @@ void loop()
         process.StreamAudioMakeSpectrums();
         displayRefreshFlag = false;
       }
-
     }
 
     break;
