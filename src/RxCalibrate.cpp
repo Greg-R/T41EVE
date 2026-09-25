@@ -762,7 +762,7 @@ void RxCalibrate::MakeFFTData()
     // This process started because there are 2048 samples available.  Perform FFT.
     updateDisplayFlag = true;
 //    if (fftActive)
-      CalcZoom1Magn(); // Receiver calibration uses 1X zoom.
+      CalcZoom1Magn(512); // Receiver calibration uses 1X zoom.
     FreqShift1();      // 48 kHz shift
     fftSuccess = true;
   } // End of receive code

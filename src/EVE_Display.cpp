@@ -1648,7 +1648,7 @@ void EVE_Display::drawTransmitterCalScreen(int16_t *fftArray)
   // Draw the RF spectrum.
   EVE_color_rgb_burst(0xf0f000); // Make spectrum blue.
   EVE_begin_burst(EVE_LINE_STRIP);
-  for (int j = 0; j < 512; j = j + 1)
+  for (int j = 0; j < 256; j = j + 1)
   {
     // Invert and offset for the display.
     fftPlot = -fftArray[j] + txcalibrater.rawSpectrumPeak + 110;

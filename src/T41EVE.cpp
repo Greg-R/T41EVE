@@ -1167,7 +1167,6 @@ void loop()
           button.ExecuteButtonPress(menu);
       }
     }
-    Serial.printf("menuCounter = %d\n", menuCounter);
     // This handles functions selected from the second level of menus.
     if (evemenucontrol.runOptionFunction == true)
     {

@@ -187,7 +187,7 @@ bool ReceiveDSP::ProcessIQData()
   // X1 zoom must be done before the frequency shift!
   if ((ConfigData.spectrum_zoom == 0) and updateDisplayFlag)
   {
-    CalcZoom1Magn();
+    CalcZoom1Magn(512);
   }
 
   FreqShift1();
@@ -203,12 +203,12 @@ bool ReceiveDSP::ProcessIQData()
   // Zooms 2 and 4.  These need only 16 blocks, so can be done in a single pass.
   if (updateDisplayFlag and (ConfigData.spectrum_zoom == 1 or ConfigData.spectrum_zoom == 2))
   {
-    ZoomFFTExe(BUFFER_SIZE * N_BLOCKS);
+    ZoomFFTExe(512, BUFFER_SIZE * N_BLOCKS);
   }
   // Zooms 8 and 16.  These have to be called repeatedly to accumulate data.
   if (ConfigData.spectrum_zoom == 3 or ConfigData.spectrum_zoom == 4)
   {
-    ZoomFFTExe(BUFFER_SIZE * N_BLOCKS);
+    ZoomFFTExe(512, BUFFER_SIZE * N_BLOCKS);
   }
 
   //    if (calibrateFlag == true) {  // This is required for frequency calibration as it runs with the receiver active.

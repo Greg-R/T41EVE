@@ -51,8 +51,8 @@ void TxCalibrate::warmUpCal()
     updateDisplayFlag = true;
     TxCalibrate::MakeFFTData(); // Note, FFT not called if buffers are not sufficiently filled.
 
-    arm_max_q15(pixelnew, 512, &rawSpectrumPeak, &index_of_max);
-    if (index_of_max > 251 and index_of_max < 260)
+    arm_max_q15(pixelnew, 256, &rawSpectrumPeak, &index_of_max);
+    if (index_of_max > 120 and index_of_max < 136)
     { // The peak is in the correct bin?
       count = count + 1;
     }
@@ -65,11 +65,14 @@ void TxCalibrate::warmUpCal()
 //  fftActive = true;
   updateDisplayFlag = false;
   // Find peak of spectrum, which is 512 wide.  Use this to adjust spectrum peak to top of spectrum display.
-  arm_max_q15(pixelnew, 512, &rawSpectrumPeak, &index_of_max);
-  if (index_of_max < 251 or index_of_max > 260)
+  arm_max_q15(pixelnew, 256, &rawSpectrumPeak, &index_of_max);
+////  if (index_of_max < 120 or index_of_max > 136)
   {
-    Serial.printf("Problem with TX warmUpCal\n");
+////    Serial.printf("Problem with TX warmUpCal\n");
     Serial.printf("index_of_max = %d\n", index_of_max);
+  }
+  for(int x = 0; x < 256; x = x + 1) {
+    Serial.printf("pixelnew[%d] = %d\n", x, pixelnew[x]);
   }
   ADC_RX_I.clear();
   ADC_RX_Q.clear();
@@ -995,7 +998,7 @@ void TxCalibrate::RadioCal(int mode)
 void TxCalibrate::MakeFFTData()
 {
   float32_t rfGainValue;     // AFP 2-11-23.  Greg KF5N February 13, 2023
-  uint32_t dataWidth = 2048; // was 2048
+  uint32_t dataWidth = 1024; // was 2048
   float32_t powerScale = 0;
 
   float32_t *iBuffer = nullptr; // I and Q pointers needed for one-time read of record queues.
@@ -1003,12 +1006,12 @@ void TxCalibrate::MakeFFTData()
 
   // Read incoming I and Q audio blocks from the SSB exciter.
   // Data gatekeeper.  Are there at least N_BLOCKS buffers in each channel available ?
-  while (static_cast<uint32_t>(Q_in_L_Ex.available()) < 16 and static_cast<uint32_t>(Q_in_R_Ex.available()) < 16)
+  while (static_cast<uint32_t>(Q_in_L_Ex.available()) < 8 and static_cast<uint32_t>(Q_in_R_Ex.available()) < 8)
   {
     ;
   }
 
-  for (unsigned i = 0; i < 16; i++)
+  for (unsigned i = 0; i < 8; i++)
   {
 
     iBuffer = Q_in_L_Ex.readBuffer();
@@ -1072,9 +1075,9 @@ void TxCalibrate::MakeFFTData()
 
   // Get audio samples from the audio  buffers and convert them to float.
   // Read in 16 blocks of 128 samples in I and Q if available.
-  if (static_cast<uint32_t>(ADC_RX_I.available()) > 15 and static_cast<uint32_t>(ADC_RX_Q.available()) > 15)
+  if (static_cast<uint32_t>(ADC_RX_I.available()) > 7 and static_cast<uint32_t>(ADC_RX_Q.available()) > 7)
   {
-    for (unsigned i = 0; i < N_BLOCKS; i++)
+    for (unsigned i = 0; i < 8; i++)
     {
       /**********************************************************************************  AFP 12-31-20
           Using arm_Math library, convert to float one buffer_size.
@@ -1130,7 +1133,7 @@ void TxCalibrate::MakeFFTData()
     // This process started because there are 2048 samples available.  Perform FFT.
     updateDisplayFlag = true;
 //    if (fftActive)
-      ZoomFFTExe(2048);
+      ZoomFFTExe(256, 1024);
     fftSuccess = true;
   } // End of receive code
   else

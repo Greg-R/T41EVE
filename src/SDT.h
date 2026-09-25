@@ -937,7 +937,7 @@ float BearingHeading(char *dxCallPrefix);
 void BearingMaps();
 void bmpDraw(const char *filename, int x, int y);
 void CalDataOptions(); // Resides in MenuProc.cpp.
-void CalcZoom1Magn();
+void CalcZoom1Magn(int fftWidth);
 void CalcFIRCoeffs(float *coeffs_I, int numCoeffs, float32_t fc, float32_t Astop, int type, float dfc, float Fsamprate);
 void CalcCplxFIRCoeffs(float *coeffs_I, float *coeffs_Q, int numCoeffs, float32_t FLoCut, float32_t FHiCut, float SampleRate);
 void CaptureKeystrokes();
@@ -1033,4 +1033,4 @@ void writeClippedRect(int x, int y, int cx, int cy, uint16_t *pixels, bool waitF
 inline void writeRect(int x, int y, int cx, int cy, uint16_t *pixels);
 void Xanr();
 void ZoomFFTPrep();
-void ZoomFFTExe(uint32_t blockSize);
+void ZoomFFTExe(int fftWidth, uint32_t blockSize);

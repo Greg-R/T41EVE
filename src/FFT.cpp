@@ -38,8 +38,9 @@ int16_t spectrumMinAvg{0};
 int16_t spectrumMinOld{0};
 const float32_t alpha = 0.1;
 
+// Take value of spectrum_zoom and initialize FIR decimation filters for the right values.
 void ZoomFFTPrep()
-{ // take value of spectrum_zoom and initialize FIR decimation filters for the right values
+{ 
 
   /****************************************************************************************
      Zoom FFT: Initiate decimation FIR filters
@@ -122,8 +123,8 @@ void ZoomFFTPrep()
   zoom_sample_ptr = 0;
 }
 
-const int fftWidth = 512;
-void ZoomFFTExe(uint32_t blockSize)
+//const int fftWidth = 512;
+void ZoomFFTExe(int fftWidth, uint32_t blockSize)
 {
   // totally rebuilt 27.8.2020 DD4WH
   // however, I did not manage to implement a correct routine for magnifications > 2048x
@@ -132,8 +133,11 @@ void ZoomFFTExe(uint32_t blockSize)
   float32_t y_buffer[blockSize];
 
   //  NOTE THESE ARE STATIC
-  static float32_t FFT_ring_buffer_x[fftWidth * 2];
-  static float32_t FFT_ring_buffer_y[fftWidth * 2];
+////  static float32_t FFT_ring_buffer_x[fftWidth * 2];
+////  static float32_t FFT_ring_buffer_y[fftWidth * 2];
+
+  static float32_t FFT_ring_buffer_x[1024];
+  static float32_t FFT_ring_buffer_y[1024];
 
   int sample_no = 256;
   // sample_no is 256, in high magnify modes it is smaller!
@@ -275,7 +279,7 @@ void ZoomFFTExe(uint32_t blockSize)
     void
     Used when Spectrum Zoom =1
 *****/
-void CalcZoom1Magn()
+void CalcZoom1Magn(int fftWidth)
 {
   if (updateDisplayFlag == true)
   {
