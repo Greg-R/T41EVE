@@ -518,7 +518,7 @@ task<callable_holder> task_filter_tune(EncoderFilter, 30);
 
 void EncoderFilterISR()
 {
-//  seq::add(task_filter_tune);
-  Serial.printf("EncoderFilterISR %d\n", filterEncoderMove);
-  EncoderFilter();
+  seq::add(task_filter_tune);
+//  Serial.printf("EncoderFilterISR %d\n", filterEncoderMove);
+if(calOnFlag)  EncoderFilter();
 }

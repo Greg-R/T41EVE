@@ -28,7 +28,7 @@ You should have received a copy of the GNU General Public License along with T41
 
 #include "SDT.h"
 
-  using namespace Sequencer;
+using namespace Sequencer;
 
 //  using callable_holder = std::function<void()>;
 //  using task_seq = Sequencer::task<callable_holder>;
@@ -53,7 +53,7 @@ void TxCalibrate::warmUpCal()
   // MakeFFTData() has to be called enough times for transients to settle out before computing FFT.
   for (i = 0; i < 32; i = i + 1)
   {
-//    fftActive = true;
+    //    fftActive = true;
     updateDisplayFlag = true;
     TxCalibrate::MakeFFTData(); // Note, FFT not called if buffers are not sufficiently filled.
 
@@ -68,18 +68,18 @@ void TxCalibrate::warmUpCal()
       break; // If five in a row, exit the loop.  Warm-up is complete.
   } // End peak detection loop.
 
-//  fftActive = true;
+  //  fftActive = true;
   updateDisplayFlag = false;
   // Find peak of spectrum, which is 512 wide.  Use this to adjust spectrum peak to top of spectrum display.
   arm_max_q15(pixelnew, 256, &rawSpectrumPeak, &index_of_max);
-////  if (index_of_max < 120 or index_of_max > 136)
+  ////  if (index_of_max < 120 or index_of_max > 136)
   {
-////    Serial.printf("Problem with TX warmUpCal\n");
+    ////    Serial.printf("Problem with TX warmUpCal\n");
     Serial.printf("index_of_max = %d\n", index_of_max);
   }
-//  for(int x = 0; x < 256; x = x + 1) {
-//    Serial.printf("pixelnew[%d] = %d\n", x, pixelnew[x]);
-//  }
+  //  for(int x = 0; x < 256; x = x + 1) {
+  //    Serial.printf("pixelnew[%d] = %d\n", x, pixelnew[x]);
+  //  }
   ADC_RX_I.clear();
   ADC_RX_Q.clear();
   Q_in_L_Ex.clear();
@@ -134,6 +134,25 @@ void TxCalibrate::CalibratePreamble(int setZoom)
   NCOFreq = 0;
   digitalWrite(MUTE, MUTEAUDIO); // Mute Audio.
   digitalWrite(RXTX, HIGH);      // Turn on transmitter.
+
+  // Apply existing amplitude and phase corrections.
+  AudioNoInterrupts();
+  if (TxCalibrate::mode == 0)
+  {
+    if (bands.bands[ConfigData.currentBand].sideband == Sideband::LOWER)
+      cessb1.setIQCorrections(true, CalData.IQCWAmpCorrectionFactorLSB[ConfigData.currentBandA], CalData.IQCWPhaseCorrectionFactorLSB[ConfigData.currentBandA], 0.0);
+    if (bands.bands[ConfigData.currentBand].sideband == Sideband::UPPER)
+      cessb1.setIQCorrections(true, CalData.IQCWAmpCorrectionFactorUSB[ConfigData.currentBandA], CalData.IQCWPhaseCorrectionFactorUSB[ConfigData.currentBandA], 0.0);
+  }
+  if (TxCalibrate::mode == 1)
+  {
+    if (bands.bands[ConfigData.currentBand].sideband == Sideband::LOWER)
+      cessb1.setIQCorrections(true, CalData.IQSSBAmpCorrectionFactorLSB[ConfigData.currentBandA], CalData.IQSSBPhaseCorrectionFactorLSB[ConfigData.currentBandA], 0.0);
+    if (bands.bands[ConfigData.currentBand].sideband == Sideband::UPPER)
+      cessb1.setIQCorrections(true, CalData.IQSSBAmpCorrectionFactorUSB[ConfigData.currentBandA], CalData.IQSSBPhaseCorrectionFactorUSB[ConfigData.currentBandA], 0.0);
+  }
+  AudioInterrupts();
+
   rawSpectrumPeak = 0;
   if (mode == 0)
     radioState = RadioState::CW_CALIBRATE_STATE;
@@ -183,6 +202,7 @@ void TxCalibrate::CalibrateEpilogue()
   if (TxCalibrate::saveToEeprom)
     eeprom.CalDataWrite(); // Save calibration numbers and configuration.  KF5N August 12, 2023
   calOnFlag = false;
+  seq::clear();
   fftOffset = 0; // Some reboots may be caused by large fftOffset values when Auto-Spectrum is on.
   bands.bands[ConfigData.currentBand].sideband = tempSideband;
   lastState = RadioState::NOSTATE; // This is required due to the function deactivating the receiver.  This forces a pass through the receiver set-up code.  KF5N October 16, 2023
@@ -299,6 +319,11 @@ void TxCalibrate::writeToCalData(float ichannel, float qchannel)
    Return value:
       void
  *****/
+
+elapsedMicros usec1 = 0;
+uint32_t usec1Old = 0;
+uint32_t loopCounter = 0;
+
 void TxCalibrate::DoXmitCalibrate(int calMode, bool radio, bool toEeprom)
 {
   int freqOffset = 0; // Calibration tone same as regular modulation tone.
@@ -367,11 +392,8 @@ void TxCalibrate::DoXmitCalibrate(int calMode, bool radio, bool toEeprom)
   // Transmit Calibration Loop
   while (true)
   {
-//    fftActive = true;
-//seq::run();
     computeAdjdB();
     evedisplay.drawTransmitterCalScreen(pixelnew);
-    
 
     // This function takes care of button presses and resultant control of the rest of the process.
     // The buttons are polled by the while loop.
@@ -597,12 +619,22 @@ void TxCalibrate::DoXmitCalibrate(int calMode, bool radio, bool toEeprom)
 
     task = MenuSelect::DEFAULT; // Reset task after it is used.
                                 //  Read encoder and update values.
-//    seq::run();
+                                //    seq::run();
     if (IQCalType == 0)
       amplitude = GetEncoderValueLive(-2.0, 2.0, amplitude, 0.001);
     if (IQCalType == 1)
       phase = GetEncoderValueLive(-2.0, 2.0, phase, 0.001);
     writeToCalData(amplitude, phase);
+
+    loopCounter = loopCounter + 1;
+    if (loopCounter > 100) // uint32_t 2^32 = 4294967296
+    {
+      Serial.printf("Loop us = %u\n", (static_cast<uint32_t>(usec1) - static_cast<uint32_t>(usec1Old)));
+      loopCounter = 0;
+      Serial.printf("ConfigData.sdCardPresent = %d\n", ConfigData.sdCardPresent);
+    }
+    usec1Old = usec1;
+
   } // end while
 } // End Transmit calibration
 
@@ -620,6 +652,18 @@ void TxCalibrate::DoXmitCarrierCalibrate(int calMode, bool radio, bool toEeprom)
 {
   float32_t maxSweepAmp = 0.1;
   float32_t maxSweepPhase = 0.05;
+
+  /*
+  if(mode == 0 and CalData.CWradioCalComplete == true) {
+  maxSweepAmp = 0.05;
+  maxSweepPhase = 0.025;
+  }
+  if(mode == 1 and CalData.SSBradioCalComplete == true) {
+  maxSweepAmp = 0.05;
+  maxSweepPhase = 0.025;
+  }
+  */
+
   float adjdB_old{0};
   float adjdB_min{0};
   carrIncrement = 0.005;       // Initial carrier increment.
@@ -666,7 +710,7 @@ void TxCalibrate::DoXmitCarrierCalibrate(int calMode, bool radio, bool toEeprom)
   // Carrier Calibration Loop
   while (true)
   {
-//    fftActive = true;
+    //    fftActive = true;
     computeAdjdB();
     evedisplay.drawTransmitterCalScreen(pixelnew);
     TxCalibrate::buttonTasks(); // This takes care of manual calls to the initial or refinement calibrations.
@@ -688,6 +732,20 @@ void TxCalibrate::DoXmitCarrierCalibrate(int calMode, bool radio, bool toEeprom)
         warmup = warmup + 1;
         qDCoffset = maxSweepPhase; //  Need to use these values during warmup
         iDCoffset = maxSweepAmp;   //  so adjdB and adjdB_avg are forced upwards.
+
+  /*
+  if (mode == 0)
+  {
+    iDCoffset = CalData.iDCoffsetCW[ConfigData.currentBand] - maxSweepAmp;
+    qDCoffset = CalData.qDCoffsetCW[ConfigData.currentBand] - maxSweepAmp;
+  }
+  if (mode == 1)
+  {
+    iDCoffset = CalData.iDCoffsetSSB[ConfigData.currentBand] - maxSweepAmp;
+    qDCoffset = CalData.qDCoffsetSSB[ConfigData.currentBand] - maxSweepAmp;
+  }
+*/
+
         state = State::warmup;
         if (warmup == 1)
           state = State::state0;
@@ -696,6 +754,20 @@ void TxCalibrate::DoXmitCarrierCalibrate(int calMode, bool radio, bool toEeprom)
       case State::state0:
         iDCoffset = -maxSweepAmp; // Begin sweep at low end and move upwards.
         qDCoffset = -maxSweepAmp; // Begin sweep at low end and move upwards.
+
+/*
+  if (mode == 0)
+  {
+    iDCoffset = CalData.iDCoffsetCW[ConfigData.currentBand] - maxSweepAmp;
+    qDCoffset = CalData.qDCoffsetCW[ConfigData.currentBand] - maxSweepAmp;
+  }
+  if (mode == 1)
+  {
+    iDCoffset = CalData.iDCoffsetSSB[ConfigData.currentBand] - maxSweepAmp;
+    qDCoffset = CalData.qDCoffsetSSB[ConfigData.currentBand] - maxSweepAmp;
+  }
+*/
+
         GetEncoderValueLive(-1.0, 1.0, qDCoffset, carrIncrement);
         index = 0;
         IQCalType = 0;
@@ -710,7 +782,7 @@ void TxCalibrate::DoXmitCarrierCalibrate(int calMode, bool radio, bool toEeprom)
           adjdB_min = adjdB;
         if ((adjdB - adjdB_min) > 2.0)
           iDCoffset = maxSweepAmp;
-//        Serial.printf("adjdB = %f adjdB_min = %f\n", adjdB, adjdB_min);
+        //        Serial.printf("adjdB = %f adjdB_min = %f\n", adjdB, adjdB_min);
         index = index + 1;
         // Increment for next measurement.
         iDCoffset = iDCoffset + carrIncrement;
@@ -738,7 +810,7 @@ void TxCalibrate::DoXmitCarrierCalibrate(int calMode, bool radio, bool toEeprom)
           // Clear the vector before moving to phase.
           std::fill(sweepVectorValue.begin(), sweepVectorValue.end(), 0.0);
           std::fill(sweepVector.begin(), sweepVector.end(), 0.0);
-          qDCoffset = -maxSweepPhase + iDCoffset; // The starting value for phase.
+          qDCoffset = -maxSweepPhase + qDCoffset; // The starting value for phase.
           adjdB_min = 0.0;
           state = State::initialSweepPhase; // Initial I channel sweep done; proceed to initial Q sweep.
           break;
@@ -771,7 +843,7 @@ void TxCalibrate::DoXmitCarrierCalibrate(int calMode, bool radio, bool toEeprom)
           adjdB = 0.0;
           index = 0;
           carrIncrement = 0.0005; // Manual increment.
-          refinePass = 0;
+//          refinePass = 0;
 
           // Set optimal values to CalData.
           if (mode == 0)
@@ -917,8 +989,8 @@ void TxCalibrate::DoXmitCarrierCalibrate(int calMode, bool radio, bool toEeprom)
 
     task = MenuSelect::DEFAULT; // Reset task after it is used.
     //  Read encoder and update values.
-//        seq::run();
-        
+    //        seq::run();
+
     if (IQCalType == 0)
       iDCoffset = GetEncoderValueLive(-1.0, 1.0, iDCoffset, 0.0005);
     if (IQCalType == 1)
@@ -1144,8 +1216,8 @@ void TxCalibrate::MakeFFTData()
 
     // This process started because there are 2048 samples available.  Perform FFT.
     updateDisplayFlag = true;
-//    if (fftActive)
-      ZoomFFTExe(256, 1024);
+    //    if (fftActive)
+    ZoomFFTExe(256, 1024);
     fftSuccess = true;
   } // End of receive code
   else
