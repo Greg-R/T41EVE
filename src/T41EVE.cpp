@@ -56,7 +56,7 @@ You should have received a copy of the GNU General Public License along with T41
 const char *configFilename = "/config.txt";   // <- SD library uses 8.3 filenames
 const char *calFilename = "/calibration.txt"; // <- SD library uses 8.3 filenames
 
-extern const int32_t SPECTRUM_RES{512};
+//extern const int32_t SPECTRUM_RES{512};
 
 /* Bearing functionality is not implemented in T41EEE.91 (to return in a future release).
 struct maps myMapFiles[10] = {
@@ -247,7 +247,7 @@ uint32_t SampleRate = SAMPLE_RATE_192K;
 uint32_t zoom_display = 1;
 
 //  These arrays are used to create the RF spectrum plot in the display.
-int16_t pixelnew[SPECTRUM_RES]{0};
+int16_t pixelnew[512]{0};
 
 //  Set by the filter encoder isr.
 int32_t filterEncoderMove = 0;

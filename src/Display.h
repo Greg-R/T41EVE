@@ -34,7 +34,6 @@ class Display
 public:
   uint32_t TEMP_X_OFFSET{15};
   uint32_t TEMP_Y_OFFSET{465}; // 480 * 0.97 = 465
-  const uint32_t SPECTRUM_RES{512};
   int16_t spectrum_x = 10;
   
   int maxYPlot;

@@ -31,7 +31,7 @@ int Zoom_FFT_M1;
 int Zoom_FFT_M2;
 int zoom_sample_ptr = 0;
 float32_t LPF_spectrum = 0.82;
-extern const int32_t SPECTRUM_RES;
+//const int32_t SPECTRUM_RES{256};
 int16_t spectrumMin{0};
 uint32_t minIndex{0};
 int16_t spectrumMinAvg{0};
@@ -133,11 +133,11 @@ void ZoomFFTExe(int fftWidth, uint32_t blockSize)
   float32_t y_buffer[blockSize];
 
   //  NOTE THESE ARE STATIC
-////  static float32_t FFT_ring_buffer_x[fftWidth * 2];
-////  static float32_t FFT_ring_buffer_y[fftWidth * 2];
+  static float32_t FFT_ring_buffer_x[2048];
+  static float32_t FFT_ring_buffer_y[2048];
 
-  static float32_t FFT_ring_buffer_x[1024];
-  static float32_t FFT_ring_buffer_y[1024];
+//  static float32_t FFT_ring_buffer_x[1024];
+//  static float32_t FFT_ring_buffer_y[1024];
 
   int sample_no = 256;
   // sample_no is 256, in high magnify modes it is smaller!
@@ -158,10 +158,10 @@ void ZoomFFTExe(int fftWidth, uint32_t blockSize)
   arm_fir_decimate_f32(&Fir_Zoom_FFT_Decimate_I2, x_buffer, x_buffer, blockSize / Zoom_FFT_M1);
   arm_fir_decimate_f32(&Fir_Zoom_FFT_Decimate_Q2, y_buffer, y_buffer, blockSize / Zoom_FFT_M1);
 
-  // this puts the sample_no samples into the ringbuffer -->
-  //  the right order has to be thought about!
-  //  we take all the samples from zoom_sample_ptr to 256 and
-  //  then all samples from 0 to zoom_sampl_ptr - 1
+  // This puts the sample_no samples into the ringbuffer -->
+  //  The right order has to be thought about!
+  //  We take all the samples from zoom_sample_ptr to 256 and
+  //  Then all samples from 0 to zoom_sampl_ptr - 1
 
   // fill into ringbuffer
   for (int i = 0; i < sample_no; i++)
@@ -190,8 +190,8 @@ void ZoomFFTExe(int fftWidth, uint32_t blockSize)
 
   for (int idx = 0; idx < fftWidth; idx++)
   {
-    buffer_spec_FFT[idx * 2 + 0] = multiplier * FFT_ring_buffer_x[zoom_sample_ptr] * (0.5 - 0.5 * cos(6.28 * idx / SPECTRUM_RES)); // Hanning Window AFP 03-12-21
-    buffer_spec_FFT[idx * 2 + 1] = multiplier * FFT_ring_buffer_y[zoom_sample_ptr] * (0.5 - 0.5 * cos(6.28 * idx / SPECTRUM_RES));
+    buffer_spec_FFT[idx * 2 + 0] = multiplier * FFT_ring_buffer_x[zoom_sample_ptr] * (0.5 - 0.5 * cos(6.28 * idx / fftWidth)); // Hanning Window AFP 03-12-21
+    buffer_spec_FFT[idx * 2 + 1] = multiplier * FFT_ring_buffer_y[zoom_sample_ptr] * (0.5 - 0.5 * cos(6.28 * idx / fftWidth));
     zoom_sample_ptr++;
     if (zoom_sample_ptr >= fftWidth)
       zoom_sample_ptr = 0;
@@ -219,7 +219,8 @@ void ZoomFFTExe(int fftWidth, uint32_t blockSize)
     //    }
     // Perform complex FFT
     // Calculation is performed in-place the FFT_buffer [re, im, re, im, re, im . . .]
-    arm_cfft_f32(spec_FFT, buffer_spec_FFT, 0, 1); // spec_FFT is width 512
+if(calOnFlag)    arm_cfft_f32(NR_FFT, buffer_spec_FFT, 0, 1); // spec_FFT is width 512
+else arm_cfft_f32(NR_FFT, buffer_spec_FFT, 0, 1); // spec_FFT is width 512
     // calculate mag = I*I + Q*Q,
     // and simultaneously put them into the right order
     for (int i = 0; i < fftWidth / 2; i++)
@@ -309,14 +310,14 @@ void CalcZoom1Magn(int fftWidth)
     // and simultaneously put them into the right order
     // 38.50%, saves 0.05% of processor power and 1kbyte RAM ;-)
 
-    for (int i = 0; i < SPECTRUM_RES / 2; i++)
+    for (int i = 0; i < fftWidth / 2; i++)
     {
-      FFT_spec[i + SPECTRUM_RES / 2] = (buffer_spec_FFT[i * 2] * buffer_spec_FFT[i * 2] + buffer_spec_FFT[i * 2 + 1] * buffer_spec_FFT[i * 2 + 1]);
-      FFT_spec[i] = (buffer_spec_FFT[(i + SPECTRUM_RES / 2) * 2] * buffer_spec_FFT[(i + SPECTRUM_RES / 2) * 2] + buffer_spec_FFT[(i + SPECTRUM_RES / 2) * 2 + 1] * buffer_spec_FFT[(i + SPECTRUM_RES / 2) * 2 + 1]);
+      FFT_spec[i + fftWidth / 2] = (buffer_spec_FFT[i * 2] * buffer_spec_FFT[i * 2] + buffer_spec_FFT[i * 2 + 1] * buffer_spec_FFT[i * 2 + 1]);
+      FFT_spec[i] = (buffer_spec_FFT[(i + fftWidth / 2) * 2] * buffer_spec_FFT[(i + fftWidth / 2) * 2] + buffer_spec_FFT[(i + fftWidth / 2) * 2 + 1] * buffer_spec_FFT[(i + fftWidth / 2) * 2 + 1]);
     }
 
     // apply low pass filter and scale the magnitude values and convert to int for spectrum display
-    for (int16_t x = 0; x < SPECTRUM_RES; x++)
+    for (int16_t x = 0; x < fftWidth; x++)
     {
       spec_help = ConfigData.LPFcoeff * FFT_spec[x] + (1.0 - ConfigData.LPFcoeff) * FFT_spec_old[x];
       FFT_spec_old[x] = spec_help;

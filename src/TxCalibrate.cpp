@@ -28,6 +28,12 @@ You should have received a copy of the GNU General Public License along with T41
 
 #include "SDT.h"
 
+  using namespace Sequencer;
+
+  using callable_holder = std::function<void()>;
+  using task_seq = Sequencer::task<callable_holder>;
+  using seq = Sequencer::sequencer<task_seq>;
+
 /*****
   Purpose: Run MakeFFTData() a few times to load and settle out buffers.  KF5N May 22, 2024
            Compute FFT in order to find maximum signal peak prior to beginning calibration.
@@ -912,6 +918,7 @@ void TxCalibrate::DoXmitCarrierCalibrate(int calMode, bool radio, bool toEeprom)
       iDCoffset = GetEncoderValueLive(-1.0, 1.0, iDCoffset, 0.0005);
     if (IQCalType == 1)
       qDCoffset = GetEncoderValueLive(-1.0, 1.0, qDCoffset, 0.0005);
+        seq::run();
     if (mode == 0)
     {
       CalData.iDCoffsetCW[ConfigData.currentBand] = iDCoffset;
@@ -1157,20 +1164,20 @@ void TxCalibrate::MakeFFTData()
 void TxCalibrate::ShowSpectrum() // AFP 2-10-23
 {
   int x1 = 0;
-  int capture_bins = 8; // Sets the number of bins to scan for signal peak.
+  int capture_bins = 6; // Sets the number of bins to scan for signal peak.
   int cal_bins[3] = {0, 0, 0};
 
   if ((calTypeFlag == 1 || calTypeFlag == 2) && bands.bands[ConfigData.currentBand].sideband == Sideband::LOWER)
   {
-    cal_bins[0] = 257; // LSB
-    cal_bins[1] = 289; // Carrier
-    cal_bins[2] = 322; // Undesired sideband
+    cal_bins[0] = 257 - 127; // LSB
+    cal_bins[1] = 272 - 127; // Carrier
+    cal_bins[2] = 288 - 127; // Undesired sideband
   } // Transmit and Carrier calibration, LSB.  KF5N
   if ((calTypeFlag == 1 || calTypeFlag == 2) && bands.bands[ConfigData.currentBand].sideband == Sideband::UPPER)
   {
-    cal_bins[0] = 257; // USB
-    cal_bins[1] = 225; // Carrier
-    cal_bins[2] = 193; // Undesired sideband
+    cal_bins[0] = 257 - 127; // USB
+    cal_bins[1] = 236 - 127; // Carrier
+    cal_bins[2] = 224 - 127; // Undesired sideband
   } // Transmit and Carrier calibration, USB.  KF5N
 
   // Plot carrier during transmit cal, do not return a dB value:
