@@ -219,8 +219,8 @@ void ZoomFFTExe(int fftWidth, uint32_t blockSize)
     //    }
     // Perform complex FFT
     // Calculation is performed in-place the FFT_buffer [re, im, re, im, re, im . . .]
-if(calOnFlag)    arm_cfft_f32(NR_FFT, buffer_spec_FFT, 0, 1); // spec_FFT is width 512
-else arm_cfft_f32(NR_FFT, buffer_spec_FFT, 0, 1); // spec_FFT is width 512
+if(calOnFlag)    arm_cfft_f32(NR_FFT, buffer_spec_FFT, 0, 1); // NR_FFT is width 256
+else arm_cfft_f32(spec_FFT, buffer_spec_FFT, 0, 1); // spec_FFT is width 512
     // calculate mag = I*I + Q*Q,
     // and simultaneously put them into the right order
     for (int i = 0; i < fftWidth / 2; i++)

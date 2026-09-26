@@ -87,4 +87,7 @@ namespace Sequencer
 
   }; // End class sequencer
 
+    using task_seq = Sequencer::task<callable_holder>;
+  using seq = Sequencer::sequencer<task_seq>;
+
 } // End Sequencer namespace.

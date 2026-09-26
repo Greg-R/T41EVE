@@ -30,9 +30,9 @@ You should have received a copy of the GNU General Public License along with T41
 
   using namespace Sequencer;
 
-  using callable_holder = std::function<void()>;
-  using task_seq = Sequencer::task<callable_holder>;
-  using seq = Sequencer::sequencer<task_seq>;
+//  using callable_holder = std::function<void()>;
+//  using task_seq = Sequencer::task<callable_holder>;
+//  using seq = Sequencer::sequencer<task_seq>;
 
 /*****
   Purpose: Run MakeFFTData() a few times to load and settle out buffers.  KF5N May 22, 2024
@@ -77,9 +77,9 @@ void TxCalibrate::warmUpCal()
 ////    Serial.printf("Problem with TX warmUpCal\n");
     Serial.printf("index_of_max = %d\n", index_of_max);
   }
-  for(int x = 0; x < 256; x = x + 1) {
-    Serial.printf("pixelnew[%d] = %d\n", x, pixelnew[x]);
-  }
+//  for(int x = 0; x < 256; x = x + 1) {
+//    Serial.printf("pixelnew[%d] = %d\n", x, pixelnew[x]);
+//  }
   ADC_RX_I.clear();
   ADC_RX_Q.clear();
   Q_in_L_Ex.clear();
@@ -368,8 +368,10 @@ void TxCalibrate::DoXmitCalibrate(int calMode, bool radio, bool toEeprom)
   while (true)
   {
 //    fftActive = true;
+//seq::run();
     computeAdjdB();
     evedisplay.drawTransmitterCalScreen(pixelnew);
+    
 
     // This function takes care of button presses and resultant control of the rest of the process.
     // The buttons are polled by the while loop.
@@ -595,6 +597,7 @@ void TxCalibrate::DoXmitCalibrate(int calMode, bool radio, bool toEeprom)
 
     task = MenuSelect::DEFAULT; // Reset task after it is used.
                                 //  Read encoder and update values.
+//    seq::run();
     if (IQCalType == 0)
       amplitude = GetEncoderValueLive(-2.0, 2.0, amplitude, 0.001);
     if (IQCalType == 1)
@@ -914,11 +917,13 @@ void TxCalibrate::DoXmitCarrierCalibrate(int calMode, bool radio, bool toEeprom)
 
     task = MenuSelect::DEFAULT; // Reset task after it is used.
     //  Read encoder and update values.
+//        seq::run();
+        
     if (IQCalType == 0)
       iDCoffset = GetEncoderValueLive(-1.0, 1.0, iDCoffset, 0.0005);
     if (IQCalType == 1)
       qDCoffset = GetEncoderValueLive(-1.0, 1.0, qDCoffset, 0.0005);
-        seq::run();
+
     if (mode == 0)
     {
       CalData.iDCoffsetCW[ConfigData.currentBand] = iDCoffset;
