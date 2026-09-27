@@ -1027,7 +1027,7 @@ void TxCalibrate::RadioCal(int mode)
     {
       bands.bands[ConfigData.currentBand].sideband = Sideband::UPPER; // Calibrate upper sideband for 80M and 40M.
       rxcalibrater.DoReceiveCalibrate(mode, true, false);
-      txcalibrater.DoXmitCarrierCalibrate(mode, true, false);
+//      txcalibrater.DoXmitCarrierCalibrate(mode, true, false);
       txcalibrater.DoXmitCalibrate(mode, true, false);
     }
 

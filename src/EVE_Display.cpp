@@ -1622,7 +1622,7 @@ void EVE_Display::drawTransmitterCalScreen(int16_t *fftArray)
     EVE_color_rgb(0xff0000); // Red
     EVE_vertex2f(267, 101);
     EVE_vertex2f(277, 469);
-    EVE_color_rgb(0x0000ff); // Blue
+    EVE_color_rgb(0x34bdeb); // Blue
     EVE_vertex2f(251, 101);
     EVE_vertex2f(261, 469);
     EVE_end();
@@ -1634,7 +1634,7 @@ void EVE_Display::drawTransmitterCalScreen(int16_t *fftArray)
     EVE_color_rgb(0xff0000); // Red
     EVE_vertex2f(235, 101);
     EVE_vertex2f(245, 469);
-    EVE_color_rgb(0x0000ff); // Blue
+    EVE_color_rgb(0x34bdeb); // Blue
     EVE_vertex2f(251, 101);
     EVE_vertex2f(261, 469);
     EVE_end();
@@ -1646,7 +1646,7 @@ void EVE_Display::drawTransmitterCalScreen(int16_t *fftArray)
   EVE_cmd_number_burst(0, 37, 31, 0, TxRxFreq); // x, y, font, options, n
 
   // Draw the RF spectrum.
-  EVE_color_rgb_burst(0xf0f000); // Make spectrum blue.
+  EVE_color_rgb_burst(0xffffff); // Make spectrum white.
   EVE_begin_burst(EVE_LINE_STRIP);
   for (int j = 0; j < 256; j = j + 1)
   {
