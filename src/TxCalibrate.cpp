@@ -311,7 +311,7 @@ void TxCalibrate::writeToCalData(float ichannel, float qchannel)
 }
 
 /*****
-  Purpose: Combined input/output for the purpose of calibrating the transmit IQ.
+  Purpose: Full duplex transmitter carrier nulling.
 
    Parameter List:
       mode, bool radioCal, bool refineCal, bool saveToEeprom
@@ -414,11 +414,25 @@ void TxCalibrate::DoXmitCalibrate(int calMode, bool radio, bool toEeprom)
         std::fill(sweepVectorValue.begin(), sweepVectorValue.end(), 0.0);
         std::fill(sweepVector.begin(), sweepVector.end(), 0.0);
         warmup = warmup + 1;
-        phase = 0.0 + maxSweepPhase;   //  Need to use these values during warmup
-        amplitude = 1.0 + maxSweepAmp; //  so adjdB and adjdB_avg are forced upwards.
+//        phase = 0.0 + maxSweepPhase;   //  Need to use these values during warmup
+//        amplitude = 1.0 + maxSweepAmp; //  so adjdB and adjdB_avg are forced upwards.
         state = State::warmup;
         if (warmup == 1)         // Was 16.
           state = State::state0; // Proceed with initial calibration.
+
+  if(mode == 0 and CalData.CWradioCalComplete == true) {
+amplitude = amplitude + 0.001;
+adjdB_old = 0;
+refinePass = 0;
+  state = State::refineAmpPlus;
+}
+  if(mode == 1 and CalData.SSBradioCalComplete == true) {
+    amplitude = amplitude + 0.001;
+    adjdB_old = 0;
+    refinePass = 0;
+   state = State::refineAmpPlus;
+  }
+
         break;
 
       case State::state0:
@@ -647,23 +661,10 @@ void TxCalibrate::DoXmitCalibrate(int calMode, bool radio, bool toEeprom)
    Return value:
       void
  *****/
-
 void TxCalibrate::DoXmitCarrierCalibrate(int calMode, bool radio, bool toEeprom)
 {
   float32_t maxSweepAmp = 0.1;
   float32_t maxSweepPhase = 0.05;
-
-  /*
-  if(mode == 0 and CalData.CWradioCalComplete == true) {
-  maxSweepAmp = 0.05;
-  maxSweepPhase = 0.025;
-  }
-  if(mode == 1 and CalData.SSBradioCalComplete == true) {
-  maxSweepAmp = 0.05;
-  maxSweepPhase = 0.025;
-  }
-  */
-
   float adjdB_old{0};
   float adjdB_min{0};
   carrIncrement = 0.005;       // Initial carrier increment.
@@ -710,7 +711,7 @@ void TxCalibrate::DoXmitCarrierCalibrate(int calMode, bool radio, bool toEeprom)
   // Carrier Calibration Loop
   while (true)
   {
-    //    fftActive = true;
+//    fftActive = true;
     computeAdjdB();
     evedisplay.drawTransmitterCalScreen(pixelnew);
     TxCalibrate::buttonTasks(); // This takes care of manual calls to the initial or refinement calibrations.
@@ -730,44 +731,31 @@ void TxCalibrate::DoXmitCarrierCalibrate(int calMode, bool radio, bool toEeprom)
         std::fill(sweepVectorValue.begin(), sweepVectorValue.end(), 0.0);
         std::fill(sweepVector.begin(), sweepVector.end(), 0.0);
         warmup = warmup + 1;
-        qDCoffset = maxSweepPhase; //  Need to use these values during warmup
-        iDCoffset = maxSweepAmp;   //  so adjdB and adjdB_avg are forced upwards.
-
-  /*
-  if (mode == 0)
-  {
-    iDCoffset = CalData.iDCoffsetCW[ConfigData.currentBand] - maxSweepAmp;
-    qDCoffset = CalData.qDCoffsetCW[ConfigData.currentBand] - maxSweepAmp;
-  }
-  if (mode == 1)
-  {
-    iDCoffset = CalData.iDCoffsetSSB[ConfigData.currentBand] - maxSweepAmp;
-    qDCoffset = CalData.qDCoffsetSSB[ConfigData.currentBand] - maxSweepAmp;
-  }
-*/
-
+//        qDCoffset = maxSweepPhase; //  Need to use these values during warmup
+//        iDCoffset = maxSweepAmp;   //  so adjdB and adjdB_avg are forced upwards.
         state = State::warmup;
         if (warmup == 1)
           state = State::state0;
+
+  if(mode == 0 and CalData.CWradioCalComplete == true) {
+iDCoffset = iDCoffset + 0.0005;
+adjdB_old = 0;
+refinePass = 0;
+  state = State::refineAmpPlus;
+}
+  if(mode == 1 and CalData.SSBradioCalComplete == true) {
+    iDCoffset = iDCoffset + 0.0005;
+    adjdB_old = 0;
+    refinePass = 0;
+   state = State::refineAmpPlus;
+  }
+
+
         break;
 
       case State::state0:
         iDCoffset = -maxSweepAmp; // Begin sweep at low end and move upwards.
         qDCoffset = -maxSweepAmp; // Begin sweep at low end and move upwards.
-
-/*
-  if (mode == 0)
-  {
-    iDCoffset = CalData.iDCoffsetCW[ConfigData.currentBand] - maxSweepAmp;
-    qDCoffset = CalData.qDCoffsetCW[ConfigData.currentBand] - maxSweepAmp;
-  }
-  if (mode == 1)
-  {
-    iDCoffset = CalData.iDCoffsetSSB[ConfigData.currentBand] - maxSweepAmp;
-    qDCoffset = CalData.qDCoffsetSSB[ConfigData.currentBand] - maxSweepAmp;
-  }
-*/
-
         GetEncoderValueLive(-1.0, 1.0, qDCoffset, carrIncrement);
         index = 0;
         IQCalType = 0;
@@ -782,7 +770,7 @@ void TxCalibrate::DoXmitCarrierCalibrate(int calMode, bool radio, bool toEeprom)
           adjdB_min = adjdB;
         if ((adjdB - adjdB_min) > 2.0)
           iDCoffset = maxSweepAmp;
-        //        Serial.printf("adjdB = %f adjdB_min = %f\n", adjdB, adjdB_min);
+//        Serial.printf("adjdB = %f adjdB_min = %f\n", adjdB, adjdB_min);
         index = index + 1;
         // Increment for next measurement.
         iDCoffset = iDCoffset + carrIncrement;
@@ -810,7 +798,7 @@ void TxCalibrate::DoXmitCarrierCalibrate(int calMode, bool radio, bool toEeprom)
           // Clear the vector before moving to phase.
           std::fill(sweepVectorValue.begin(), sweepVectorValue.end(), 0.0);
           std::fill(sweepVector.begin(), sweepVector.end(), 0.0);
-          qDCoffset = -maxSweepPhase + qDCoffset; // The starting value for phase.
+          qDCoffset = -maxSweepPhase + iDCoffset; // The starting value for phase.
           adjdB_min = 0.0;
           state = State::initialSweepPhase; // Initial I channel sweep done; proceed to initial Q sweep.
           break;
@@ -843,7 +831,7 @@ void TxCalibrate::DoXmitCarrierCalibrate(int calMode, bool radio, bool toEeprom)
           adjdB = 0.0;
           index = 0;
           carrIncrement = 0.0005; // Manual increment.
-//          refinePass = 0;
+          refinePass = 0;
 
           // Set optimal values to CalData.
           if (mode == 0)
@@ -989,13 +977,10 @@ void TxCalibrate::DoXmitCarrierCalibrate(int calMode, bool radio, bool toEeprom)
 
     task = MenuSelect::DEFAULT; // Reset task after it is used.
     //  Read encoder and update values.
-    //        seq::run();
-
     if (IQCalType == 0)
       iDCoffset = GetEncoderValueLive(-1.0, 1.0, iDCoffset, 0.0005);
     if (IQCalType == 1)
       qDCoffset = GetEncoderValueLive(-1.0, 1.0, qDCoffset, 0.0005);
-
     if (mode == 0)
     {
       CalData.iDCoffsetCW[ConfigData.currentBand] = iDCoffset;
@@ -1009,6 +994,7 @@ void TxCalibrate::DoXmitCarrierCalibrate(int calMode, bool radio, bool toEeprom)
 
   } // end while
 } // End carrier calibration
+
 
 // Automatic calibration of all bands.  Greg KF5N June 4, 2024
 void TxCalibrate::RadioCal(int mode)
@@ -1143,13 +1129,13 @@ void TxCalibrate::MakeFFTData()
 
   if (TxCalibrate::mode == 0)
   {
-    arm_offset_f32(float_buffer_L_EX, CalData.iDCoffsetCW[ConfigData.currentBand] + CalData.dacOffsetCW, float_buffer_L_EX, dataWidth); // Carrier suppression offset.
-    arm_offset_f32(float_buffer_R_EX, CalData.qDCoffsetCW[ConfigData.currentBand] + CalData.dacOffsetCW, float_buffer_R_EX, dataWidth);
+    arm_offset_f32(float_buffer_L_EX, CalData.iDCoffsetCW[ConfigData.currentBand], float_buffer_L_EX, dataWidth); // Carrier suppression offset.
+    arm_offset_f32(float_buffer_R_EX, CalData.qDCoffsetCW[ConfigData.currentBand], float_buffer_R_EX, dataWidth);
   }
   if (TxCalibrate::mode == 1)
   {
-    arm_offset_f32(float_buffer_L_EX, CalData.iDCoffsetSSB[ConfigData.currentBand] + CalData.dacOffsetSSB, float_buffer_L_EX, dataWidth); // Carrier suppression offset.
-    arm_offset_f32(float_buffer_R_EX, CalData.qDCoffsetSSB[ConfigData.currentBand] + CalData.dacOffsetSSB, float_buffer_R_EX, dataWidth);
+    arm_offset_f32(float_buffer_L_EX, CalData.iDCoffsetSSB[ConfigData.currentBand], float_buffer_L_EX, dataWidth); // Carrier suppression offset.
+    arm_offset_f32(float_buffer_R_EX, CalData.qDCoffsetSSB[ConfigData.currentBand], float_buffer_R_EX, dataWidth);
   }
 
   Q_out_L_Ex.play(float_buffer_L_EX, dataWidth); // play it!  This is the I channel from the Audio Adapter line out to QSE I input.

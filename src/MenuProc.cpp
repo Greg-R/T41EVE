@@ -72,7 +72,7 @@ void MenuProc::CalibrateOptions()
   case 0:                                    // Calibrate Frequency  - uses WWV
     evemenucontrol.runOptionFunction = true; // Runs in loop().
     evemenucontrol.runInDSP = true;
-    parameterAdjustFlag = true;              // Prevents multiple EEPROM writes.
+    parameterAdjustFlag = true; // Prevents multiple EEPROM writes.
     CalData.freqCorrectionFactor = GetEncoderValueLive(-200000, 200000, CalData.freqCorrectionFactor, increment);
     if (CalData.freqCorrectionFactor != freqCorrectionFactorOld)
     {
@@ -97,7 +97,7 @@ void MenuProc::CalibrateOptions()
   case 1:                                    // CW PA Cal.  Set using encoder.
     evemenucontrol.runOptionFunction = true; // Runs in loop().
     evemenucontrol.runInDSP = true;
-    parameterAdjustFlag = true;              // Prevents multiple EEPROM writes.
+    parameterAdjustFlag = true; // Prevents multiple EEPROM writes.
     CalData.CWPowerCalibrationFactor[ConfigData.currentBand] = GetEncoderValueLive(0.0, 1.0, CalData.CWPowerCalibrationFactor[ConfigData.currentBand], 0.01);
     ConfigData.powerOutCW[ConfigData.currentBand] = sqrt(ConfigData.transmitPowerLevel / 20.0) * CalData.CWPowerCalibrationFactor[ConfigData.currentBand];
 
@@ -117,34 +117,34 @@ void MenuProc::CalibrateOptions()
 
     break;
 
-  case 2:                                                    // CW IQ Receive Cal - Gain and Phase
-    evemenucontrol.runOptionFunction = false;                // Deactivate function.
+  case 2:                                     // CW IQ Receive Cal - Gain and Phase
+    evemenucontrol.runOptionFunction = false; // Deactivate function.
     evemenucontrol.runInDSP = false;
     rxcalibrater.DoReceiveCalibrate(0, false, false); // This function was significantly revised.  KF5N August 16, 2023
-    parameterAdjustFlag = false;                             // Save to EEPROM at conclusion of this function.
+    parameterAdjustFlag = false;                      // Save to EEPROM at conclusion of this function.
     subMenuChoice = 0;
     break;
 
-  case 3: // CW Xmit Carrier calibration.  Parameters are (mode, radioCal, refineCal, saveToEeprom)
+  case 3:                                     // CW Xmit Carrier calibration.  Parameters are (mode, radioCal, refineCal, saveToEeprom)
     evemenucontrol.runOptionFunction = false; // Deactivate function.
     evemenucontrol.runInDSP = false;
     txcalibrater.DoXmitCarrierCalibrate(0, false, false);
-    parameterAdjustFlag = false;              // Save to EEPROM at conclusion of this function.
+    parameterAdjustFlag = false; // Save to EEPROM at conclusion of this function.
     subMenuChoice = 0;
     break;
 
   case 4:
-    evemenucontrol.runOptionFunction = false;             // Deactivate function.
+    evemenucontrol.runOptionFunction = false; // Deactivate function.
     evemenucontrol.runInDSP = false;
     txcalibrater.DoXmitCalibrate(0, false, false); // This function was significantly revised.  KF5N August 16, 2023
-    parameterAdjustFlag = false;                          // Save to EEPROM at conclusion of this function.
+    parameterAdjustFlag = false;                   // Save to EEPROM at conclusion of this function.
     subMenuChoice = 0;
     break;
 
   case 5:                                    // SSB PA Cal.  Set using encoder.
     evemenucontrol.runOptionFunction = true; // Runs in loop().
     evemenucontrol.runInDSP = true;
-    parameterAdjustFlag = true;              // Prevents multiple EEPROM writes.
+    parameterAdjustFlag = true; // Prevents multiple EEPROM writes.
     CalData.SSBPowerCalibrationFactor[ConfigData.currentBand] = GetEncoderValueLive(0.0, 1.0, CalData.SSBPowerCalibrationFactor[ConfigData.currentBand], 0.01);
     ConfigData.powerOutSSB[ConfigData.currentBand] = sqrt(ConfigData.transmitPowerLevel / 20.0) * CalData.SSBPowerCalibrationFactor[ConfigData.currentBand];
 
@@ -163,10 +163,10 @@ void MenuProc::CalibrateOptions()
 
     break;
 
-  case 6:                                                    // SSB receive cal
+  case 6:                                             // SSB receive cal
     rxcalibrater.DoReceiveCalibrate(1, false, false); // This function was significantly revised.  KF5N August 16, 2023
-    parameterAdjustFlag = false;                             // Save to EEPROM at conclusion of this function.
-    evemenucontrol.runOptionFunction = false;                // Deactivate function.
+    parameterAdjustFlag = false;                      // Save to EEPROM at conclusion of this function.
+    evemenucontrol.runOptionFunction = false;         // Deactivate function.
     evemenucontrol.runInDSP = false;
     subMenuChoice = 0;
 
@@ -255,7 +255,27 @@ void MenuProc::CalibrateOptions()
     }
     break;
 
-  case 14: // Cancelled choice
+  case 14: // Reset to default calibration values.
+
+    evemenucontrol.runOptionFunction = true; // Runs in loop().
+    evemenucontrol.runInDSP = true;
+    menu = button.readButton();
+    if (menu != MenuSelect::BOGUS_PIN_READ)
+    {
+      if (menu == MenuSelect::MENU_OPTION_SELECT)
+      {
+        MenuProc::SetToCalDefaults();
+        calibrateFlag = false;
+        parameterAdjustFlag = false;              // Save to EEPROM at conclusion of this function.
+        evemenucontrol.runOptionFunction = false; // Deactivate function.
+        evemenucontrol.runInDSP = false;
+        subMenuChoice = 0;
+      }
+    }
+
+    break;
+
+  case 15: // Cancelled choice
 
     calibrateFlag = false;
     parameterAdjustFlag = false;              // Save to EEPROM at conclusion of this function.
@@ -695,8 +715,8 @@ void MenuProc::SSBOptions()
         evemenucontrol.runOptionFunction = false;
         parameterAdjustFlag = false;
         subMenuChoice = 0;
-        imdAmplitudedB = 5;  // Put back to a low level.
-        return; // Nothing saved or configured upon exit.
+        imdAmplitudedB = 5; // Put back to a low level.
+        return;             // Nothing saved or configured upon exit.
       }
     }
     break;
@@ -1038,7 +1058,7 @@ void MenuProc::SubmenuSelectString(std::vector<std::string> options)
 {
   MenuSelect menu;
 
-  menu = button.readButton();                                                                                                               // Read the ladder value
+  menu = button.readButton();                                                                                                                                    // Read the ladder value
   if ((menu != MenuSelect::BOGUS_PIN_READ) and (menu == MenuSelect::MENU_OPTION_SELECT or menu == MenuSelect::MAIN_MENU_UP or menu == MenuSelect::MAIN_MENU_DN)) // Valid choice?
   {
     switch (menu)
@@ -1066,4 +1086,37 @@ void MenuProc::SubmenuSelectString(std::vector<std::string> options)
   }
 
   subMenuString = options[subMenuChoice]; // This is used by EVE to display the choice.
+}
+
+void MenuProc::SetToCalDefaults()
+{
+  for(int x; x < NUMBER_OF_BANDS; x = x + 1) {
+  // LSB calibration
+  CalData.IQCWRXAmpCorrectionFactorLSB[x] = 1.0;
+  CalData.IQCWRXPhaseCorrectionFactorLSB[x] = 0.0;
+  CalData.IQCWAmpCorrectionFactorLSB[x] = 1.0;
+  CalData.IQCWPhaseCorrectionFactorLSB[x] = 0.0;
+  CalData.IQSSBRXAmpCorrectionFactorLSB[x] = 1.0;
+  CalData.IQSSBRXPhaseCorrectionFactorLSB[x] = 0.0;
+  CalData.IQSSBAmpCorrectionFactorLSB[x] = 1.0;
+  CalData.IQSSBPhaseCorrectionFactorLSB[x] = 0.0;
+
+  // USB calibration
+  CalData.IQCWRXAmpCorrectionFactorUSB[x] = 1.0;
+  CalData.IQCWRXPhaseCorrectionFactorUSB[x] = 0.0;
+  CalData.IQCWAmpCorrectionFactorUSB[x] = 1.0;
+  CalData.IQCWPhaseCorrectionFactorUSB[x] = 0.0;
+  CalData.IQSSBRXAmpCorrectionFactorUSB[x] = 1.0;
+  CalData.IQSSBRXPhaseCorrectionFactorUSB[x] = 0.0;
+  CalData.IQSSBAmpCorrectionFactorUSB[x] = 1.0;
+  CalData.IQSSBPhaseCorrectionFactorUSB[x] = 0.0;
+
+  CalData.iDCoffsetCW[x] = 0.0;
+  CalData.qDCoffsetCW[x] = 0.0;
+  CalData.iDCoffsetSSB[x] = 0.0;
+  CalData.qDCoffsetSSB[x] = 0.0;
+  }
+
+  CalData.CWradioCalComplete = false;
+  CalData.SSBradioCalComplete = false;
 }

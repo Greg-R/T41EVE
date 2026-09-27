@@ -481,8 +481,8 @@ struct calibration_t
   float32_t qDCoffsetCW[NUMBER_OF_BANDS] = {0, 0, 0, 0, 0, 0, 0};
   float32_t iDCoffsetSSB[NUMBER_OF_BANDS] = {0, 0, 0, 0, 0, 0, 0};
   float32_t qDCoffsetSSB[NUMBER_OF_BANDS] = {0, 0, 0, 0, 0, 0, 0};
-  float32_t dacOffsetCW = 0.0;  // The offsets may no longer be necessary.
-  float32_t dacOffsetSSB = 0.0; // Leaving for now until more experience with F32.
+//  float32_t dacOffsetCW = 0.0;  // The offsets may no longer be necessary.
+//  float32_t dacOffsetSSB = 0.0; // Leaving for now until more experience with F32.
 
   bool CWradioCalComplete = false;
   bool SSBradioCalComplete = false;

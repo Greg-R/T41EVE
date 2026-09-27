@@ -322,8 +322,8 @@ FLASHMEM void JSON::loadCalibration(const char *filename, calibration_t &CalData
   for (int i = 0; i < 7; i++) CalData.qDCoffsetCW[i] = doc["qDCoffsetCW"][i];
   for (int i = 0; i < 7; i++) CalData.iDCoffsetSSB[i] = doc["iDCoffsetSSB"][i];
   for (int i = 0; i < 7; i++) CalData.qDCoffsetSSB[i] = doc["qDCoffsetSSB"][i];
-  CalData.dacOffsetCW = doc["dacOffsetCW"] | 0;
-  CalData.dacOffsetSSB = doc["dacOffsetSSB"] | 0;
+//  CalData.dacOffsetCW = doc["dacOffsetCW"] | 0;
+//  CalData.dacOffsetSSB = doc["dacOffsetSSB"] | 0;
 
   CalData.CWradioCalComplete = doc["CWradioCalComplete"] | false;
   CalData.SSBradioCalComplete = doc["SSBradioCalComplete"] | false;
@@ -375,8 +375,8 @@ FLASHMEM void JSON::saveCalibration(const char *filename, const calibration_t &C
   for (int i = 0; i < 7; i++) doc["qDCoffsetCW"][i] = CalData.qDCoffsetCW[i];
   for (int i = 0; i < 7; i++) doc["iDCoffsetSSB"][i] = CalData.iDCoffsetSSB[i];
   for (int i = 0; i < 7; i++) doc["qDCoffsetSSB"][i] = CalData.qDCoffsetSSB[i];
-  doc["dacOffsetCW"] = CalData.dacOffsetCW;
-  doc["dacOffsetSSB"] = CalData.dacOffsetSSB;
+//  doc["dacOffsetCW"] = CalData.dacOffsetCW;
+//  doc["dacOffsetSSB"] = CalData.dacOffsetSSB;
 
   doc["CWradioCalComplete"] = CalData.CWradioCalComplete;
   doc["SSBradioCalComplete"] = CalData.SSBradioCalComplete;

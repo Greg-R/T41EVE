@@ -119,11 +119,11 @@ void SSB_ExciterIQData() {
   arm_scale_f32(float_buffer_R_EX, powerScale, float_buffer_R_EX, 2048);
 
   if (bands.bands[ConfigData.currentBand].mode == RadioMode::SSB_MODE) {
-    arm_offset_f32(float_buffer_L_EX, CalData.iDCoffsetSSB[ConfigData.currentBand] + CalData.dacOffsetSSB, float_buffer_L_EX, 2048);  // Carrier suppression offset.
-    arm_offset_f32(float_buffer_R_EX, CalData.qDCoffsetSSB[ConfigData.currentBand] + CalData.dacOffsetSSB, float_buffer_R_EX, 2048);
+    arm_offset_f32(float_buffer_L_EX, CalData.iDCoffsetSSB[ConfigData.currentBand], float_buffer_L_EX, 2048);  // Carrier suppression offset.
+    arm_offset_f32(float_buffer_R_EX, CalData.qDCoffsetSSB[ConfigData.currentBand], float_buffer_R_EX, 2048);
   } else if (bands.bands[ConfigData.currentBand].mode == RadioMode::FT8_MODE) {
-    arm_offset_f32(float_buffer_L_EX, CalData.iDCoffsetCW[ConfigData.currentBand] + CalData.dacOffsetCW, float_buffer_L_EX, 2048);  // Carrier suppression offset.
-    arm_offset_f32(float_buffer_R_EX, CalData.qDCoffsetCW[ConfigData.currentBand] + CalData.dacOffsetCW, float_buffer_R_EX, 2048);
+    arm_offset_f32(float_buffer_L_EX, CalData.iDCoffsetCW[ConfigData.currentBand], float_buffer_L_EX, 2048);  // Carrier suppression offset.
+    arm_offset_f32(float_buffer_R_EX, CalData.qDCoffsetCW[ConfigData.currentBand], float_buffer_R_EX, 2048);
   }
 
   Q_out_L_Ex.setBehaviour(AudioPlayQueue_F32::ORIGINAL);
