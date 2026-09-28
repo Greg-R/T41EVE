@@ -53,7 +53,8 @@ namespace Sequencer
     static void add(Task task)
     {
       noInterrupts();
-    if(pq.size() < 20) pq.push(task);
+      if (pq.size() < 20)
+      if(sequencerActive)  pq.push(task);
       interrupts();
     }
 
@@ -81,13 +82,18 @@ namespace Sequencer
       return static_cast<int>(pq.size());
     }
 
+    static void active(bool set) {
+      sequencerActive = set;
+    }
+
   private:
     // Priority queue.
     static inline std::priority_queue<Task, std::vector<Task>> pq{};
+    static inline bool sequencerActive{true};
 
   }; // End class sequencer
 
-    using task_seq = Sequencer::task<callable_holder>;
+  using task_seq = Sequencer::task<callable_holder>;
   using seq = Sequencer::sequencer<task_seq>;
 
 } // End Sequencer namespace.

@@ -366,17 +366,16 @@ void EVE_Display::drawReceiverScreen(int16_t *fftArray, uint8_t *waterfall, int1
     EVE_cmd_text_burst(325, 8, 29, 0, buffer);
   }
 
-
   // The special case of dBm power calibration.  Show power correction
   // factor while tuning.  This must be done in the main receiver loop.
-  if (calibrateFlag and menuProc.subMenuChoice == 13)
+  if (calibrateFlag and menuProc.subMenuChoice == 11)
   {
     EVE_cmd_text_burst(80, 8, 29, 0, "dBm Correction Factor:");
     EVE_cmd_number_burst(400, 8, 29, 0, CalData.dBm_calibration);
   }
 
     // The special case of "Button Repeat" adjustment.
-  if (calibrateFlag and menuProc.subMenuChoice == 15)
+  if (calibrateFlag and menuProc.subMenuChoice == 13)
   {
     EVE_cmd_text_burst(80, 8, 29, 0, "Button Repeat Delay:");
     EVE_cmd_number_burst(330, 8, 29, 0, CalData.buttonRepeatDelay);
@@ -1511,6 +1510,17 @@ FLASHMEM void EVE_Display::transmitterCalStatic_cmd_list()
   EVE_vertex2f(0, 100);
   EVE_end();
 
+  // Background
+    EVE_begin(EVE_RECTS);
+    EVE_color_a(150);        // Set transparency.
+    EVE_color_rgb(0x292626); // Dark gray.
+  EVE_vertex2f(0, 100);
+//  EVE_vertex2f(513, 100);
+  EVE_vertex2f(513, 470);
+//  EVE_vertex2f(0, 470);
+//  EVE_vertex2f(0, 100);
+    EVE_end();
+
   // Band and mode information line.
   EVE_color_rgb(0xffffff); // White
   EVE_cmd_text(0, 80, 26, 0, "Center Freq");
@@ -1592,13 +1602,13 @@ void EVE_Display::drawTransmitterCalScreen(int16_t *fftArray)
   if (bands.bands[ConfigData.currentBand].sideband == Sideband::LOWER and txcalibrater.calTypeFlag == 1)
   {
     EVE_begin(EVE_RECTS);
-    EVE_color_a(100);        // Set transparency.
+    EVE_color_a(150);        // Set transparency.
     EVE_color_rgb(0xff0000); // Red
     EVE_vertex2f(283, 101);
     EVE_vertex2f(294, 469);
-    EVE_color_rgb(0x0000ff); // Blue
-    EVE_vertex2f(250, 101);
-    EVE_vertex2f(262, 469);
+    EVE_color_rgb(0x4d54e8); // Blue Green better?
+    EVE_vertex2f(246, 101);
+    EVE_vertex2f(266, 469);
     EVE_end();
   }
   if (bands.bands[ConfigData.currentBand].sideband == Sideband::UPPER and txcalibrater.calTypeFlag == 1)

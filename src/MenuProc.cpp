@@ -40,6 +40,8 @@ You should have received a copy of the GNU General Public License along with T41
 
 #include "SDT.h"
 
+using namespace Sequencer;
+
 // Updates by KF5N to CalibrateOptions() function.  Added SSB Carrier and SSB Transmit cal.  Greg KF5N July 10, 2024
 // Updated receive calibration code to clean up graphics.  KF5N August 3, 2023
 // ==============  AFP 10-22-22 ==================
@@ -206,8 +208,9 @@ void MenuProc::CalibrateOptions()
     break;
 
   case 11:                                   // dBm level cal.
+  Serial.printf("dBm level cal\n");
     evemenucontrol.runOptionFunction = true; // Runs in loop().
-    evemenucontrol.runInDSP = true;
+//    evemenucontrol.runInDSP = true;
     parameterAdjustFlag = true; // Prevents multiple EEPROM writes.
     CalData.dBm_calibration = GetEncoderValueLive(0, 100, CalData.dBm_calibration, 1);
     if (CalData.dBm_calibration != freqCorrectionFactorOld)
@@ -240,6 +243,7 @@ void MenuProc::CalibrateOptions()
   case 13:                                   // Set button repeat rate
     evemenucontrol.runOptionFunction = true; // Runs in loop().
     evemenucontrol.runInDSP = true;
+    parameterAdjustFlag = true;
     CalData.buttonRepeatDelay = 1000 * GetEncoderValueLive(0, 5000, CalData.buttonRepeatDelay / 1000, 1);
     menu = button.readButton();
     if (menu != MenuSelect::BOGUS_PIN_READ)
@@ -255,11 +259,14 @@ void MenuProc::CalibrateOptions()
     }
     break;
 
-  case 14: // Reset to default calibration values.
+  case 14: // Reset to default calibration values.  Simple command.
 
+//    seq::clear();
+//    seq::active(false);
+    parameterAdjustFlag = true;
     evemenucontrol.runOptionFunction = true; // Runs in loop().
     evemenucontrol.runInDSP = true;
-    menu = button.readButton();
+    menu = MenuSelect::MENU_OPTION_SELECT;  // Don't need to read button here.
     if (menu != MenuSelect::BOGUS_PIN_READ)
     {
       if (menu == MenuSelect::MENU_OPTION_SELECT)
@@ -270,6 +277,8 @@ void MenuProc::CalibrateOptions()
         evemenucontrol.runOptionFunction = false; // Deactivate function.
         evemenucontrol.runInDSP = false;
         subMenuChoice = 0;
+        Serial.printf("Bail out from reset default cal values\n");
+//        seq::active(true);
       }
     }
 
@@ -1091,7 +1100,7 @@ void MenuProc::SubmenuSelectString(std::vector<std::string> options)
 
 void MenuProc::SetToCalDefaults()
 {
-  for (int x; x < NUMBER_OF_BANDS; x = x + 1)
+  for (int x = 0; x < NUMBER_OF_BANDS; x = x + 1)
   {
     // LSB calibration
     CalData.IQCWRXAmpCorrectionFactorLSB[x] = 1.0;

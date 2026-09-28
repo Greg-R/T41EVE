@@ -25,8 +25,6 @@ You should have received a copy of the GNU General Public License along with T41
 
 // Menu Processing class.
 
-// #include "SDT.h"
-
 class MenuProc
 {
 

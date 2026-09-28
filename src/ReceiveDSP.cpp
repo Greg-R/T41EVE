@@ -215,10 +215,10 @@ bool ReceiveDSP::ProcessIQData()
   //      menuProc.CalibrateOptions();
   //    }
   // This handles functions selected from the second level of menus.
-  if (evemenucontrol.runInDSP == true)
-  {                               // This is required for Morse decode sensitivity adjustment with receiver active.
-    functionPtr[mainMenuIndex](); // The top menu item to run.
-  }
+//  if (evemenucontrol.runInDSP == true)
+//  {                               // This is required for Morse decode sensitivity adjustment with receiver active.
+//    functionPtr[mainMenuIndex](); // The top menu item to run.
+//  }
 
   /*************************************************************************************************
       freq_conv2()

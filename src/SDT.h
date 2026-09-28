@@ -345,7 +345,7 @@ extern Bands bands;
 struct config_t
 {
 
-  char versionSettings[11] = "SEQUENCER4"; // This is required to be the first!
+  char versionSettings[11] = "FAST CAL"; // This is required to be the first!
 
   bool AGCMode = true;
   float32_t AGCThreshold = -40.0;
@@ -933,7 +933,6 @@ void arm_clip_f32(const float32_t *pSrc,
                   float32_t high,
                   uint32_t numSamples);
 void buttonPush();
-extern bool buttonPressFlag;
 int BandOptions();
 float BearingHeading(char *dxCallPrefix);
 void BearingMaps();

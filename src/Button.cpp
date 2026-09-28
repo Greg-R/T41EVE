@@ -95,7 +95,6 @@ void ButtonISR()
       buttonElapsed = 0;  // Start debounce "timer".
       buttonState = BUTTON_STATE_DEBOUNCE;  // Proceed to next step; we need to debounce.
     }
-//    buttonPressFlag = false;
 
     break;
   case BUTTON_STATE_DEBOUNCE:  // State 1.
@@ -108,6 +107,8 @@ void ButtonISR()
       buttonADCOut = buttonADCPressed = filteredADCValue;  // Accept filtered value.
       buttonElapsed = 0;  // Reset debounce timer.
       buttonState = BUTTON_STATE_PRESSED;
+Serial.printf("bP ISR debounced add to sequencer buttonADCOut = %d\n", buttonADCOut);
+      seq::add(task_button_press);
     }
 
     break;
@@ -131,8 +132,8 @@ void ButtonISR()
 
 //      Can add to sequencer here?
         seq::add(task_button_press);
-        Serial.printf("buttonPress ISR else\n");
-//        buttonPressFlag = true;
+        Serial.printf("bP ISR else add to sequencer buttonADCOut = %d\n", buttonADCOut);
+
       }
     }
 

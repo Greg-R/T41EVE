@@ -927,9 +927,8 @@ void DisplayRefreshISR()
 IntervalTimer displayRefresh;
 */
 
-bool buttonPressFlag = false;
 void buttonPush() {
-Serial.printf("buttonPush\n");
+if(evemenucontrol.runOptionFunction == true) return;  // Bypass if we are using the menus.
     MenuSelect menu;
     if ((radioState != RadioState::SSB_TRANSMIT_STATE) and (radioState != RadioState::FT8_TRANSMIT_STATE) and (calibrateFlag == false) and (evemenucontrol.runOptionFunction == false) and (evemenucontrol.subMenuSelect == false))
     {
@@ -948,10 +947,10 @@ Serial.printf("buttonPush\n");
     }
     // This handles functions selected from the second level of menus.
     // This should only be relevant for functions not runInDSP!
-    if (evemenucontrol.runOptionFunction == true)
-    {
-      functionPtr[mainMenuIndex](); // The top menu item to run.  mainMenuIndex is a global.
-    }
+//    if (evemenucontrol.runOptionFunction == true)
+//    {
+//      functionPtr[mainMenuIndex](); // The top menu item to run.  mainMenuIndex is a global.
+//    }
   }
 
 
@@ -1172,9 +1171,19 @@ void loop()
   bool cwKeyDown;
   unsigned long cwBlockIndex;
 
-  if(buttonPressFlag) Serial.printf("buttonPressFlag\n");
-
   seq::run();
+
+      // This handles functions selected from the second level of menus.
+    // This should only be relevant for functions not runInDSP!
+    if (evemenucontrol.runOptionFunction == true)
+    {
+      functionPtr[mainMenuIndex](); // The top menu item to run.  mainMenuIndex is a global.
+    }
+      // This handles functions selected from the second level of menus.
+//  if (evemenucontrol.runInDSP == true)
+//  {                               // This is required for Morse decode sensitivity adjustment with receiver active.
+//    functionPtr[mainMenuIndex](); // The top menu item to run.
+//  }
 
   // Top menu button read.
   // SSB and FT8 transmit operate via the main loop().  CW modes operate within independent while loops.
