@@ -49,21 +49,21 @@ Filter bandwidth is dependent on the sample rate and the "k" parameter, as follo
 Thus, the default values below create a filter with 10000 * 0.0217 = 217 Hz bandwidth
 */
 
-static unsigned long buttonFilterRegister;
+static unsigned long buttonFilterRegister{0};
 const uint32_t BUTTON_FILTER_SHIFT = 3; // Filter parameter k
-static uint32_t buttonState, buttonADCPressed, buttonElapsed;
-static volatile int buttonADCOut;
+static uint32_t buttonState{0}, buttonADCPressed{0}, buttonElapsed{0};
+static volatile int buttonADCOut{0};
 const uint32_t BUTTON_FILTER_SAMPLERATE = 10000; // Hz
 const uint32_t BUTTON_DEBOUNCE_DELAY = 5000;     // uSec
 const uint32_t BUTTON_STATE_UP = 0;
 const uint32_t BUTTON_STATE_DEBOUNCE = 1;
 const uint32_t BUTTON_STATE_PRESSED = 2;
-const float32_t BUTTON_USEC_PER_ISR = (1000000 / BUTTON_FILTER_SAMPLERATE);
+const float32_t BUTTON_USEC_PER_ISR = (1000000 / BUTTON_FILTER_SAMPLERATE);  // 100
 const uint32_t BUTTON_OUTPUT_UP = 1023; // Value to be output when in the UP state
 
 /*****
-  Purpose: ISR to read button ADC and detect button presses
-
+  Purpose: ISR to read button ADC and detect button presses.
+           The ISR is run every 100usec by an IntervalTimer.
   Parameter list:
     none
   Return value;
@@ -73,13 +73,15 @@ void ButtonISR()
 {
   int filteredADCValue;
 
+  // This is the "leaky integrator":
   buttonFilterRegister = buttonFilterRegister - (buttonFilterRegister >> BUTTON_FILTER_SHIFT) + analogRead(BUSY_ANALOG_PIN);
+  // This normalizes the output to 1:
   filteredADCValue = static_cast<int>(buttonFilterRegister >> BUTTON_FILTER_SHIFT);
 
   switch (buttonState)
   {
   case BUTTON_STATE_UP:
-    if (filteredADCValue <= CalData.buttonThresholdPressed)
+    if (filteredADCValue <= CalData.buttonThresholdPressed)  // Button likely to have been pressed.
     {
       buttonElapsed = 0;
       buttonState = BUTTON_STATE_DEBOUNCE;
@@ -151,7 +153,7 @@ void Button::EnableButtonInterrupts()
   buttonState = BUTTON_STATE_UP;
   buttonADCPressed = BUTTON_STATE_UP;
   buttonElapsed = 0;
-  buttonInterrupts.begin(ButtonISR, 1000000 / BUTTON_FILTER_SAMPLERATE);
+  buttonInterrupts.begin(ButtonISR, 1000000 / BUTTON_FILTER_SAMPLERATE);  // Every 100 usec.
   buttonInterruptsEnabled = true;
 }
 
@@ -185,7 +187,7 @@ MenuSelect Button::ProcessButtonPress(int valPin)
 }
 
 /*****
-  Purpose: Check for UI button press. If pressed, return the ADC value
+  Purpose: Check for UI button press. If pressed, return the ADC value.
 
   Parameter list:
     none
