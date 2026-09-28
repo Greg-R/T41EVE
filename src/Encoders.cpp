@@ -507,7 +507,7 @@ void EncoderFilter()
     filterEncoderMove = -1;
     break;
   }
-  Serial.printf("EncoderFilter filterEncoderMove = %d\n", filterEncoderMove);
+//  Serial.printf("EncoderFilter filterEncoderMove = %d\n", filterEncoderMove);
 
   // Don't adjust the filter if doing frequency calibration, adjusting Morse decode sensitivity, or encoder parameter adjustment.
   if (calibrateFlag == false and morseDecodeAdjustFlag == false and parameterAdjustFlag == false and calOnFlag == false)

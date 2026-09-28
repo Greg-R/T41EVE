@@ -1595,10 +1595,10 @@ void EVE_Display::drawTransmitterCalScreen(int16_t *fftArray)
     EVE_color_a(100);        // Set transparency.
     EVE_color_rgb(0xff0000); // Red
     EVE_vertex2f(283, 101);
-    EVE_vertex2f(293, 469);
+    EVE_vertex2f(294, 469);
     EVE_color_rgb(0x0000ff); // Blue
-    EVE_vertex2f(251, 101);
-    EVE_vertex2f(261, 469);
+    EVE_vertex2f(250, 101);
+    EVE_vertex2f(262, 469);
     EVE_end();
   }
   if (bands.bands[ConfigData.currentBand].sideband == Sideband::UPPER and txcalibrater.calTypeFlag == 1)
@@ -1621,10 +1621,10 @@ void EVE_Display::drawTransmitterCalScreen(int16_t *fftArray)
     EVE_color_a(100);        // Set transparency.
     EVE_color_rgb(0xff0000); // Red
     EVE_vertex2f(267, 101);
-    EVE_vertex2f(277, 469);
+    EVE_vertex2f(279, 469);
     EVE_color_rgb(0x34bdeb); // Blue
-    EVE_vertex2f(251, 101);
-    EVE_vertex2f(261, 469);
+    EVE_vertex2f(250, 101);
+    EVE_vertex2f(262, 469);
     EVE_end();
   }
   if (bands.bands[ConfigData.currentBand].sideband == Sideband::UPPER and txcalibrater.calTypeFlag == 2)
@@ -1632,11 +1632,11 @@ void EVE_Display::drawTransmitterCalScreen(int16_t *fftArray)
     EVE_begin(EVE_RECTS);
     EVE_color_a(100);        // Set transparency.
     EVE_color_rgb(0xff0000); // Red
-    EVE_vertex2f(235, 101);
-    EVE_vertex2f(245, 469);
+    EVE_vertex2f(234, 101);
+    EVE_vertex2f(246, 469);
     EVE_color_rgb(0x34bdeb); // Blue
-    EVE_vertex2f(251, 101);
-    EVE_vertex2f(261, 469);
+    EVE_vertex2f(250, 101);
+    EVE_vertex2f(262, 469);
     EVE_end();
   }
 
@@ -1647,6 +1647,7 @@ void EVE_Display::drawTransmitterCalScreen(int16_t *fftArray)
 
   // Draw the RF spectrum.
   EVE_color_rgb_burst(0xffffff); // Make spectrum white.
+  EVE_line_width(12);
   EVE_begin_burst(EVE_LINE_STRIP);
   for (int j = 0; j < 256; j = j + 1)
   {
@@ -1861,7 +1862,8 @@ void EVE_Display::drawReceiverCalScreen(int16_t *fftArray)
   EVE_cmd_number_burst(0, 37, 31, 0, TxRxFreq); // x, y, font, options, n
 
   // Draw the RF spectrum.
-  EVE_color_rgb_burst(0xf0f000); // Make spectrum blue.
+  EVE_color_rgb_burst(0xffffff); // Make spectrum blue.
+  EVE_line_width(12);
   EVE_begin_burst(EVE_LINE_STRIP);
   for (int j = 0; j < 512; j = j + 1)
   {

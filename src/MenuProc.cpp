@@ -106,7 +106,6 @@ void MenuProc::CalibrateOptions()
     {
       if (menu == MenuSelect::MENU_OPTION_SELECT)
       {
-        //        eeprom.CalDataWrite();
         calibrateFlag = false;
         parameterAdjustFlag = false;
         evemenucontrol.runOptionFunction = false; // Deactivate function.
@@ -209,6 +208,7 @@ void MenuProc::CalibrateOptions()
   case 11:                                   // dBm level cal.
     evemenucontrol.runOptionFunction = true; // Runs in loop().
     evemenucontrol.runInDSP = true;
+    parameterAdjustFlag = true; // Prevents multiple EEPROM writes.
     CalData.dBm_calibration = GetEncoderValueLive(0, 100, CalData.dBm_calibration, 1);
     if (CalData.dBm_calibration != freqCorrectionFactorOld)
     {
@@ -1083,6 +1083,7 @@ void MenuProc::SubmenuSelectString(std::vector<std::string> options)
       subMenuChoice = -1; // An error selection
       break;
     }
+    Serial.printf("subMenuChoice = %d mainMenuIndex = %d\n", subMenuChoice, mainMenuIndex);
   }
 
   subMenuString = options[subMenuChoice]; // This is used by EVE to display the choice.
@@ -1090,31 +1091,32 @@ void MenuProc::SubmenuSelectString(std::vector<std::string> options)
 
 void MenuProc::SetToCalDefaults()
 {
-  for(int x; x < NUMBER_OF_BANDS; x = x + 1) {
-  // LSB calibration
-  CalData.IQCWRXAmpCorrectionFactorLSB[x] = 1.0;
-  CalData.IQCWRXPhaseCorrectionFactorLSB[x] = 0.0;
-  CalData.IQCWAmpCorrectionFactorLSB[x] = 1.0;
-  CalData.IQCWPhaseCorrectionFactorLSB[x] = 0.0;
-  CalData.IQSSBRXAmpCorrectionFactorLSB[x] = 1.0;
-  CalData.IQSSBRXPhaseCorrectionFactorLSB[x] = 0.0;
-  CalData.IQSSBAmpCorrectionFactorLSB[x] = 1.0;
-  CalData.IQSSBPhaseCorrectionFactorLSB[x] = 0.0;
+  for (int x; x < NUMBER_OF_BANDS; x = x + 1)
+  {
+    // LSB calibration
+    CalData.IQCWRXAmpCorrectionFactorLSB[x] = 1.0;
+    CalData.IQCWRXPhaseCorrectionFactorLSB[x] = 0.0;
+    CalData.IQCWAmpCorrectionFactorLSB[x] = 1.0;
+    CalData.IQCWPhaseCorrectionFactorLSB[x] = 0.0;
+    CalData.IQSSBRXAmpCorrectionFactorLSB[x] = 1.0;
+    CalData.IQSSBRXPhaseCorrectionFactorLSB[x] = 0.0;
+    CalData.IQSSBAmpCorrectionFactorLSB[x] = 1.0;
+    CalData.IQSSBPhaseCorrectionFactorLSB[x] = 0.0;
 
-  // USB calibration
-  CalData.IQCWRXAmpCorrectionFactorUSB[x] = 1.0;
-  CalData.IQCWRXPhaseCorrectionFactorUSB[x] = 0.0;
-  CalData.IQCWAmpCorrectionFactorUSB[x] = 1.0;
-  CalData.IQCWPhaseCorrectionFactorUSB[x] = 0.0;
-  CalData.IQSSBRXAmpCorrectionFactorUSB[x] = 1.0;
-  CalData.IQSSBRXPhaseCorrectionFactorUSB[x] = 0.0;
-  CalData.IQSSBAmpCorrectionFactorUSB[x] = 1.0;
-  CalData.IQSSBPhaseCorrectionFactorUSB[x] = 0.0;
+    // USB calibration
+    CalData.IQCWRXAmpCorrectionFactorUSB[x] = 1.0;
+    CalData.IQCWRXPhaseCorrectionFactorUSB[x] = 0.0;
+    CalData.IQCWAmpCorrectionFactorUSB[x] = 1.0;
+    CalData.IQCWPhaseCorrectionFactorUSB[x] = 0.0;
+    CalData.IQSSBRXAmpCorrectionFactorUSB[x] = 1.0;
+    CalData.IQSSBRXPhaseCorrectionFactorUSB[x] = 0.0;
+    CalData.IQSSBAmpCorrectionFactorUSB[x] = 1.0;
+    CalData.IQSSBPhaseCorrectionFactorUSB[x] = 0.0;
 
-  CalData.iDCoffsetCW[x] = 0.0;
-  CalData.qDCoffsetCW[x] = 0.0;
-  CalData.iDCoffsetSSB[x] = 0.0;
-  CalData.qDCoffsetSSB[x] = 0.0;
+    CalData.iDCoffsetCW[x] = 0.0;
+    CalData.qDCoffsetCW[x] = 0.0;
+    CalData.iDCoffsetSSB[x] = 0.0;
+    CalData.qDCoffsetSSB[x] = 0.0;
   }
 
   CalData.CWradioCalComplete = false;

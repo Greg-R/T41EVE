@@ -1168,6 +1168,7 @@ void loop()
       }
     }
     // This handles functions selected from the second level of menus.
+    // This should only be relevant for functions not runInDSP!
     if (evemenucontrol.runOptionFunction == true)
     {
       functionPtr[mainMenuIndex](); // The top menu item to run.  mainMenuIndex is a global.
