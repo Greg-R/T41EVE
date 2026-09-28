@@ -27,6 +27,8 @@ You should have received a copy of the GNU General Public License along with T41
 
 #include "SDT.h"
 
+using namespace Sequencer;
+
 /*
 The button interrupt routine implements a first-order recursive filter, or "leaky integrator,"
 as described at:
@@ -61,6 +63,13 @@ const uint32_t BUTTON_STATE_PRESSED = 2;
 const float32_t BUTTON_USEC_PER_ISR = (1000000 / BUTTON_FILTER_SAMPLERATE);  // 100
 const uint32_t BUTTON_OUTPUT_UP = 1023; // Value to be output when in the UP state
 
+task<callable_holder> task_button_press(buttonPush, 15);
+
+//void EncoderFilterISR()
+//{
+//  seq::add(task_button_press);
+//}
+
 /*****
   Purpose: ISR to read button ADC and detect button presses.
            The ISR is run every 100usec by an IntervalTimer.
@@ -80,31 +89,34 @@ void ButtonISR()
 
   switch (buttonState)
   {
-  case BUTTON_STATE_UP:
+  case BUTTON_STATE_UP:  // State 0.
     if (filteredADCValue <= CalData.buttonThresholdPressed)  // Button likely to have been pressed.
     {
-      buttonElapsed = 0;
-      buttonState = BUTTON_STATE_DEBOUNCE;
+      buttonElapsed = 0;  // Start debounce "timer".
+      buttonState = BUTTON_STATE_DEBOUNCE;  // Proceed to next step; we need to debounce.
     }
+//    buttonPressFlag = false;
 
     break;
-  case BUTTON_STATE_DEBOUNCE:
+  case BUTTON_STATE_DEBOUNCE:  // State 1.
     if (buttonElapsed < BUTTON_DEBOUNCE_DELAY)
     {
-      buttonElapsed += BUTTON_USEC_PER_ISR;
+      buttonElapsed += BUTTON_USEC_PER_ISR;  // Add time of 100usec.  State does not change.
     }
     else
     {
-      buttonADCOut = buttonADCPressed = filteredADCValue;
-      buttonElapsed = 0;
+      buttonADCOut = buttonADCPressed = filteredADCValue;  // Accept filtered value.
+      buttonElapsed = 0;  // Reset debounce timer.
       buttonState = BUTTON_STATE_PRESSED;
     }
 
     break;
-  case BUTTON_STATE_PRESSED:
-    if (filteredADCValue >= CalData.buttonThresholdReleased)
+  case BUTTON_STATE_PRESSED:  // State 2.
+//  Serial.printf("buttonPress ISR state 2\n");
+    if (filteredADCValue >= CalData.buttonThresholdReleased)  // Button not actually pressed.
     {
       buttonState = BUTTON_STATE_UP;
+      Serial.printf("buttonPress ISR state 2 button not pressed\n");
     }
     else if (CalData.buttonRepeatDelay != 0)
     { // buttonRepeatDelay of 0 disables repeat
@@ -114,8 +126,13 @@ void ButtonISR()
       }
       else
       {
-        buttonADCOut = buttonADCPressed;
-        buttonElapsed = 0;
+        buttonADCOut = buttonADCPressed;  // Done.
+        buttonElapsed = 0;                // Reset debounce for next button push.
+
+//      Can add to sequencer here?
+        seq::add(task_button_press);
+        Serial.printf("buttonPress ISR else\n");
+//        buttonPressFlag = true;
       }
     }
 

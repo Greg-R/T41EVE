@@ -932,6 +932,8 @@ void arm_clip_f32(const float32_t *pSrc,
                   float32_t low,
                   float32_t high,
                   uint32_t numSamples);
+void buttonPush();
+extern bool buttonPressFlag;
 int BandOptions();
 float BearingHeading(char *dxCallPrefix);
 void BearingMaps();

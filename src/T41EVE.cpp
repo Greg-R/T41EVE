@@ -927,6 +927,34 @@ void DisplayRefreshISR()
 IntervalTimer displayRefresh;
 */
 
+bool buttonPressFlag = false;
+void buttonPush() {
+Serial.printf("buttonPush\n");
+    MenuSelect menu;
+    if ((radioState != RadioState::SSB_TRANSMIT_STATE) and (radioState != RadioState::FT8_TRANSMIT_STATE) and (calibrateFlag == false) and (evemenucontrol.runOptionFunction == false) and (evemenucontrol.subMenuSelect == false))
+    {
+      menu = button.readButton();
+      // Restrict allowed button selections if in top menu.
+      if (evemenucontrol.top == true)
+      {
+        if ((menu != MenuSelect::BOGUS_PIN_READ) and (menu == MenuSelect::MAIN_MENU_UP or menu == MenuSelect::MAIN_MENU_DN or menu == MenuSelect::MENU_OPTION_SELECT))
+          button.ExecuteButtonPress(menu);
+      }
+      else
+      {
+        if (menu != MenuSelect::BOGUS_PIN_READ)
+          button.ExecuteButtonPress(menu);
+      }
+    }
+    // This handles functions selected from the second level of menus.
+    // This should only be relevant for functions not runInDSP!
+    if (evemenucontrol.runOptionFunction == true)
+    {
+      functionPtr[mainMenuIndex](); // The top menu item to run.  mainMenuIndex is a global.
+    }
+  }
+
+
 bool powerUp = false;
 uint32_t afterPowerUp = 0;
 /*****
@@ -1139,10 +1167,12 @@ uint32_t menuCounter{0};
 int32_t zoomCount{0};
 void loop()
 {
-  MenuSelect menu;
+//  MenuSelect menu;
   long ditTimerOff; // AFP 09-22-22
   bool cwKeyDown;
   unsigned long cwBlockIndex;
+
+  if(buttonPressFlag) Serial.printf("buttonPressFlag\n");
 
   seq::run();
 
@@ -1150,8 +1180,8 @@ void loop()
   // SSB and FT8 transmit operate via the main loop().  CW modes operate within independent while loops.
   // Don't stop in SSB and FT8 transmit modes to read the buttons.
   // Also skip if top menu and sub menu operations are in progress.
-  if (menuCounter > 20000)
-  {
+//  if (menuCounter > 20000)
+/*  {
     if ((radioState != RadioState::SSB_TRANSMIT_STATE) and (radioState != RadioState::FT8_TRANSMIT_STATE) and (calibrateFlag == false) and (evemenucontrol.runOptionFunction == false) and (evemenucontrol.subMenuSelect == false))
     {
       menu = button.readButton();
@@ -1173,10 +1203,11 @@ void loop()
     {
       functionPtr[mainMenuIndex](); // The top menu item to run.  mainMenuIndex is a global.
     }
-    menuCounter = 0;
-  }
-  else
+//    menuCounter = 0;
+//  }
+//  else
     menuCounter = menuCounter + 1;
+    */
 
   // Screen selector.
   switch (evedisplay.screenSelect)
