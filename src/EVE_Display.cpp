@@ -1537,13 +1537,13 @@ FLASHMEM void EVE_Display::transmitterCalStatic_cmd_list()
   EVE_cmd_text(450, 80, 26, 0, "Watts");
 
   // Draw the button push guides.
-  EVE_color_rgb(0x00ff00);
+  EVE_color_rgb(0x2b5218);
   //  EVE_cmd_text(550, 125, 28, 0, "Incr =");
   EVE_cmd_text(660, 150, 30, 0, "dBC");
   EVE_cmd_text(550, 185, 28, 0, "User1: Gain/Phase");
   //  EVE_cmd_text(550, 215, 28, 0, "User2: Increment");
   EVE_cmd_text(550, 215, 28, 0, "Zoom: Auto-Cal");
-  //  EVE_cmd_text(550, 275, 28, 0, "Filter: Refine-Cal");
+  EVE_cmd_text(550, 245, 28, 0, "Filter: Refine-Cal");
 
   EVE_cmd_endlist();
 } // End of transmit/carrier calibration static.

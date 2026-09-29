@@ -218,21 +218,23 @@ void TxCalibrate::buttonTasks()
   task = button.readButton();
   switch (task)
   {
-  // Activate initial automatic calibration.
+  // Activate automatic calibration starting with stored values.
   case MenuSelect::ZOOM: // 2nd row, 1st column button
     TxCalibrate::autoCal = true;
     warmup = 0;
     index = 0;
+    initialAutoTune = true;
     state = State::warmup;
     break;
-  // Automatic calibration using previously stored values.
+  // Automatic calibration starting from scratch.
   case MenuSelect::FILTER: // 3rd row, 1st column button
     TxCalibrate::autoCal = true;
     warmup = 0;
     index = 0;
+    initialAutoTune = false;
     state = State::warmup;
     break;
-  // Toggle gain and phasei in manual mode.
+  // Toggle gain and phase in manual mode.
   case MenuSelect::UNUSED_1:
     if (IQCalType == 0)
     {
@@ -414,24 +416,29 @@ void TxCalibrate::DoXmitCalibrate(int calMode, bool radio, bool toEeprom)
         std::fill(sweepVectorValue.begin(), sweepVectorValue.end(), 0.0);
         std::fill(sweepVector.begin(), sweepVector.end(), 0.0);
         warmup = warmup + 1;
-//        phase = 0.0 + maxSweepPhase;   //  Need to use these values during warmup
-//        amplitude = 1.0 + maxSweepAmp; //  so adjdB and adjdB_avg are forced upwards.
+        //        phase = 0.0 + maxSweepPhase;   //  Need to use these values during warmup
+        //        amplitude = 1.0 + maxSweepAmp; //  so adjdB and adjdB_avg are forced upwards.
         state = State::warmup;
         if (warmup == 1)         // Was 16.
-          state = State::state0; // Proceed with initial calibration.
+          state = State::state0; // Proceed with initial auto-calibration.
 
-  if(mode == 0 and CalData.CWradioCalComplete == true) {
-amplitude = amplitude + 0.001;
-adjdB_old = 0;
-refinePass = 0;
-  state = State::refineAmpPlus;
-}
-  if(mode == 1 and CalData.SSBradioCalComplete == true) {
-    amplitude = amplitude + 0.001;
-    adjdB_old = 0;
-    refinePass = 0;
-   state = State::refineAmpPlus;
-  }
+        if (not initialAutoTune)
+        {
+          if (mode == 0 and CalData.CWradioCalComplete == true)
+          {
+            amplitude = amplitude + 0.001;
+            adjdB_old = 0;
+            refinePass = 0;
+            state = State::refineAmpPlus;
+          }
+          if (mode == 1 and CalData.SSBradioCalComplete == true)
+          {
+            amplitude = amplitude + 0.001;
+            adjdB_old = 0;
+            refinePass = 0;
+            state = State::refineAmpPlus;
+          }
+        }
 
         break;
 
@@ -711,7 +718,6 @@ void TxCalibrate::DoXmitCarrierCalibrate(int calMode, bool radio, bool toEeprom)
   // Carrier Calibration Loop
   while (true)
   {
-//    fftActive = true;
     computeAdjdB();
     evedisplay.drawTransmitterCalScreen(pixelnew);
     TxCalibrate::buttonTasks(); // This takes care of manual calls to the initial or refinement calibrations.
@@ -731,25 +737,30 @@ void TxCalibrate::DoXmitCarrierCalibrate(int calMode, bool radio, bool toEeprom)
         std::fill(sweepVectorValue.begin(), sweepVectorValue.end(), 0.0);
         std::fill(sweepVector.begin(), sweepVector.end(), 0.0);
         warmup = warmup + 1;
-//        qDCoffset = maxSweepPhase; //  Need to use these values during warmup
-//        iDCoffset = maxSweepAmp;   //  so adjdB and adjdB_avg are forced upwards.
+        if(initialAutoTune) {
+                qDCoffset = maxSweepPhase; //  Need to use these values during warmup
+                iDCoffset = maxSweepAmp;   //  so adjdB and adjdB_avg are forced upwards.
+        }
         state = State::warmup;
         if (warmup == 1)
           state = State::state0;
-
-  if(mode == 0 and CalData.CWradioCalComplete == true) {
-iDCoffset = iDCoffset + 0.0005;
-adjdB_old = 0;
-refinePass = 0;
-  state = State::refineAmpPlus;
-}
-  if(mode == 1 and CalData.SSBradioCalComplete == true) {
-    iDCoffset = iDCoffset + 0.0005;
-    adjdB_old = 0;
-    refinePass = 0;
-   state = State::refineAmpPlus;
-  }
-
+        if (not initialAutoTune)
+        {
+          if (mode == 0 and CalData.CWradioCalComplete == true)
+          {
+            iDCoffset = iDCoffset + 0.0005;
+            adjdB_old = 0;
+            refinePass = 0;
+            state = State::refineAmpPlus;
+          }
+          if (mode == 1 and CalData.SSBradioCalComplete == true)
+          {
+            iDCoffset = iDCoffset + 0.0005;
+            adjdB_old = 0;
+            refinePass = 0;
+            state = State::refineAmpPlus;
+          }
+        }
 
         break;
 
@@ -770,7 +781,7 @@ refinePass = 0;
           adjdB_min = adjdB;
         if ((adjdB - adjdB_min) > 2.0)
           iDCoffset = maxSweepAmp;
-//        Serial.printf("adjdB = %f adjdB_min = %f\n", adjdB, adjdB_min);
+        //        Serial.printf("adjdB = %f adjdB_min = %f\n", adjdB, adjdB_min);
         index = index + 1;
         // Increment for next measurement.
         iDCoffset = iDCoffset + carrIncrement;
@@ -995,7 +1006,6 @@ refinePass = 0;
   } // end while
 } // End carrier calibration
 
-
 // Automatic calibration of all bands.  Greg KF5N June 4, 2024
 void TxCalibrate::RadioCal(int mode)
 {
@@ -1027,7 +1037,7 @@ void TxCalibrate::RadioCal(int mode)
     {
       bands.bands[ConfigData.currentBand].sideband = Sideband::UPPER; // Calibrate upper sideband for 80M and 40M.
       rxcalibrater.DoReceiveCalibrate(mode, true, false);
-//      txcalibrater.DoXmitCarrierCalibrate(mode, true, false);
+      //      txcalibrater.DoXmitCarrierCalibrate(mode, true, false);
       txcalibrater.DoXmitCalibrate(mode, true, false);
     }
 

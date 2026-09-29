@@ -344,6 +344,7 @@ void RxCalibrate::DoReceiveCalibrate(int calMode, bool radio, bool toEeprom)
     // Activate automatic calibration (initial calibration).
     case MenuSelect::ZOOM: // 2nd row, 1st column button
       autoCal = true;
+      refineCal = false;
       warmup = 0;
       index = 1;
       IQCalType = 0;

@@ -79,6 +79,7 @@ public:
   MenuSelect task = MenuSelect::DEFAULT;
   bool autoCal = false;
   bool radioCal = false;
+  bool initialAutoTune{false};
   bool saveToEeprom = false;
   bool fftSuccess = false; // A flag for debugging FFT inadequate data problems.
                            //  bool fftActive = true;   // This variable is used to deactive creation of the FFT result.
