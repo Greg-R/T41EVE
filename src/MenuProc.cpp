@@ -118,10 +118,10 @@ void MenuProc::CalibrateOptions()
 
     break;
 
-  case 2:                                     // CW IQ Receive Cal - Gain and Phase
+  case 2:                                     // Manual CW IQ Receive calibration.
     evemenucontrol.runOptionFunction = false; // Deactivate function.
     evemenucontrol.runInDSP = false;
-    rxcalibrater.DoReceiveCalibrate(0, false, false); // This function was significantly revised.  KF5N August 16, 2023
+    rxcalibrater.DoReceiveCalibrate(0, false, false);  // mode, autoCal, save to EEPROM
     parameterAdjustFlag = false;                      // Save to EEPROM at conclusion of this function.
     subMenuChoice = 0;
     break;
@@ -134,7 +134,7 @@ void MenuProc::CalibrateOptions()
     subMenuChoice = 0;
     break;
 
-  case 4:
+  case 4:  // CW Xmit Sideband calibration.
     evemenucontrol.runOptionFunction = false; // Deactivate function.
     evemenucontrol.runInDSP = false;
     txcalibrater.DoXmitCalibrate(0, false, false); // This function was significantly revised.  KF5N August 16, 2023
@@ -164,7 +164,7 @@ void MenuProc::CalibrateOptions()
 
     break;
 
-  case 6:                                             // SSB receive cal
+  case 6:                                             // Manual SSB receive cal
     rxcalibrater.DoReceiveCalibrate(1, false, false); // This function was significantly revised.  KF5N August 16, 2023
     parameterAdjustFlag = false;                      // Save to EEPROM at conclusion of this function.
     evemenucontrol.runOptionFunction = false;         // Deactivate function.

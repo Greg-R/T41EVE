@@ -67,7 +67,7 @@ void RxCalibrate::warmUpCal()
   // MakeFFTData() has to be called enough times for transients to settle out before computing FFT.
   for (i = 0; i < 32; i = i + 1)
   {
-//    fftActive = true;
+    //    fftActive = true;
     updateDisplayFlag = true;
     RxCalibrate::MakeFFTData(); // Note, FFT not called if buffers are not sufficiently filled.
     arm_max_q15(pixelnew, 512, &rawSpectrumPeak, &index_of_max);
@@ -81,9 +81,9 @@ void RxCalibrate::warmUpCal()
       break; // If five in a row, exit the loop.  Warm-up is complete.
   }
   updateDisplayFlag = true; // This flag is used by the normal receiver process.
-//  fftActive = true;         // This is a flag local to this class.
+                            //  fftActive = true;         // This is a flag local to this class.
   updateDisplayFlag = false;
-//  fftActive = false;
+  //  fftActive = false;
   // Find peak of spectrum, which is 512 wide.  Use this to adjust spectrum peak to top of spectrum display.
   arm_max_q15(pixelnew, 512, &rawSpectrumPeak, &index_of_max);
   //    Serial.printf("RX rawSpectrumPeak = %d count = %d i = %d\n", rawSpectrumPeak, count, i);
@@ -200,6 +200,55 @@ void RxCalibrate::CalibrateEpilogue(bool radioCal, bool saveToEeprom)
   powerUp = true;      // Clip off transient.
 }
 
+//
+void RxCalibrate::buttonTasks()
+{
+  task = button.readButton();
+  switch (task)
+  {
+  // Activate automatic calibration starting with stored values.
+  case MenuSelect::ZOOM: // 2nd row, 1st column button
+  Serial.printf("Zoom button\n");
+    RxCalibrate::autoCal = true;
+    warmup = 0;
+    index = 0;
+    initialAutoTune = true;
+    RxCalibrate::state = State::warmup;
+    break;
+  // Automatic calibration starting from scratch.
+  case MenuSelect::FILTER: // 3rd row, 1st column button
+    RxCalibrate::autoCal = true;
+    warmup = 0;
+    index = 0;
+    initialAutoTune = false;
+    state = State::warmup;
+    break;
+  // Toggle gain and phase in manual mode.
+  case MenuSelect::UNUSED_1:
+    if (IQCalType == 0)
+    {
+      IQCalType = 1;
+      // Turn off red indication of active setting.
+      if (calTypeFlag == 1)
+        GetEncoderValueLive(-1.0, 1.0, amplitude, increment);
+    }
+    else
+    {
+      IQCalType = 0;
+      // Turn off red indication of active setting.
+      if (calTypeFlag == 1)
+        GetEncoderValueLive(-1.0, 1.0, phase, increment);
+    }
+    break;
+
+  case MenuSelect::MENU_OPTION_SELECT: // Save values and exit from manual calibration.
+    exitManual = true;
+    break;
+  default:
+    break;
+  } // end switch
+}
+
 /*****
   Purpose: Write the calibration factors to the CalData struct.
 
@@ -248,27 +297,25 @@ void RxCalibrate::writeToCalData(float ichannel, float qchannel)
    Return value:
       void
  *****/
-void RxCalibrate::DoReceiveCalibrate(int calMode, bool radio, bool toEeprom)
+void RxCalibrate::DoReceiveCalibrate(int calMode, bool fullRadioCal, bool toEeprom)
 {
-  MenuSelect task = MenuSelect::DEFAULT;
+  //  MenuSelect task = MenuSelect::DEFAULT;
 
-  RxCalibrate::mode = calMode;          // CW or SSB.  This is an object state variable.
-  RxCalibrate::radioCal = radio;        // Initial calibration of all bands.
+  RxCalibrate::mode = calMode;          // CW or SSB.  0 for CW, 1 for SSB.
+  RxCalibrate::radioCal = fullRadioCal;      // Run automatic calibration programmatically.
   RxCalibrate::saveToEeprom = toEeprom; // Save to EEPROM
 
   loadCalToneBuffers(750.0);
   CalibratePreamble(0);     // Set zoom to 1X.
   int calFreqShift = 96000; // Transmit frequency to 2 times IF, the image.
 
-  ResetFlipFlops(); // This function has delay.
-
   SetFreqCal(calFreqShift);
   IQCalType = 0;               // Start with IG Gain calibration.
   warmUpCal();                 // Finds the peak of the FFT to adjust in display.
-  State state = State::warmup; // Start calibration state machine in warmup state.
+  RxCalibrate::state = State::warmup; // Start calibration state machine in warmup state.
   float maxSweepAmp = 0.1;
   float maxSweepPhase = 0.1;
-  increment = 0.01; // Used in initial sweeps.
+  increment = 0.001; // 0.01 used in initial sweeps.
   int refinePass{0};
   float iOptimal = 1.0;
   float qOptimal = 0.0;
@@ -278,7 +325,8 @@ void RxCalibrate::DoReceiveCalibrate(int calMode, bool radio, bool toEeprom)
   std::vector<float32_t> sweepVectorValue(21);
   int startTimer = 0; // Used to time display of results.
   std::vector<float>::iterator result;
-  // Get current values for amplitude and phase.  This is for refinement only.
+
+  // Get current values for amplitude and phase.
   if (mode == 0)
   {
     if (bands.bands[ConfigData.currentBand].sideband == Sideband::LOWER)
@@ -308,6 +356,7 @@ void RxCalibrate::DoReceiveCalibrate(int calMode, bool radio, bool toEeprom)
 
   GetEncoderValueLive(-2.0, 2.0, phase, increment); // Show phase on display.
 
+  // This is used in full radio cal only.
   if (radioCal)
   {
     autoCal = true;
@@ -319,11 +368,10 @@ void RxCalibrate::DoReceiveCalibrate(int calMode, bool radio, bool toEeprom)
     state = State::warmup;
   }
 
-  // Receive Calibration Loop
+  // Receive Calibration Loop.  This runs in both button (manual) and programmatic modes.
   while (true)
   {
-//    fftActive = true;
-    computeAdjdB();
+    computeAdjdB(); // Run full duplex transmit/receive and measure suppression in dB.
 
     if ((static_cast<int>(displayTimer) - lastDisplayTime) > 20)
     {
@@ -331,14 +379,19 @@ void RxCalibrate::DoReceiveCalibrate(int calMode, bool radio, bool toEeprom)
       lastDisplayTime = static_cast<int>(displayTimer);
     }
 
+    // This function takes care of button presses and resultant control of the rest of the process.
+    // The buttons are polled by the while loop.
+    buttonTasks();
+    Serial.printf("After buttonTasks state = %d\n", static_cast<int>(RxCalibrate::state));
+
     // Exit from manual calibration by button push.
     if (exitManual == true)
     {
       RxCalibrate::CalibrateEpilogue(radioCal, saveToEeprom);
       return;
     }
-    task = button.readButton();
 
+    /*
     switch (task)
     {
     // Activate automatic calibration (initial calibration).
@@ -346,6 +399,7 @@ void RxCalibrate::DoReceiveCalibrate(int calMode, bool radio, bool toEeprom)
       autoCal = true;
       refineCal = false;
       warmup = 0;
+      initialAutoTune = true;
       index = 1;
       IQCalType = 0;
       std::fill(sweepVectorValue.begin(), sweepVectorValue.end(), 0.0);
@@ -357,6 +411,7 @@ void RxCalibrate::DoReceiveCalibrate(int calMode, bool radio, bool toEeprom)
       refineCal = true;
       autoCal = true;
       warmup = 0;
+      initialAutoTune = false;
       index = 1;
       IQCalType = 0;
       std::fill(sweepVectorValue.begin(), sweepVectorValue.end(), 0.0);
@@ -378,18 +433,7 @@ void RxCalibrate::DoReceiveCalibrate(int calMode, bool radio, bool toEeprom)
         GetEncoderValueLive(-2.0, 2.0, phase, increment);
       }
       break;
-    // Toggle increment value
-    case MenuSelect::BEARING: // UNUSED_2 is now called BEARING
-      corrChange = not corrChange;
-      if (corrChange == true)
-      { // Toggle increment value
-        increment = 0.001;
-      }
-      else
-      {
-        increment = 0.002;
-      }
-      break;
+
     case MenuSelect::MENU_OPTION_SELECT: // Save values and exit calibration.
       exitManual = true;
       RxCalibrate::CalibrateEpilogue(radioCal, saveToEeprom);
@@ -399,30 +443,54 @@ void RxCalibrate::DoReceiveCalibrate(int calMode, bool radio, bool toEeprom)
     default:
       break;
     } // end switch
+     */
+
+Serial.printf("autoCal = %d radioCal = %d state = %d\n", autoCal, radioCal, static_cast<int>(RxCalibrate::state));
 
     //  Begin automatic calibration state machine.
-    if (autoCal || radioCal)
+    if (autoCal or radioCal)
     {
       switch (state)
       {
       case State::warmup:
+      Serial.printf("warmup\n");
         autoCal = true;
         index = 0;
         IQCalType = 0;
         std::fill(sweepVectorValue.begin(), sweepVectorValue.end(), 0.0);
         std::fill(sweepVector.begin(), sweepVector.end(), 0.0);
         warmup = warmup + 1;
-        if (not refineCal)
+        if (initialAutoTune)
         {
           phase = 0.0 + maxSweepPhase;   //  Need to use these values during warmup
           amplitude = 1.0 + maxSweepAmp; //  so adjdB and adjdB_avg are forced upwards.
         }
         state = State::warmup;
         if (warmup == 1)
-          state = State::state0;
+          state = State::state0;  // Proceed with initial auto calibration.
+
+        if (not initialAutoTune)  // Run refine calibration only.
+        {
+          if (mode == 0 and CalData.CWradioCalComplete == true)
+          {
+            amplitude = amplitude + 0.001;
+            adjdB_old = 0;
+            refinePass = 0;
+            state = State::refineAmpPlus;
+          }
+          if (mode == 1 and CalData.SSBradioCalComplete == true)
+          {
+            amplitude = amplitude + 0.001;
+            adjdB_old = 0;
+            refinePass = 0;
+            state = State::refineAmpPlus;
+          }
+        }
+
         break;
 
       case State::state0:
+        Serial.printf("state0\n");
         // Starting values for sweeps.  First sweep is amplitude (gain).
         phase = 0.0;
         amplitude = 1.0 - maxSweepAmp;                    // Begin sweep at low end and move upwards.
@@ -430,15 +498,17 @@ void RxCalibrate::DoReceiveCalibrate(int calMode, bool radio, bool toEeprom)
         adjdB = 0;
         index = 0;
         IQCalType = 0;
-        increment = 0.01;               // Reset increment in case initial cal is run twice.
+        increment = 0.01; // Reset increment in case initial cal is run twice.
         adjdB_min = 0;
         state = State::initialSweepAmp; // Let this fall through.
 
       case State::initialSweepAmp:
         sweepVectorValue[index] = amplitude;
         sweepVector[index] = adjdB;
-        if((adjdB < adjdB_min) and (adjdB < -20.0)) adjdB_min = adjdB;
-        if((adjdB - adjdB_min) > 2.0) amplitude = maxSweepAmp;
+        if ((adjdB < adjdB_min) and (adjdB < -20.0))
+          adjdB_min = adjdB;
+        if ((adjdB - adjdB_min) > 2.0)
+          amplitude = maxSweepAmp;
         index = index + 1;
         // Increment for next measurement.
         amplitude = amplitude + increment; // Next one!
@@ -468,8 +538,10 @@ void RxCalibrate::DoReceiveCalibrate(int calMode, bool radio, bool toEeprom)
       case State::initialSweepPhase:
         sweepVectorValue[index] = phase;
         sweepVector[index] = adjdB;
-        if((adjdB < adjdB_min) and (adjdB < -20.0)) adjdB_min = adjdB;
-        if((adjdB - adjdB_min) > 2.0) phase = maxSweepPhase;
+        if ((adjdB < adjdB_min) and (adjdB < -20.0))
+          adjdB_min = adjdB;
+        if ((adjdB - adjdB_min) > 2.0)
+          phase = maxSweepPhase;
         index = index + 1;
         // Increment for the next measurement.
         phase = phase + increment;
@@ -607,7 +679,6 @@ void RxCalibrate::DoReceiveCalibrate(int calMode, bool radio, bool toEeprom)
         else
         {
           autoCal = false; // Don't enter switch, but remain in manual loop.
-          refineCal = false;
         }
         break;
       }
@@ -762,9 +833,9 @@ void RxCalibrate::MakeFFTData()
 
     // This process started because there are 2048 samples available.  Perform FFT.
     updateDisplayFlag = true;
-//    if (fftActive)
-      CalcZoom1Magn(512); // Receiver calibration uses 1X zoom.
-    FreqShift1();      // 48 kHz shift
+    //    if (fftActive)
+    CalcZoom1Magn(512); // Receiver calibration uses 1X zoom.
+    FreqShift1();       // 48 kHz shift
     fftSuccess = true;
   } // End of receive code
   else

@@ -1775,7 +1775,7 @@ FLASHMEM void EVE_Display::receiverCalStatic_cmd_list()
 
   // T41-EP "brand"
   EVE_color_rgb(0xffffff);
-  EVE_cmd_text(510, 10, 30, 0, "T41-3 SDT");
+  EVE_cmd_text(510, 10, 30, 0, "T41-3 EP");
 
   // RF spectrum display container.
   EVE_color_rgb(0xff0000); // Red
@@ -1821,9 +1821,8 @@ FLASHMEM void EVE_Display::receiverCalStatic_cmd_list()
   EVE_cmd_text(550, 125, 28, 0, "Incr =");
   EVE_cmd_text(640, 150, 30, 0, "dBC");
   EVE_cmd_text(550, 185, 28, 0, "User1: Gain/Phase");
-  EVE_cmd_text(550, 215, 28, 0, "User2: Increment");
-  EVE_cmd_text(550, 245, 28, 0, "Zoom: Auto-Cal");
-  EVE_cmd_text(550, 275, 28, 0, "Filter: Refine-Cal");
+  EVE_cmd_text(550, 215, 28, 0, "Zoom: Auto-Cal");
+  EVE_cmd_text(550, 245, 28, 0, "Filter: Refine-Cal");
 
   EVE_cmd_endlist();
 } // End of receiver calibration static.
