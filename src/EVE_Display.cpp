@@ -16,13 +16,12 @@ You should have received a copy of the GNU General Public License along with T41
   "TEENSY CONVOLUTION SDR" substantially modified by Jack Purdum, W8TEE, and Al Peter, AC8GY
 
   This software is made available under the GNU GPLv3 license agreement. If commercial use of this
-  software is planned, we would appreciate it if the interested parties contact Jack Purdum, W8TEE, 
+  software is planned, we would appreciate it if the interested parties contact Jack Purdum, W8TEE,
   and Al Peter, AC8GY.
 
-  Any and all other uses, written or implied, by the GPLv3 license are forbidden without written 
+  Any and all other uses, written or implied, by the GPLv3 license are forbidden without written
   permission from from Jack Purdum, W8TEE, and Al Peter, AC8GY.
 */
-
 
 #include "SDT.h"
 
@@ -46,17 +45,17 @@ EVE_Display::EVE_Display()
 void EVE_Display::initialize()
 {
 
-  pinMode(10, OUTPUT);   // SPI chip select.
+  pinMode(10, OUTPUT); // SPI chip select.
   digitalWrite(10, HIGH);
 
-    // Configure GPIO 10 for high speed.
+  // Configure GPIO 10 for high speed.
   uint32_t iospeed_display = IOMUXC_PAD_DSE(3) | IOMUXC_PAD_SPEED(1);
   *(digital_pin_to_info_PGM + 10)->pad = iospeed_display;
 
   SPI.begin(); /* sets up the SPI to run in Mode 0 and 1 MHz */
   /* switch to 8MHz, note, init must be done with <11MHz */
   SPI.beginTransaction(SPISettings(4UL * 1000000UL, MSBFIRST, SPI_MODE0));
-//  tft_init();
+  //  tft_init();
 
   if (E_OK == EVE_init())
   {
@@ -148,7 +147,7 @@ void EVE_Display::drawReceiverScreen(int16_t *fftArray, uint8_t *waterfall, int1
     EVE_cmd_number_burst(360, 10, 29, 0, ConfigData.transmitPowerLevel);
   }
 
-    // Receiver gain adjust.
+  // Receiver gain adjust.
   if (receiverGainAdjustFlag)
   {
     EVE_cmd_text_burst(110, 10, 29, 0, "Receiver DSP Gain dB:");
@@ -233,10 +232,10 @@ void EVE_Display::drawReceiverScreen(int16_t *fftArray, uint8_t *waterfall, int1
 
   // Volume
   EVE_color_rgb_burst(0x0000FF);
-  if(ConfigData.audioOut == AudioState::SPEAKER or ConfigData.audioOut == AudioState::BOTH)
-  EVE_cmd_number_burst(610, 278, 30, 0, ConfigData.speakerVolume);
-  if(ConfigData.audioOut == AudioState::HEADPHONE)
-  EVE_cmd_number_burst(610, 278, 30, 0, ConfigData.headphoneVolume);
+  if (ConfigData.audioOut == AudioState::SPEAKER or ConfigData.audioOut == AudioState::BOTH)
+    EVE_cmd_number_burst(610, 278, 30, 0, ConfigData.speakerVolume);
+  if (ConfigData.audioOut == AudioState::HEADPHONE)
+    EVE_cmd_number_burst(610, 278, 30, 0, ConfigData.headphoneVolume);
 
   // AGC on or off.
   std::string agcMode{"ON"};
@@ -374,7 +373,7 @@ void EVE_Display::drawReceiverScreen(int16_t *fftArray, uint8_t *waterfall, int1
     EVE_cmd_number_burst(400, 8, 29, 0, CalData.dBm_calibration);
   }
 
-    // The special case of "Button Repeat" adjustment.
+  // The special case of "Button Repeat" adjustment.
   if (calibrateFlag and menuProc.subMenuChoice == 13)
   {
     EVE_cmd_text_burst(80, 8, 29, 0, "Button Repeat Delay:");
@@ -548,7 +547,7 @@ void EVE_Display::drawReceiverScreen(int16_t *fftArray, uint8_t *waterfall, int1
       EVE_color_rgb_burst(0x7d898b);
       EVE_vertex2f_burst(BAND_INDICATOR_X - 6 + abs(filterLoPositionMarker), SPECTRUM_BOTTOM - 2);
       EVE_vertex2f_burst(BAND_INDICATOR_X - 6 + abs(filterLoPositionMarker), SPECTRUM_BOTTOM - 117);
-      EVE_color_rgb_burst(0xff0000);  // Red
+      EVE_color_rgb_burst(0xff0000); // Red
       EVE_vertex2f_burst(BAND_INDICATOR_X - 7 + abs(filterHiPositionMarker), SPECTRUM_BOTTOM - 2);
       EVE_vertex2f_burst(BAND_INDICATOR_X - 7 + abs(filterHiPositionMarker), SPECTRUM_BOTTOM - 117);
       EVE_end_burst();
@@ -1326,25 +1325,25 @@ FLASHMEM void EVE_Display::buttonEntryStatic_cmd_list()
   // Row 1
   EVE_color_rgb(0x000000);
   EVE_cmd_text(490, 118, 31, 0, "<");
-//  EVE_color_rgb(0xFFFFFF);
-//  EVE_cmd_text(661, 128, 30, 0, "X");
+  //  EVE_color_rgb(0xFFFFFF);
+  //  EVE_cmd_text(661, 128, 30, 0, "X");
   // Rows 2-4
-//  EVE_cmd_text(578, 128, 31, 0, "^");
+  //  EVE_cmd_text(578, 128, 31, 0, "^");
 
   uint32_t line1y{150};
   uint32_t linex{70};
 
-//  std::string test12 = "↑";
+  //  std::string test12 = "↑";
 
   // Entry guide static text.
   EVE_color_rgb(0xffffff);
   EVE_cmd_text(linex, line1y, 29, 0, "Button Parameter Entry");
   EVE_cmd_text(linex, line1y + 50, 29, 0, "Up/Down arrows to select");
-//  EVE_cmd_text(linex, line1y + 80, 29, 0, " Down to next");
+  //  EVE_cmd_text(linex, line1y + 80, 29, 0, " Down to next");
   EVE_cmd_text(linex, line1y + 110, 29, 0, "< Apply entry");
-//  EVE_cmd_text(linex, line1y + 140, 29, 0, "X Exit no change");
+  //  EVE_cmd_text(linex, line1y + 140, 29, 0, "X Exit no change");
 
-//  EVE_cmd_text(578, 182, 31, 0, "^");
+  //  EVE_cmd_text(578, 182, 31, 0, "^");
 
   // Up and down arrows.
   EVE_line_width(24);
@@ -1372,8 +1371,7 @@ FLASHMEM void EVE_Display::buttonEntryStatic_cmd_list()
 
   EVE_end();
 
-
-//  EVE_cmd_text(578, 182, 31, 0, "^");
+  //  EVE_cmd_text(578, 182, 31, 0, "^");
 
   EVE_cmd_endlist();
 } // End button entry static list.
@@ -1440,11 +1438,11 @@ FLASHMEM void EVE_Display::encoderEntryStatic_cmd_list()
   EVE_color_rgb(0x000000);
   EVE_cmd_text(490, 118, 31, 0, "<");
   EVE_color_rgb(0xFFFFFF);
-//  EVE_cmd_text(661, 128, 30, 0, "X");
+  //  EVE_cmd_text(661, 128, 30, 0, "X");
   // Rows 2-4
   //    EVE_cmd_number(492, 182, 30, 0, 7);
-  //EVE_cmd_text(578, 128, 31, 0, "^");
-  //EVE_cmd_text(578, 182, 31, 0, "^");
+  // EVE_cmd_text(578, 128, 31, 0, "^");
+  // EVE_cmd_text(578, 182, 31, 0, "^");
 
   uint32_t line1y{150};
   uint32_t linex{70};
@@ -1455,7 +1453,7 @@ FLASHMEM void EVE_Display::encoderEntryStatic_cmd_list()
   EVE_cmd_text(linex, line1y + 50, 29, 0, "Use encoder to adjust");
   //  EVE_cmd_text(linex, line1y + 80, 29, 0, " Down to next");
   EVE_cmd_text(linex, line1y + 110, 29, 0, "< Apply entry");
-//  EVE_cmd_text(linex, line1y + 140, 29, 0, "X Exit no change");
+  //  EVE_cmd_text(linex, line1y + 140, 29, 0, "X Exit no change");
 
   EVE_cmd_endlist();
 } // End static items in button parameter entry.
@@ -1511,15 +1509,12 @@ FLASHMEM void EVE_Display::transmitterCalStatic_cmd_list()
   EVE_end();
 
   // Background
-    EVE_begin(EVE_RECTS);
-    EVE_color_a(150);        // Set transparency.
-    EVE_color_rgb(0x292626); // Dark gray.
-  EVE_vertex2f(0, 100);
-//  EVE_vertex2f(513, 100);
-  EVE_vertex2f(513, 470);
-//  EVE_vertex2f(0, 470);
-//  EVE_vertex2f(0, 100);
-    EVE_end();
+  EVE_begin(EVE_RECTS);
+  EVE_color_a(150);        // Set transparency.
+  EVE_color_rgb(0x292626); // Dark gray.
+  EVE_vertex2f(1, 101);
+  EVE_vertex2f(512, 469);
+  EVE_end();
 
   // Band and mode information line.
   EVE_color_rgb(0xffffff); // White
@@ -1543,12 +1538,12 @@ FLASHMEM void EVE_Display::transmitterCalStatic_cmd_list()
 
   // Draw the button push guides.
   EVE_color_rgb(0x00ff00);
-//  EVE_cmd_text(550, 125, 28, 0, "Incr =");
+  //  EVE_cmd_text(550, 125, 28, 0, "Incr =");
   EVE_cmd_text(660, 150, 30, 0, "dBC");
   EVE_cmd_text(550, 185, 28, 0, "User1: Gain/Phase");
-//  EVE_cmd_text(550, 215, 28, 0, "User2: Increment");
+  //  EVE_cmd_text(550, 215, 28, 0, "User2: Increment");
   EVE_cmd_text(550, 215, 28, 0, "Zoom: Auto-Cal");
-//  EVE_cmd_text(550, 275, 28, 0, "Filter: Refine-Cal");
+  //  EVE_cmd_text(550, 275, 28, 0, "Filter: Refine-Cal");
 
   EVE_cmd_endlist();
 } // End of transmit/carrier calibration static.
@@ -1591,8 +1586,8 @@ void EVE_Display::drawTransmitterCalScreen(int16_t *fftArray)
 
   if (txcalibrater.autoCal)
     EVE_cmd_text(textX, 320, 30, 0, "Auto Mode");
-//  if (txcalibrater.refineCal)
-//    EVE_cmd_text(textX, 320, 30, 0, "Refine Mode");
+  //  if (txcalibrater.refineCal)
+  //    EVE_cmd_text(textX, 320, 30, 0, "Refine Mode");
   if (not txcalibrater.autoCal)
     EVE_cmd_text(textX, 320, 30, 0, "Manual Mode");
 
@@ -1618,9 +1613,9 @@ void EVE_Display::drawTransmitterCalScreen(int16_t *fftArray)
     EVE_color_rgb(0xff0000); // Red
     EVE_vertex2f(219, 101);
     EVE_vertex2f(229, 469);
-    EVE_color_rgb(0x0000ff); // Blue
-    EVE_vertex2f(251, 101);
-    EVE_vertex2f(261, 469);
+    EVE_color_rgb(0x4d54e8); // Blue
+    EVE_vertex2f(246, 101);
+    EVE_vertex2f(266, 469);
     EVE_end();
   }
 
@@ -1632,7 +1627,7 @@ void EVE_Display::drawTransmitterCalScreen(int16_t *fftArray)
     EVE_color_rgb(0xff0000); // Red
     EVE_vertex2f(267, 101);
     EVE_vertex2f(279, 469);
-    EVE_color_rgb(0x34bdeb); // Blue
+    EVE_color_rgb(0x4d54e8); // Blue
     EVE_vertex2f(250, 101);
     EVE_vertex2f(262, 469);
     EVE_end();
@@ -1644,7 +1639,7 @@ void EVE_Display::drawTransmitterCalScreen(int16_t *fftArray)
     EVE_color_rgb(0xff0000); // Red
     EVE_vertex2f(234, 101);
     EVE_vertex2f(246, 469);
-    EVE_color_rgb(0x34bdeb); // Blue
+    EVE_color_rgb(0x4d54e8); // Blue
     EVE_vertex2f(250, 101);
     EVE_vertex2f(262, 469);
     EVE_end();
@@ -1703,7 +1698,7 @@ void EVE_Display::drawTransmitterCalScreen(int16_t *fftArray)
   EVE_cmd_number_burst(430, 80, 26, 0, ConfigData.transmitPowerLevel);
 
   // Draw current suppression in dBC.
-////  dtostrf(txcalibrater.adjdB_avg, 4, 1, buffer);
+  ////  dtostrf(txcalibrater.adjdB_avg, 4, 1, buffer);
   dtostrf(txcalibrater.adjdB, 5, 3, buffer);
   EVE_color_a(255);
   EVE_cmd_text_burst(550, 150, 30, 0, buffer);
@@ -1793,6 +1788,14 @@ FLASHMEM void EVE_Display::receiverCalStatic_cmd_list()
   EVE_vertex2f(0, 100);
   EVE_end();
 
+  // Background
+  EVE_begin(EVE_RECTS);
+  EVE_color_a(150);        // Set transparency.
+  EVE_color_rgb(0x292626); // Dark gray.
+  EVE_vertex2f(1, 101);
+  EVE_vertex2f(512, 469);
+  EVE_end();
+
   // Band and mode information line.
   EVE_color_rgb(0xffffff); // White
   EVE_cmd_text(0, 80, 26, 0, "Center Freq");
@@ -1859,11 +1862,11 @@ void EVE_Display::drawReceiverCalScreen(int16_t *fftArray)
   EVE_begin(EVE_RECTS);
   EVE_color_a(100);        // Set transparency.
   EVE_color_rgb(0xff0000); // Red
-  EVE_vertex2f(113, 101);
-  EVE_vertex2f(145, 469);
+  EVE_vertex2f(119, 101);
+  EVE_vertex2f(139, 469);
   EVE_color_rgb(0x0000ff); // Blue
-  EVE_vertex2f(369, 101);
-  EVE_vertex2f(401, 469);
+  EVE_vertex2f(374, 101);
+  EVE_vertex2f(394, 469);
   EVE_end();
 
   // Main frequency.
@@ -1875,7 +1878,7 @@ void EVE_Display::drawReceiverCalScreen(int16_t *fftArray)
   EVE_color_rgb_burst(0xffffff); // Make spectrum blue.
   EVE_line_width(12);
   EVE_begin_burst(EVE_LINE_STRIP);
-  for (int j = 0; j < 512; j = j + 1)
+  for (int j = 63; j < 448; j = j + 1)
   {
     // Invert and offset for the display.
     fftPlot = -fftArray[j] + rxcalibrater.rawSpectrumPeak + 110;
@@ -2133,7 +2136,6 @@ FLASHMEM void EVE_Display::switchMatrixCalStatic_cmd_list()
   EVE_cmd_endlist();
 } // End switch matrix cal static list.
 
-
 // Switch Matric release button notification.
 // This is used with #define DEBUG_SWITCH_CAL  in MyConfigurationFile.h.
 void EVE_Display::drawReleaseButtonScreen()
@@ -2151,9 +2153,9 @@ void EVE_Display::drawReleaseButtonScreen()
 
   EVE_display();
   EVE_cmd_swap();
-  while (EVE_busy());
+  while (EVE_busy())
+    ;
 }
-
 
 // Switch Matric calibration (dynamic).
 void EVE_Display::drawSwitchMatrixCalScreen()
@@ -2186,7 +2188,7 @@ void EVE_Display::drawSwitchMatrixCalScreen()
       // Turn the circle green since it has been pushed.
       if (buttonFinished[index])
       {
-//        Serial.printf("EVE buttonFinished[%d] = %d row = %d column = %d\n", index, buttonFinished[index], row, column);
+        //        Serial.printf("EVE buttonFinished[%d] = %d row = %d column = %d\n", index, buttonFinished[index], row, column);
         EVE_vertex_format(0);
         EVE_point_size(15 * 16);
         EVE_begin(EVE_POINTS);
@@ -2201,7 +2203,7 @@ void EVE_Display::drawSwitchMatrixCalScreen()
 
   EVE_display();
   EVE_cmd_swap();
-//  EVE_end_cmd_burst();
+  //  EVE_end_cmd_burst();
   while (EVE_busy())
     ;
 }
@@ -2565,7 +2567,7 @@ void EVE_Display::drawTransmitterScreen()
   EVE_cmd_text_burst(301, 5, 27, 0, buffer);
 #endif
 
-// IMD Test in SSB menu.
+  // IMD Test in SSB menu.
   if (radioState == RadioState::SSB_IM3TEST_STATE)
   {
     EVE_cmd_text_burst(50, 10, 29, 0, "IMD Adjust Level:");
@@ -2582,7 +2584,7 @@ void EVE_Display::drawTransmitterScreen()
 // Introductory display.
 FLASHMEM void EVE_Display::drawTransmitterAlarmScreen(std::string warningMessage)
 {
-//  EVE_start_cmd_burst();
+  //  EVE_start_cmd_burst();
   EVE_cmd_dl(CMD_DLSTART);
   EVE_cmd_dl(DL_CLEAR_COLOR_RGB | 0xFFFFFF);
   EVE_cmd_dl(DL_CLEAR | CLR_COL | CLR_STN | CLR_TAG);
@@ -2592,42 +2594,46 @@ FLASHMEM void EVE_Display::drawTransmitterAlarmScreen(std::string warningMessage
 
   EVE_cmd_dl(DL_DISPLAY);
   EVE_cmd_dl(CMD_SWAP);
-//  EVE_end_cmd_burst();
+  //  EVE_end_cmd_burst();
   while (EVE_busy())
     ;
 }
 
-void EVE_Display::Example1() {
-EVE_cmd_dl(CMD_DLSTART); // tells EVE to start a new display-list
-delay(1);
-EVE_cmd_dl(DL_CLEAR_COLOR_RGB | WHITE); // sets the background color
-delay(1);
-EVE_cmd_dl(DL_CLEAR | CLR_COL | CLR_STN | CLR_TAG);
-delay(1);
-EVE_color_rgb(BLACK);
-delay(1);
-EVE_cmd_text(5, 15, 28, 0, "Hello there!");
-delay(1);
-EVE_cmd_dl(DL_DISPLAY); // put in the display list to mark its end
-delay(1);
-EVE_cmd_dl(CMD_SWAP); // tell EVE to use the new display list
-delay(1);
-while (EVE_busy());
+void EVE_Display::Example1()
+{
+  EVE_cmd_dl(CMD_DLSTART); // tells EVE to start a new display-list
+  delay(1);
+  EVE_cmd_dl(DL_CLEAR_COLOR_RGB | WHITE); // sets the background color
+  delay(1);
+  EVE_cmd_dl(DL_CLEAR | CLR_COL | CLR_STN | CLR_TAG);
+  delay(1);
+  EVE_color_rgb(BLACK);
+  delay(1);
+  EVE_cmd_text(5, 15, 28, 0, "Hello there!");
+  delay(1);
+  EVE_cmd_dl(DL_DISPLAY); // put in the display list to mark its end
+  delay(1);
+  EVE_cmd_dl(CMD_SWAP); // tell EVE to use the new display list
+  delay(1);
+  while (EVE_busy())
+    ;
 }
 
-void EVE_Display::Example2() {
-EVE_cmd_dl(CMD_DLSTART); // tells EVE to start a new display-list
-delay(1);
-EVE_cmd_dl(DL_CLEAR_COLOR_RGB | WHITE); // sets the background color
-delay(1);
-EVE_cmd_dl(DL_CLEAR | CLR_COL | CLR_STN | CLR_TAG);
-delay(1);
-EVE_color_rgb(BLACK);
-delay(1);
-EVE_cmd_text(5, 15, 28, 0, "Hola aqui!");
-delay(1);
-EVE_cmd_dl(DL_DISPLAY); // put in the display list to mark its end
-delay(1);
-EVE_cmd_dl(CMD_SWAP); // tell EVE to use the new display list
-while (EVE_busy());
+void EVE_Display::Example2()
+{
+  EVE_cmd_dl(CMD_DLSTART); // tells EVE to start a new display-list
+  delay(1);
+  EVE_cmd_dl(DL_CLEAR_COLOR_RGB | WHITE); // sets the background color
+  delay(1);
+  EVE_cmd_dl(DL_CLEAR | CLR_COL | CLR_STN | CLR_TAG);
+  delay(1);
+  EVE_color_rgb(BLACK);
+  delay(1);
+  EVE_cmd_text(5, 15, 28, 0, "Hola aqui!");
+  delay(1);
+  EVE_cmd_dl(DL_DISPLAY); // put in the display list to mark its end
+  delay(1);
+  EVE_cmd_dl(CMD_SWAP); // tell EVE to use the new display list
+  while (EVE_busy())
+    ;
 }
