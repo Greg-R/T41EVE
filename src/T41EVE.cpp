@@ -929,8 +929,8 @@ IntervalTimer displayRefresh;
 
 void buttonPush() {
 if(evemenucontrol.runOptionFunction == true) return;  // Bypass if we are using the menus.
-    MenuSelect menu;
-    if ((radioState != RadioState::SSB_TRANSMIT_STATE) and (radioState != RadioState::FT8_TRANSMIT_STATE) and (calibrateFlag == false) and (evemenucontrol.runOptionFunction == false) and (evemenucontrol.subMenuSelect == false))
+    MenuSelect menu{MenuSelect::BOGUS_PIN_READ};
+ if ((radioState != RadioState::SSB_TRANSMIT_STATE) and (radioState != RadioState::FT8_TRANSMIT_STATE) and (calibrateFlag == false) and (evemenucontrol.runOptionFunction == false) and (evemenucontrol.subMenuSelect == false))
     {
       menu = button.readButton();
       // Restrict allowed button selections if in top menu.
@@ -1171,7 +1171,8 @@ void loop()
   bool cwKeyDown;
   unsigned long cwBlockIndex;
 
-  seq::run();
+//  seq::run();
+buttonPush();
 
       // This handles functions selected from the second level of menus.
     // This should only be relevant for functions not runInDSP!

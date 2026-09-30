@@ -2157,7 +2157,7 @@ void EVE_Display::drawReleaseButtonScreen()
 }
 
 // Switch Matric calibration (dynamic).
-void EVE_Display::drawSwitchMatrixCalScreen()
+void EVE_Display::drawSwitchMatrixCalScreen(bool finished)
 {
   EVE_cmd_dl(CMD_DLSTART);
   EVE_cmd_dl(DL_CLEAR_COLOR_RGB | 0x000000);
@@ -2198,6 +2198,12 @@ void EVE_Display::drawSwitchMatrixCalScreen()
       }
       index = index + 1;
     }
+  }
+
+  if (finished)
+  {
+    EVE_color_rgb(0x00ff00);
+    EVE_cmd_text(80, 220, 30, 0, "DONE!");
   }
 
   EVE_display();

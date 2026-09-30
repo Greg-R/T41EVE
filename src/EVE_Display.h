@@ -104,7 +104,7 @@ void drawEqualizerAdjustScreen(int EQType);
 void equalizerAdjustStatic_cmd_list();
 
 void drawReleaseButtonScreen();
-void drawSwitchMatrixCalScreen();
+void drawSwitchMatrixCalScreen(bool finished);
 void switchMatrixCalStatic_cmd_list();
 
 void drawTransmitterAlarmScreen(std::string warningMessage);

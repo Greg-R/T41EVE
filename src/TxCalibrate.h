@@ -41,7 +41,7 @@ public:
   void DoXmitCarrierCalibrate(int calMode, bool radio, bool toEeprom);
   const char *calFreqs[2]{"750 Hz", "3.0 kHz"};
   void ShowSpectrum();
-  void PlotCalSpectrum(int x1, int cal_bins[3], int capture_bins);
+  void PlotCalSpectrum(int cal_bins[3], int capture_bins);
   void RadioCal(int mode);
   void buttonTasks();
   void writeToCalData(float ichannel, float qchannel);

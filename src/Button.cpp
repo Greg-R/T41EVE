@@ -27,7 +27,7 @@ You should have received a copy of the GNU General Public License along with T41
 
 #include "SDT.h"
 
-using namespace Sequencer;
+//using namespace Sequencer;
 
 /*
 The button interrupt routine implements a first-order recursive filter, or "leaky integrator,"
@@ -63,7 +63,7 @@ const uint32_t BUTTON_STATE_PRESSED = 2;
 const float32_t BUTTON_USEC_PER_ISR = (1000000 / BUTTON_FILTER_SAMPLERATE);  // 100
 const uint32_t BUTTON_OUTPUT_UP = 1023; // Value to be output when in the UP state
 
-task<callable_holder> task_button_press(buttonPush, 15);
+//task<callable_holder> task_button_press(buttonPush, 15);
 
 //void EncoderFilterISR()
 //{
@@ -107,8 +107,7 @@ void ButtonISR()
       buttonADCOut = buttonADCPressed = filteredADCValue;  // Accept filtered value.
       buttonElapsed = 0;  // Reset debounce timer.
       buttonState = BUTTON_STATE_PRESSED;
-Serial.printf("bP ISR debounced add to sequencer buttonADCOut = %d\n", buttonADCOut);
-      seq::add(task_button_press);
+ Serial.printf("bP ISR debounced add to sequencer buttonADCOut = %d\n", buttonADCOut);
     }
 
     break;
@@ -117,7 +116,7 @@ Serial.printf("bP ISR debounced add to sequencer buttonADCOut = %d\n", buttonADC
     if (filteredADCValue >= CalData.buttonThresholdReleased)  // Button not actually pressed.
     {
       buttonState = BUTTON_STATE_UP;
-      Serial.printf("buttonPress ISR state 2 button not pressed\n");
+//      Serial.printf("buttonPress ISR state 2 button not pressed\n");
     }
     else if (CalData.buttonRepeatDelay != 0)
     { // buttonRepeatDelay of 0 disables repeat
@@ -130,8 +129,6 @@ Serial.printf("bP ISR debounced add to sequencer buttonADCOut = %d\n", buttonADC
         buttonADCOut = buttonADCPressed;  // Done.
         buttonElapsed = 0;                // Reset debounce for next button push.
 
-//      Can add to sequencer here?
-        seq::add(task_button_press);
         Serial.printf("bP ISR else add to sequencer buttonADCOut = %d\n", buttonADCOut);
 
       }

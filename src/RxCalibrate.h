@@ -63,13 +63,11 @@ public:
   float32_t phase = 0.0;
   q15_t rawSpectrumPeak = 0;
   uint32_t index = 0;
-  //  uint32_t count = 0;
   uint32_t warmup = 0;
   float32_t increment{0};
   bool exitManual = false;
   bool corrChange = false;
   //  bool fftActive = false;
-  bool fftSuccess = false;
   bool print{false};
   elapsedMillis milliTimer;
   elapsedMillis displayTimer;
@@ -113,7 +111,7 @@ public:
   void buttonTasks();
   void DoReceiveCalibrate(int calMode, bool fullRadioCal, bool toEeprom); // Mode determines CW versus SSB.
   void ShowSpectrum();
-  void PlotCalSpectrum(int x1, int cal_bins[3], int capture_bins);
+  void PlotCalSpectrum(int cal_bins[3], int capture_bins);
   void writeToCalData(float ichannel, float qchannel);
   void computeAdjdB();
 };

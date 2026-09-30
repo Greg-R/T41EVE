@@ -33,6 +33,7 @@ AudioInputI2SQuad i2s_quadIn;  // 4 inputs available only in Teensy audio and no
 AudioOutputI2SQuad_F32 i2s_quadOut_f32(audio_settings);
 
 // Transmitter
+float cwFreqOffset{0};
 AudioControlSGTL5000 sgtl5000_1;                                                  // Controller for the Teensy Audio Adapter.
 AudioConvert_I16toF32 int2Float1_tx;                                              // Converts Int16 to Float.
 AudioEffectGain_F32 micGain(audio_settings), compGainCompensate(audio_settings);  // Microphone gain control.
@@ -558,7 +559,9 @@ void SetAudioOperatingState(RadioState operatingState) {
       // Test tone enabled and connected
       toneSSBCal1.setSampleRate_Hz(48000);
       toneSSBCal1.amplitude(0.12);
-      toneSSBCal1.frequency(750.0);
+      cwFreqOffset = (static_cast<float>(ConfigData.CWOffset) + 6.0) * 24000.0 / 256.0;
+      Serial.printf("cwFreqOffset = %d\n", static_cast<int>(cwFreqOffset));
+      toneSSBCal1.frequency(cwFreqOffset);
       toneSSBCal1.begin();
       toneSSBCal2.end();
       mixer1_tx.gain(0, 0);       // microphone audio off.

@@ -493,7 +493,6 @@ void EncoderFilter()
 
   if (result == 0)
   {
-    Serial.printf("EncoderFilter result = 0\n");
     return;
   }
 
@@ -507,7 +506,6 @@ void EncoderFilter()
     filterEncoderMove = -1;
     break;
   }
-//  Serial.printf("EncoderFilter filterEncoderMove = %d\n", filterEncoderMove);
 
   // Don't adjust the filter if doing frequency calibration, adjusting Morse decode sensitivity, or encoder parameter adjustment.
   if (calibrateFlag == false and morseDecodeAdjustFlag == false and parameterAdjustFlag == false and calOnFlag == false)
@@ -519,6 +517,6 @@ task<callable_holder> task_filter_tune(EncoderFilter, 30);
 void EncoderFilterISR()
 {
   seq::add(task_filter_tune);
-//  Serial.printf("EncoderFilterISR %d\n", filterEncoderMove);
+
 if(calOnFlag)  EncoderFilter();
 }

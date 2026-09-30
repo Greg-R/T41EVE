@@ -16,15 +16,14 @@ You should have received a copy of the GNU General Public License along with T41
   "TEENSY CONVOLUTION SDR" substantially modified by Jack Purdum, W8TEE, and Al Peter, AC8GY
 
   This software is made available under the GNU GPLv3 license agreement. If commercial use of this
-  software is planned, we would appreciate it if the interested parties contact Jack Purdum, W8TEE, 
+  software is planned, we would appreciate it if the interested parties contact Jack Purdum, W8TEE,
   and Al Peter, AC8GY.
 
-  Any and all other uses, written or implied, by the GPLv3 license are forbidden without written 
+  Any and all other uses, written or implied, by the GPLv3 license are forbidden without written
   permission from from Jack Purdum, W8TEE, and Al Peter, AC8GY.
 */
 
 // Stand-alone "utility" functions.  These functions will be integrated into new classes in a future release.
-
 
 #include "SDT.h"
 
@@ -38,7 +37,6 @@ float32_t dbmhz = -145.0;
 float32_t m_AttackAlpha = 0.03;
 float32_t m_DecayAlpha = 0.01;
 
-
 /*****
   Purpose: Generate Array with variable sinewave frequency tone AFP 05-17-22
   Parameter list:
@@ -46,18 +44,19 @@ float32_t m_DecayAlpha = 0.01;
   Return value;
     void
 *****/
-FLASHMEM void sineTone(int numCycles) {
+FLASHMEM void sineTone(int numCycles)
+{
   int kf;
   float theta, increment;
   float freqSideTone;
   freqSideTone = numCycles * 24000.0 / 256.0;
-  for (kf = 0, increment = 0.0; kf < 256; increment += 1.0, kf++) {  // Calc: numCycles = 8, 750 hz sine wave.
+  for (kf = 0, increment = 0.0; kf < 256; increment += 1.0, kf++)
+  { // Calc: numCycles = 8, 750 hz sine wave.
     theta = increment * 2.0 * PI * freqSideTone / 24000.0;
-    sinBuffer[kf] = sin(theta);  // Used in CW decoder and CW_Exciter.cpp.
-    cosBuffer[kf] = cos(theta);  // Used only in receive calibration to generate Q channel.
+    sinBuffer[kf] = sin(theta); // Used in CW decoder and CW_Exciter.cpp.
+    cosBuffer[kf] = cos(theta); // Used only in receive calibration to generate Q channel.
   }
 }
-
 
 /*****
   Purpose: Generate ~5ms raised cosine wave-shaping arrays
@@ -66,102 +65,104 @@ FLASHMEM void sineTone(int numCycles) {
   Return value;
     void
 *****/
-FLASHMEM void initCWShaping() {
+FLASHMEM void initCWShaping()
+{
   int pos;
   float deg;
   // Rising waveform
   //  Raised cosine increasing amplitude for 128 samples (roughly 5ms)
-  for (pos = 0, deg = -180; pos < 256; deg += 1.40625 / 2.0 /* 180 / 128 */, pos++) {
+  for (pos = 0, deg = -180; pos < 256; deg += 1.40625 / 2.0 /* 180 / 128 */, pos++)
+  {
     cwRiseBuffer[pos] = (1.0 + cos(deg / 57.3 /* fixed conversion to radians */)) / 2.0;
   }
   //  Full amplitude for the remainder
-  for (; pos < 512; pos++) {
+  for (; pos < 512; pos++)
+  {
     cwRiseBuffer[pos] = 1.0;
   }
 
   // Falling waveform
   //  Full amplitude for the first 128 samples
-  for (pos = 0; pos < 256; pos++) {
+  for (pos = 0; pos < 256; pos++)
+  {
     cwFallBuffer[pos] = 1.0;
   }
   //  Raised cosine decreasing amplitude for the final 128 samples (roughly 5ms)
-  for (deg = 0; pos < 512; deg += 1.40625 / 2.0 /* 180 / 128 */, pos++) {
+  for (deg = 0; pos < 512; deg += 1.40625 / 2.0 /* 180 / 128 */, pos++)
+  {
     cwFallBuffer[pos] = (1.0 + cos(deg / 57.3 /* fixed conversion to radians */)) / 2.0;
   }
 }
 
-
 const float32_t atanTable[68] = {
-  -0.015623728620477f,
-  0.000000000000000f,  // = 0 for in = 0.0
-  0.015623728620477f,
-  0.031239833430268f,
-  0.046840712915970f,
-  0.062418809995957f,
-  0.077966633831542f,
-  0.093476781158590f,
-  0.108941956989866f,
-  0.124354994546761f,
-  0.139708874289164f,
-  0.154996741923941f,
-  0.170211925285474f,
-  0.185347949995695f,
-  0.200398553825879f,
-  0.215357699697738f,
-  0.230219587276844f,
-  0.244978663126864f,
-  0.259629629408258f,
-  0.274167451119659f,
-  0.288587361894077f,
-  0.302884868374971f,
-  0.317055753209147f,
-  0.331096076704132f,
-  0.345002177207105f,
-  0.358770670270572f,
-  0.372398446676754f,
-  0.385882669398074f,
-  0.399220769575253f,
-  0.412410441597387f,
-  0.425449637370042f,
-  0.438336559857958f,
-  0.451069655988523f,
-  0.463647609000806f,
-  0.476069330322761f,
-  0.488333951056406f,
-  0.500440813147294f,
-  0.512389460310738f,
-  0.524179628782913f,
-  0.535811237960464f,
-  0.547284380987437f,
-  0.558599315343562f,
-  0.569756453482978f,
-  0.580756353567670f,
-  0.591599710335111f,
-  0.602287346134964f,
-  0.612820202165241f,
-  0.623199329934066f,
-  0.633425882969145f,
-  0.643501108793284f,
-  0.653426341180762f,
-  0.663202992706093f,
-  0.672832547593763f,
-  0.682316554874748f,
-  0.691656621853200f,
-  0.700854407884450f,
-  0.709911618463525f,
-  0.718829999621625f,
-  0.727611332626511f,
-  0.736257428981428f,
-  0.744770125716075f,
-  0.753151280962194f,
-  0.761402769805578f,
-  0.769526480405658f,
-  0.777524310373348f,
-  0.785398163397448f,  // = pi/4 for in = 1.0
-  0.793149946109655f,
-  0.800781565178043f
-};
-
+    -0.015623728620477f,
+    0.000000000000000f, // = 0 for in = 0.0
+    0.015623728620477f,
+    0.031239833430268f,
+    0.046840712915970f,
+    0.062418809995957f,
+    0.077966633831542f,
+    0.093476781158590f,
+    0.108941956989866f,
+    0.124354994546761f,
+    0.139708874289164f,
+    0.154996741923941f,
+    0.170211925285474f,
+    0.185347949995695f,
+    0.200398553825879f,
+    0.215357699697738f,
+    0.230219587276844f,
+    0.244978663126864f,
+    0.259629629408258f,
+    0.274167451119659f,
+    0.288587361894077f,
+    0.302884868374971f,
+    0.317055753209147f,
+    0.331096076704132f,
+    0.345002177207105f,
+    0.358770670270572f,
+    0.372398446676754f,
+    0.385882669398074f,
+    0.399220769575253f,
+    0.412410441597387f,
+    0.425449637370042f,
+    0.438336559857958f,
+    0.451069655988523f,
+    0.463647609000806f,
+    0.476069330322761f,
+    0.488333951056406f,
+    0.500440813147294f,
+    0.512389460310738f,
+    0.524179628782913f,
+    0.535811237960464f,
+    0.547284380987437f,
+    0.558599315343562f,
+    0.569756453482978f,
+    0.580756353567670f,
+    0.591599710335111f,
+    0.602287346134964f,
+    0.612820202165241f,
+    0.623199329934066f,
+    0.633425882969145f,
+    0.643501108793284f,
+    0.653426341180762f,
+    0.663202992706093f,
+    0.672832547593763f,
+    0.682316554874748f,
+    0.691656621853200f,
+    0.700854407884450f,
+    0.709911618463525f,
+    0.718829999621625f,
+    0.727611332626511f,
+    0.736257428981428f,
+    0.744770125716075f,
+    0.753151280962194f,
+    0.761402769805578f,
+    0.769526480405658f,
+    0.777524310373348f,
+    0.785398163397448f, // = pi/4 for in = 1.0
+    0.793149946109655f,
+    0.800781565178043f};
 
 /*****
   Purpose: Correct Phase angle between I and Q channels.  Not used with SSB.
@@ -171,17 +172,20 @@ const float32_t atanTable[68] = {
   Return value;
     void
 *****/
-void IQPhaseCorrection(float32_t *I_buffer, float32_t *Q_buffer, float32_t factor, uint32_t blocksize) {
+void IQPhaseCorrection(float32_t *I_buffer, float32_t *Q_buffer, float32_t factor, uint32_t blocksize)
+{
   float32_t temp_buffer[blocksize];
-  if (factor < 0.0) {  // mix a bit of I into Q
+  if (factor < 0.0)
+  { // mix a bit of I into Q
     arm_scale_f32(I_buffer, factor, temp_buffer, blocksize);
     arm_add_f32(Q_buffer, temp_buffer, Q_buffer, blocksize);
-  } else {  // mix a bit of Q into I
+  }
+  else
+  { // mix a bit of Q into I
     arm_scale_f32(Q_buffer, factor, temp_buffer, blocksize);
     arm_add_f32(I_buffer, temp_buffer, I_buffer, blocksize);
   }
-}  // end IQphase_correction
-
+} // end IQphase_correction
 
 /*****
   Purpose: Calculate sinc function
@@ -191,14 +195,14 @@ void IQPhaseCorrection(float32_t *I_buffer, float32_t *Q_buffer, float32_t facto
   Return value;
     void
 *****/
-float MSinc(int m, float fc) {
+float MSinc(int m, float fc)
+{
   float x = m * PIH;
   if (m == 0)
     return 1.0f;
   else
     return sinf(x * fc) / (fc * x);
 }
-
 
 /*****
   Purpose: Izero
@@ -208,7 +212,8 @@ float MSinc(int m, float fc) {
   Return value;
     void
 *****/
-float32_t Izero(float32_t x) {
+float32_t Izero(float32_t x)
+{
   float32_t x2 = x / 2.0;
   float32_t summe = 1.0;
   float32_t ds = 1.0;
@@ -216,7 +221,8 @@ float32_t Izero(float32_t x) {
   float32_t errorlimit = 1e-9;
   float32_t tmp;
 
-  do {
+  do
+  {
     tmp = x2 / di;
     tmp *= tmp;
     ds *= tmp;
@@ -224,8 +230,7 @@ float32_t Izero(float32_t x) {
     di += 1.0;
   } while (ds >= errorlimit * summe);
   return (summe);
-}  // END Izero
-
+} // END Izero
 
 /*****
   Purpose:    Fast algorithm for log10
@@ -240,7 +245,8 @@ float32_t Izero(float32_t x) {
   Return value;
     void
 *****/
-float32_t log10f_fast(float32_t X) {
+float32_t log10f_fast(float32_t X)
+{
   float Y, F;
   int E;
   F = frexpf(fabsf(X), &E);
@@ -255,7 +261,6 @@ float32_t log10f_fast(float32_t X) {
   return (Y * 0.3010299956639812f);
 }
 
-
 /*****
   Purpose: void Calculatedbm()
 
@@ -265,7 +270,8 @@ float32_t log10f_fast(float32_t X) {
   Return value;
     void
 *****/
-void Calculatedbm() {
+void Calculatedbm()
+{
   // calculation of the signal level inside the filter bandwidth
   // taken from the spectrum display FFT
   // taking into account the analog gain before the ADC
@@ -282,18 +288,21 @@ void Calculatedbm() {
   float32_t cons = -92;
   float32_t bw_LSB = 0.0;
   float32_t bw_USB = 0.0;
-  float32_t sum_db = 0.0;  // FIXME: mabye this slows down the FPU, because the FPU does only process 32bit floats ???
+  float32_t sum_db = 0.0; // FIXME: mabye this slows down the FPU, because the FPU does only process 32bit floats ???
   float32_t bin_bandwidth = (float32_t)(SR[SampleRate].rate / (256.0));
 
   // width of a 256 tap FFT bin @ 96ksps = 375Hz
   // we have to take into account the magnify mode
   // --> recalculation of bin_BW
-  bin_bandwidth = bin_bandwidth / (1 << ConfigData.spectrum_zoom);  // correct bin bandwidth is determined by the Zoom FFT display setting
+  bin_bandwidth = bin_bandwidth / (1 << ConfigData.spectrum_zoom); // correct bin bandwidth is determined by the Zoom FFT display setting
 
   // in all magnify cases (2x up to 16x) the posbin is in the centre of the spectrum display
-  if (ConfigData.spectrum_zoom != 0) {
-    posbin = 128;  // right in the middle!
-  } else {
+  if (ConfigData.spectrum_zoom != 0)
+  {
+    posbin = 128; // right in the middle!
+  }
+  else
+  {
     posbin = 64;
   }
 
@@ -303,36 +312,42 @@ void Calculatedbm() {
   bw_USB = bw_LSB;
   // calculate upper and lower limit for determination of signal strength
   // = filter passband is between the lower bin Lbin and the upper bin Ubin
-  Lbin = (float32_t)posbin + roundf(bw_LSB / bin_bandwidth);  // bin on the lower/left side
-  Ubin = (float32_t)posbin + roundf(bw_USB / bin_bandwidth);  // bin on the upper/right side
+  Lbin = (float32_t)posbin + roundf(bw_LSB / bin_bandwidth); // bin on the lower/left side
+  Ubin = (float32_t)posbin + roundf(bw_USB / bin_bandwidth); // bin on the upper/right side
 
   // take care of filter bandwidths that are larger than the displayed FFT bins
-  if (Lbin < 0) {
+  if (Lbin < 0)
+  {
     Lbin = 0;
   }
-  if (Ubin > 255) {
+  if (Ubin > 255)
+  {
     Ubin = 255;
   }
-  if ((int)Lbin == (int)Ubin) {
+  if ((int)Lbin == (int)Ubin)
+  {
     Ubin = 1.0 + Lbin;
   }
   // determine the sum of all the bin values in the passband
-  for (int c = (int)Lbin; c <= (int)Ubin; c++) {  // sum up all the values of all the bins in the passband
+  for (int c = (int)Lbin; c <= (int)Ubin; c++)
+  { // sum up all the values of all the bins in the passband
     sum_db = sum_db + FFT_spec_old[c];
   }
 
-  //#ifdef USE_W7PUA
-  if (sum_db > 0.0) {
-    //#ifdef USE_LOG10FAST
-    switch (display_dbm) {
-      case DISPLAY_S_METER_DBM:
-        display.dbm = CalData.dBm_calibration + bands.bands[ConfigData.currentBand].gainCorrection + static_cast<float32_t>(attenuator) + slope * log10f_fast(sum_db) + cons - static_cast<float32_t>(bands.bands[ConfigData.currentBand].RFgain) * 1.5;
-        dbmhz = 0;
-        break;
-      case DISPLAY_S_METER_DBMHZ:
-        dbmhz = display.dbm - 10.0 * log10f_fast(static_cast<float32_t>((static_cast<int>(Ubin) - static_cast<int>(Lbin)) * bin_BW));
-        display.dbm = 0;
-        break;
+  // #ifdef USE_W7PUA
+  if (sum_db > 0.0)
+  {
+    // #ifdef USE_LOG10FAST
+    switch (display_dbm)
+    {
+    case DISPLAY_S_METER_DBM:
+      display.dbm = CalData.dBm_calibration + bands.bands[ConfigData.currentBand].gainCorrection + static_cast<float32_t>(attenuator) + slope * log10f_fast(sum_db) + cons - static_cast<float32_t>(bands.bands[ConfigData.currentBand].RFgain) * 1.5;
+      dbmhz = 0;
+      break;
+    case DISPLAY_S_METER_DBMHZ:
+      dbmhz = display.dbm - 10.0 * log10f_fast(static_cast<float32_t>((static_cast<int>(Ubin) - static_cast<int>(Lbin)) * bin_BW));
+      display.dbm = 0;
+      break;
     }
   }
   // lowpass IIR filter
@@ -346,7 +361,6 @@ void Calculatedbm() {
   //
 }
 
-
 /*****
   Purpose: Fast approximation to the trigonometric atan2 function for floating-point data.
 
@@ -357,7 +371,8 @@ void Calculatedbm() {
   Return value;
     atan2(y, x) = atan(y/x) as radians.
 *****/
-float32_t arm_atan2_f32(float32_t y, float32_t x) {
+float32_t arm_atan2_f32(float32_t y, float32_t x)
+{
   float32_t atan2Val, fract, in;                /* Temporary variables for input, output */
   uint32_t index;                               /* Index variable */
   uint32_t tableSize = (uint32_t)TABLE_SIZE_64; /* Initialise tablesize */
@@ -370,21 +385,26 @@ float32_t arm_atan2_f32(float32_t y, float32_t x) {
                                                     Bit2 = 1 if y < 0 */
 
   /* calculate magnitude of input values */
-  if (x < 0.0f) {
+  if (x < 0.0f)
+  {
     x = -x;
     flags |= 0x02;
   }
 
-  if (y < 0.0f) {
+  if (y < 0.0f)
+  {
     y = -y;
     flags |= 0x04;
   }
 
   /* calculate in value for LUT [0 1] */
-  if (x < y) {
+  if (x < y)
+  {
     in = x / y;
     flags |= 0x01;
-  } else { /* x >= y */
+  }
+  else
+  { /* x >= y */
     if (x > 0.0f)
       in = y / x;
     else        /* both are 0.0 */
@@ -427,7 +447,6 @@ float32_t arm_atan2_f32(float32_t y, float32_t x) {
   return (atan2Val); /* Return the output value */
 }
 
-
 /*****
   Purpose:
   Parameter list:
@@ -437,23 +456,25 @@ float32_t arm_atan2_f32(float32_t y, float32_t x) {
   Return value;
     float32_t
 *****/
-float32_t AlphaBetaMag(float32_t inphase, float32_t quadrature)  // (c) András Retzler
-{                                                                // taken from libcsdr: https://github.com/simonyiszk/csdr
+float32_t AlphaBetaMag(float32_t inphase, float32_t quadrature) // (c) András Retzler
+{                                                               // taken from libcsdr: https://github.com/simonyiszk/csdr
   // Min RMS Err      0.947543636291 0.392485425092
   // Min Peak Err     0.960433870103 0.397824734759
   // Min RMS w/ Avg=0 0.948059448969 0.392699081699
-  const float32_t alpha = 0.960433870103;  // 1.0; //0.947543636291;
+  const float32_t alpha = 0.960433870103; // 1.0; //0.947543636291;
   const float32_t beta = 0.397824734759;
 
   float32_t abs_inphase = fabs(inphase);
   float32_t abs_quadrature = fabs(quadrature);
-  if (abs_inphase > abs_quadrature) {
+  if (abs_inphase > abs_quadrature)
+  {
     return alpha * abs_inphase + beta * abs_quadrature;
-  } else {
+  }
+  else
+  {
     return alpha * abs_quadrature + beta * abs_inphase;
   }
 }
-
 
 /*****
   Purpose: copied from https://www.dsprelated.com/showarticle/1052.php
@@ -466,12 +487,12 @@ float32_t AlphaBetaMag(float32_t inphase, float32_t quadrature)  // (c) András 
   Return value;
     float           atan vakye
 *****/
-float ApproxAtan(float z) {
+float ApproxAtan(float z)
+{
   const float n1 = 0.97239411f;
   const float n2 = -0.19194795f;
   return (n1 + n2 * z * z) * z;
 }
-
 
 /*****
   Purpose: function reads the analog value for each matrix switch and stores that value in EEPROM.
@@ -482,9 +503,10 @@ float ApproxAtan(float z) {
   Return value;
     void
 *****/
-  bool buttonFinished[18] = { false };  // This is extern in SDT.h.
+bool buttonFinished[18] = {false}; // This is extern in SDT.h.
 uint32_t buttonCounter{0};
-void SaveAnalogSwitchValues() {
+void SaveAnalogSwitchValues()
+{
   /*
   const char *labels[] = { "Select", "Menu Up", "Band Up",
                            "Zoom", "Menu Dn", "Band Dn",
@@ -493,68 +515,80 @@ void SaveAnalogSwitchValues() {
                            "Coarse Incr", "Decoder", "Fine Increment",
                            "Reset Tuning", "Frequ Entry", "User 2" };
                            */
-//  int index{ 1 };
-  int minVal{ 0 };
-  int value{ 0 };
-  int origRepeatDelay{ 0 };
+  //  int index{ 1 };
+  int minVal{0};
+  int value{0};
+  int origRepeatDelay{0};
 
   // Disable button repeat for interrupt driven buttons
   origRepeatDelay = CalData.buttonRepeatDelay;
   CalData.buttonRepeatDelay = 0;
 
   // Show the initial Switch Matrix calibration screen.
-  evedisplay.drawSwitchMatrixCalScreen();
+  evedisplay.drawSwitchMatrixCalScreen(false);
 
-  for (uint32_t index = 0; index < NUMBER_OF_SWITCHES;) {
+  for (uint32_t index = 0; index < NUMBER_OF_SWITCHES;)
+  {
 
-//    Serial.printf("index = %d\n", index);
+    //    Serial.printf("index = %d\n", index);
 
-    if (button.buttonInterruptsEnabled) {
-      while ((value = button.ReadSelectedPushButton()) == -1) {
+    if (button.buttonInterruptsEnabled)
+    {
+      while ((value = button.ReadSelectedPushButton()) == -1)
+      {
         // Wait until a button is pressed
       }
-    } 
+    }
     // Do this if interrupts not enabled:
-    else {
+    else
+    {
       value = -1;
       minVal = NOTHING_TO_SEE_HERE;
-      while (true) {
+      while (true)
+      {
         value = button.ReadSelectedPushButton();
-        if (value < NOTHING_TO_SEE_HERE && value > 0) {
+        if (value < NOTHING_TO_SEE_HERE && value > 0)
+        {
           delay(100L);
-          if (value < minVal) {
+          if (value < minVal)
+          {
             minVal = value;
-          } else {
+          }
+          else
+          {
             value = minVal;
-            break;  // This exits the while() loop, but not the for loop.
+            break; // This exits the while() loop, but not the for loop.
           }
         }
       }
     }
-    buttonFinished[index] = true;  // This is used to update the display.
-    CalData.switchValues[index] = value;  // Save the calibration number.
+    buttonFinished[index] = true;        // This is used to update the display.
+    CalData.switchValues[index] = value; // Save the calibration number.
 
     // Set interrupt press/release thresholds based on the Select button, which has the highest ADC value
-    if (index == 0) {
+    if (index == 0)
+    {
       CalData.buttonThresholdPressed = CalData.switchValues[0] + WIGGLE_ROOM;
       CalData.buttonThresholdReleased = CalData.buttonThresholdPressed + WIGGLE_ROOM;
     }
 
     index++;
-    while ((value = button.ReadSelectedPushButton()) != -1 && value < NOTHING_TO_SEE_HERE) {
+    while ((value = button.ReadSelectedPushButton()) != -1 && value < NOTHING_TO_SEE_HERE)
+    {
       // Wait until the button is released
     }
     // Now re-draw the screen with the updated values.
-        evedisplay.drawSwitchMatrixCalScreen();
-        delay(100);
+    evedisplay.drawSwitchMatrixCalScreen(false);
+    delay(100);
   }
 
-  CalData.buttonRepeatDelay = origRepeatDelay;  // Restore original repeat delay
+  CalData.buttonRepeatDelay = origRepeatDelay; // Restore original repeat delay
   // Set buttonFinished[] to false in case calibration is run again.
-  for(uint32_t i = 0; i < 18; i = i + 1) buttonFinished[i] = false;
-  delay(5000);  // Delay before exiting so user can see the last value.
+  for (uint32_t i = 0; i < 18; i = i + 1)
+    buttonFinished[i] = false;
+  evedisplay.drawSwitchMatrixCalScreen(true);
+  delay(5000); // Delay before exiting so user can see the last value.
 }
-
 
 /*****
   Purpose: Initialize power coefficients based on transmit power level and calibration factor.
@@ -565,13 +599,14 @@ void SaveAnalogSwitchValues() {
   Return value;
     void
 *****/
-FLASHMEM void initPowerCoefficients() {
-  for (int i = 0; i < NUMBER_OF_BANDS; i = i + 1) {
+FLASHMEM void initPowerCoefficients()
+{
+  for (int i = 0; i < NUMBER_OF_BANDS; i = i + 1)
+  {
     ConfigData.powerOutCW[i] = sqrt(ConfigData.transmitPowerLevel / 20.0) * CalData.CWPowerCalibrationFactor[i];
     ConfigData.powerOutSSB[i] = sqrt(ConfigData.transmitPowerLevel / 20.0) * CalData.SSBPowerCalibrationFactor[i];
   }
 }
-
 
 /*****
   Purpose: Initialize user defined things.  Make sure this runs after the configuration struct has been read.
@@ -582,26 +617,26 @@ FLASHMEM void initPowerCoefficients() {
   Return value;
     void
 *****/
-FLASHMEM void initUserDefinedStuff() {
+FLASHMEM void initUserDefinedStuff()
+{
   NR_Index = ConfigData.nrOptionSelect;
   TxRxFreq = ConfigData.centerFreq = ConfigData.lastFrequencies[ConfigData.currentBand][ConfigData.activeVFO];
   cwprocess.SetTransmitDitLength(ConfigData.currentWPM);
   // Initialize buffers used by the CW transmitter and CW decoder.
-  sineTone(ConfigData.CWOffset + 6);                   // This function takes "number of cycles" which is the offset + 6.  Used by CW decoder.
-  cwexciter.writeSineBuffer(ConfigData.CWOffset + 6);  // Used to create CW sinusoidal tone.
+  sineTone(ConfigData.CWOffset + 6);                  // This function takes "number of cycles" which is the offset + 6.  Used by CW decoder.
+  cwexciter.writeSineBuffer(ConfigData.CWOffset + 6); // Used to create CW sinusoidal tone.
   si5351.set_correction(CalData.freqCorrectionFactor, SI5351_PLL_INPUT_XO);
   initCWShaping();
   initPowerCoefficients();
   cwprocess.SetKeyPowerUp();
-  cwprocess.ResetHistograms();                         // KF5N February 20, 2024
-//  zoomIndex = ConfigData.spectrum_zoom - 1;  // ButtonZoom() increments zoomIndex, so this cancels it so the read from EEPROM is accurately restored.  KF5N August 3, 2023
-//  button.ButtonZoom();                       // Restore zoom settings.  KF5N August 3, 2023
+  cwprocess.ResetHistograms(); // KF5N February 20, 2024
+  //  zoomIndex = ConfigData.spectrum_zoom - 1;  // ButtonZoom() increments zoomIndex, so this cancels it so the read from EEPROM is accurately restored.  KF5N August 3, 2023
+  //  button.ButtonZoom();                       // Restore zoom settings.  KF5N August 3, 2023
 }
-
 
 /*****
   Purpose: Arm function which is not included in the older library included with TeensyDuino.
-  
+
   https://www.keil.com/pack/doc/cmsis/dsp/html/arm__clip__f32_8c.html
 
 *****/
@@ -609,9 +644,11 @@ void arm_clip_f32(const float32_t *pSrc,
                   float32_t *pDst,
                   float32_t low,
                   float32_t high,
-                  uint32_t numSamples) {
+                  uint32_t numSamples)
+{
   uint32_t i;
-  for (i = 0; i < numSamples; i++) {
+  for (i = 0; i < numSamples; i++)
+  {
     if (pSrc[i] > high)
       pDst[i] = high;
     else if (pSrc[i] < low)
@@ -620,7 +657,6 @@ void arm_clip_f32(const float32_t *pSrc,
       pDst[i] = pSrc[i];
   }
 }
-
 
 /*****
   Purpose: Detect PTT, straight key or keyer, or SerialUSB1.rts() (used for FT8)
@@ -632,32 +668,49 @@ void arm_clip_f32(const float32_t *pSrc,
   Return value;
     void
 *****/
-void isTransmitterKeyed() {
+void isTransmitterKeyed()
+{
   // Check straight key.
-  if (ConfigData.keyType == 0 and digitalRead(KEYER_DIT_INPUT_TIP) == LOW) {
+  if (ConfigData.keyType == 0 and digitalRead(KEYER_DIT_INPUT_TIP) == LOW)
+  {
     std::string prompt = "The straight key is closed!";
-evedisplay.drawTransmitterAlarmScreen(prompt);
-    while (true) { delay(1000); }  // Delay indefinitely.  User must restart radio.
+    evedisplay.drawTransmitterAlarmScreen(prompt);
+    while (true)
+    {
+      delay(1000);
+    } // Delay indefinitely.  User must restart radio.
   }
 
   // Check keyer paddle.
-  if (ConfigData.keyType == 1 and ((digitalRead(KEYER_DIT_INPUT_TIP) == LOW) or (digitalRead(KEYER_DAH_INPUT_RING) == LOW))) {
+  if (ConfigData.keyType == 1 and ((digitalRead(KEYER_DIT_INPUT_TIP) == LOW) or (digitalRead(KEYER_DAH_INPUT_RING) == LOW)))
+  {
     std::string prompt = "The paddle is closed!";
-evedisplay.drawTransmitterAlarmScreen(prompt);
-    while (true) { delay(1000); }  // Delay indefinitely.  User must restart radio.
+    evedisplay.drawTransmitterAlarmScreen(prompt);
+    while (true)
+    {
+      delay(1000);
+    } // Delay indefinitely.  User must restart radio.
   }
 
   // Check PTT.
-  if (digitalRead(PTT) == LOW) {
+  if (digitalRead(PTT) == LOW)
+  {
     std::string prompt = "The PTT is closed!";
-evedisplay.drawTransmitterAlarmScreen(prompt);
-    while (true) { delay(1000); }  // Delay indefinitely.  User must restart radio.
+    evedisplay.drawTransmitterAlarmScreen(prompt);
+    while (true)
+    {
+      delay(1000);
+    } // Delay indefinitely.  User must restart radio.
   }
 
   // Check SerialUSB1.rts().  Ignore if FT8 is not enabled.  FT8 always disabled at boot.
-  if (SerialUSB1.rts() == HIGH and ft8EnableFlag) {
+  if (SerialUSB1.rts() == HIGH and ft8EnableFlag)
+  {
     std::string prompt = "SerialUSB1.rts is HIGH!";
-evedisplay.drawTransmitterAlarmScreen(prompt);
-    while (true) { delay(1000); }  // Delay indefinitely.  User must restart radio.
+    evedisplay.drawTransmitterAlarmScreen(prompt);
+    while (true)
+    {
+      delay(1000);
+    } // Delay indefinitely.  User must restart radio.
   }
 }

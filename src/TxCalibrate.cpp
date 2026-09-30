@@ -53,7 +53,6 @@ void TxCalibrate::warmUpCal()
   // MakeFFTData() has to be called enough times for transients to settle out before computing FFT.
   for (i = 0; i < 32; i = i + 1)
   {
-    //    fftActive = true;
     updateDisplayFlag = true;
     TxCalibrate::MakeFFTData(); // Note, FFT not called if buffers are not sufficiently filled.
 
@@ -68,18 +67,14 @@ void TxCalibrate::warmUpCal()
       break; // If five in a row, exit the loop.  Warm-up is complete.
   } // End peak detection loop.
 
-  //  fftActive = true;
   updateDisplayFlag = false;
   // Find peak of spectrum, which is 512 wide.  Use this to adjust spectrum peak to top of spectrum display.
   arm_max_q15(pixelnew, 256, &rawSpectrumPeak, &index_of_max);
-  ////  if (index_of_max < 120 or index_of_max > 136)
+  if (index_of_max < 120 or index_of_max > 136)
   {
-    ////    Serial.printf("Problem with TX warmUpCal\n");
+    Serial.printf("Problem with TX warmUpCal\n");
     Serial.printf("index_of_max = %d\n", index_of_max);
   }
-  //  for(int x = 0; x < 256; x = x + 1) {
-  //    Serial.printf("pixelnew[%d] = %d\n", x, pixelnew[x]);
-  //  }
   ADC_RX_I.clear();
   ADC_RX_Q.clear();
   Q_in_L_Ex.clear();
@@ -121,8 +116,8 @@ void TxCalibrate::CalibratePreamble(int setZoom)
   }
   else
     tempSideband = bands.bands[ConfigData.currentBand].sideband;
-  ConfigData.CWOffset = 2;                  // 750 Hz for TX calibration.  Epilogue restores user selected offset.
-                                            //  userxmtMode = ConfigData.xmtMode;          // Store the user's mode setting.  KF5N July 22, 2023
+  //  ConfigData.CWOffset = 2;                  // 750 Hz for TX calibration.  Epilogue restores user selected offset.
+  //  userxmtMode = ConfigData.xmtMode;          // Store the user's mode setting.  KF5N July 22, 2023
   userZoomIndex = ConfigData.spectrum_zoom; // Save the zoom index so it can be reset at the conclusion.  KF5N August 12, 2023
   ConfigData.spectrum_zoom = setZoom;
   button.ButtonZoom();
@@ -321,11 +316,6 @@ void TxCalibrate::writeToCalData(float ichannel, float qchannel)
    Return value:
       void
  *****/
-
-elapsedMicros usec1 = 0;
-uint32_t usec1Old = 0;
-uint32_t loopCounter = 0;
-
 void TxCalibrate::DoXmitCalibrate(int calMode, bool radio, bool toEeprom)
 {
   int freqOffset = 0; // Calibration tone same as regular modulation tone.
@@ -343,6 +333,7 @@ void TxCalibrate::DoXmitCalibrate(int calMode, bool radio, bool toEeprom)
   TxCalibrate::mode = calMode;          // CW or SSB.  This is an object state variable.
   TxCalibrate::radioCal = radio;        // Initial calibration of all bands.
   TxCalibrate::saveToEeprom = toEeprom; // Save to EEPROM
+  initialAutoTune = true;
   std::vector<float>::iterator result;
   TxCalibrate::CalibratePreamble(2); // Set zoom to 4X.  Sample rate 48ksps.
   calTypeFlag = 1;                   // TX sideband
@@ -383,6 +374,10 @@ void TxCalibrate::DoXmitCalibrate(int calMode, bool radio, bool toEeprom)
   if (radioCal)
   {
     autoCal = true;
+    if (mode == 0 and CalData.CWradioCalComplete == true)
+      initialAutoTune = false;
+    if (mode == 1 and CalData.SSBradioCalComplete == true)
+      initialAutoTune = false;
     warmup = 0;
     index = 0; // Why is index = 1???
     IQCalType = 0;
@@ -399,7 +394,7 @@ void TxCalibrate::DoXmitCalibrate(int calMode, bool radio, bool toEeprom)
 
     // This function takes care of button presses and resultant control of the rest of the process.
     // The buttons are polled by the while loop.
-    TxCalibrate::buttonTasks();
+    buttonTasks();
 
     if (exitManual == true) // Exit from manual calibration by button push.
     {
@@ -647,15 +642,6 @@ void TxCalibrate::DoXmitCalibrate(int calMode, bool radio, bool toEeprom)
       phase = GetEncoderValueLive(-2.0, 2.0, phase, 0.001);
     writeToCalData(amplitude, phase);
 
-    loopCounter = loopCounter + 1;
-    if (loopCounter > 100) // uint32_t 2^32 = 4294967296
-    {
-      Serial.printf("Loop us = %u\n", (static_cast<uint32_t>(usec1) - static_cast<uint32_t>(usec1Old)));
-      loopCounter = 0;
-      Serial.printf("ConfigData.sdCardPresent = %d\n", ConfigData.sdCardPresent);
-    }
-    usec1Old = usec1;
-
   } // end while
 } // End Transmit calibration
 
@@ -707,6 +693,10 @@ void TxCalibrate::DoXmitCarrierCalibrate(int calMode, bool radio, bool toEeprom)
   if (radioCal)
   {
     autoCal = true;
+    if (mode == 0 and CalData.CWradioCalComplete == true)
+      initialAutoTune = false;
+    if (mode == 1 and CalData.SSBradioCalComplete == true)
+      initialAutoTune = false;
     warmup = 0;
     index = 0;
     IQCalType = 0;
@@ -737,9 +727,10 @@ void TxCalibrate::DoXmitCarrierCalibrate(int calMode, bool radio, bool toEeprom)
         std::fill(sweepVectorValue.begin(), sweepVectorValue.end(), 0.0);
         std::fill(sweepVector.begin(), sweepVector.end(), 0.0);
         warmup = warmup + 1;
-        if(initialAutoTune) {
-                qDCoffset = maxSweepPhase; //  Need to use these values during warmup
-                iDCoffset = maxSweepAmp;   //  so adjdB and adjdB_avg are forced upwards.
+        if (initialAutoTune)
+        {
+          qDCoffset = maxSweepPhase; //  Need to use these values during warmup
+          iDCoffset = maxSweepAmp;   //  so adjdB and adjdB_avg are forced upwards.
         }
         state = State::warmup;
         if (warmup == 1)
@@ -779,8 +770,8 @@ void TxCalibrate::DoXmitCarrierCalibrate(int calMode, bool radio, bool toEeprom)
         sweepVector[index] = adjdB;          // Already computed in warm-up for index 0.
         if ((adjdB < adjdB_min) and (adjdB < -20.0))
           adjdB_min = adjdB;
-        if ((adjdB - adjdB_min) > 2.0)
-          iDCoffset = maxSweepAmp;
+        //        if ((adjdB - adjdB_min) > 2.0)
+        //          iDCoffset = maxSweepAmp;
         //        Serial.printf("adjdB = %f adjdB_min = %f\n", adjdB, adjdB_min);
         index = index + 1;
         // Increment for next measurement.
@@ -1212,7 +1203,6 @@ void TxCalibrate::MakeFFTData()
 
     // This process started because there are 2048 samples available.  Perform FFT.
     updateDisplayFlag = true;
-    //    if (fftActive)
     ZoomFFTExe(256, 1024);
     fftSuccess = true;
   } // End of receive code
@@ -1236,7 +1226,6 @@ void TxCalibrate::MakeFFTData()
 *****/
 void TxCalibrate::ShowSpectrum() // AFP 2-10-23
 {
-  int x1 = 0;
   int capture_bins = 6; // Sets the number of bins to scan for signal peak.
   int cal_bins[3] = {0, 0, 0};
 
@@ -1245,24 +1234,22 @@ void TxCalibrate::ShowSpectrum() // AFP 2-10-23
     cal_bins[0] = 257 - 127; // LSB
     cal_bins[1] = 272 - 127; // Carrier
     cal_bins[2] = 288 - 127; // Undesired sideband
-  } // Transmit and Carrier calibration, LSB.  KF5N
+  } // Sideband and Carrier calibration, LSB.  KF5N
   if ((calTypeFlag == 1 || calTypeFlag == 2) && bands.bands[ConfigData.currentBand].sideband == Sideband::UPPER)
   {
     cal_bins[0] = 257 - 127; // USB
     cal_bins[1] = 236 - 127; // Carrier
     cal_bins[2] = 224 - 127; // Undesired sideband
-  } // Transmit and Carrier calibration, USB.  KF5N
+  } // Sideband and Carrier calibration, USB.  KF5N
 
   // Plot carrier during transmit cal, do not return a dB value:
   if (calTypeFlag == 1)
-  { // Transmit cal
-    x1 = cal_bins[0] - capture_bins;
-    TxCalibrate::PlotCalSpectrum(x1, cal_bins, capture_bins); // Compute adjdB
+  {                                                       // Sideband cal
+    TxCalibrate::PlotCalSpectrum(cal_bins, capture_bins); // Compute adjdB
   }
   if (calTypeFlag == 2)
-  {
-    x1 = cal_bins[0] - capture_bins; // x1 < cal_bins[0] + capture_bins; x1++)
-    TxCalibrate::PlotCalSpectrum(x1, cal_bins, capture_bins);
+  { // Carrier cal
+    TxCalibrate::PlotCalSpectrum(cal_bins, capture_bins);
   }
 
 } // end ShowSpectrum()
@@ -1276,7 +1263,7 @@ void TxCalibrate::ShowSpectrum() // AFP 2-10-23
   Return value;
     float, returns the adjusted value in dB
 *****/
-void TxCalibrate::PlotCalSpectrum(int x1, int cal_bins[3], int capture_bins)
+void TxCalibrate::PlotCalSpectrum(int cal_bins[3], int capture_bins)
 {
   int16_t adjAmplitude = 0; // Was float; cast to float in dB calculation.  KF5N
   int16_t refAmplitude = 0; // Was float; cast to float in dB calculation.  KF5N
