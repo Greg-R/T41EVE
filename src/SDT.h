@@ -345,7 +345,7 @@ extern Bands bands;
 struct config_t
 {
 
-  char versionSettings[11] = "FAST CAL"; // This is required to be the first!
+  char versionSettings[11] = "T41EVE.03"; // This is required to be the first!
 
   bool AGCMode = true;
   float32_t AGCThreshold = -40.0;

@@ -112,11 +112,9 @@ void ButtonISR()
 
     break;
   case BUTTON_STATE_PRESSED:  // State 2.
-//  Serial.printf("buttonPress ISR state 2\n");
     if (filteredADCValue >= CalData.buttonThresholdReleased)  // Button not actually pressed.
     {
       buttonState = BUTTON_STATE_UP;
-//      Serial.printf("buttonPress ISR state 2 button not pressed\n");
     }
     else if (CalData.buttonRepeatDelay != 0)
     { // buttonRepeatDelay of 0 disables repeat
@@ -128,9 +126,6 @@ void ButtonISR()
       {
         buttonADCOut = buttonADCPressed;  // Done.
         buttonElapsed = 0;                // Reset debounce for next button push.
-
-        Serial.printf("bP ISR else add to sequencer buttonADCOut = %d\n", buttonADCOut);
-
       }
     }
 
