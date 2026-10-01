@@ -133,8 +133,8 @@ void ZoomFFTExe(int fftWidth, uint32_t blockSize)
   float32_t y_buffer[blockSize];
 
   //  NOTE THESE ARE STATIC
-  static float32_t FFT_ring_buffer_x[2048];
-  static float32_t FFT_ring_buffer_y[2048];
+  static float32_t FFT_ring_buffer_x[1024];
+  static float32_t FFT_ring_buffer_y[1024];
 
 //  static float32_t FFT_ring_buffer_x[1024];
 //  static float32_t FFT_ring_buffer_y[1024];
