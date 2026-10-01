@@ -1594,54 +1594,120 @@ void EVE_Display::drawTransmitterCalScreen(int16_t *fftArray)
   // Draw the red and blue boxes.  These have to be dynamic because
   // they depend on sideband and type of calibration.
   // Sideband calibration.
+  int redLow{0}, blueLow{0}, redHigh{0}, blueHigh{0}, barWidth{0}, fftOffset{0};
+  fftOffset = 127;
+  if (ConfigData.CWOffset == 0)  // 562.5Hz
+  {
+    redLow = 148 + fftOffset;
+    blueLow = 124 + fftOffset;
+    redHigh = 100 + fftOffset;
+    blueHigh = 124 + fftOffset;
+    barWidth = 8;
+  }
+  if (ConfigData.CWOffset == 1)  // 656.6Hz
+  {
+    redLow = 152 + fftOffset;
+    blueLow = 124 + fftOffset;
+    redHigh = 96 + fftOffset;
+    blueHigh = 124 + fftOffset;
+    barWidth = 8;
+  }
+    if (ConfigData.CWOffset == 2)  // 750.0Hz
+  {
+    redLow = 156 + fftOffset;
+    blueLow = 124 + fftOffset;
+    redHigh = 92 + fftOffset;
+    blueHigh = 124 + fftOffset;
+    barWidth = 8;
+  }
+    if (ConfigData.CWOffset == 3)  // 843.8Hz
+  {
+    redLow = 160 + fftOffset;
+    blueLow = 124 + fftOffset;
+    redHigh = 88 + fftOffset;
+    blueHigh = 124 + fftOffset;
+    barWidth = 8;
+  }
   if (bands.bands[ConfigData.currentBand].sideband == Sideband::LOWER and txcalibrater.calTypeFlag == 1)
   {
     EVE_begin(EVE_RECTS);
     EVE_color_a(150);        // Set transparency.
-    EVE_color_rgb(0xff0000); // Red
-    EVE_vertex2f(283, 101);
-    EVE_vertex2f(294, 469);
-    EVE_color_rgb(0x4d54e8); // Blue Green better?
-    EVE_vertex2f(246, 101);
-    EVE_vertex2f(266, 469);
+    EVE_color_rgb(0xff0000); // Red.  Undesired sideband.
+    EVE_vertex2f(redLow, 101);  // 283
+    EVE_vertex2f(redLow + barWidth, 469);  // 294
+    EVE_color_rgb(0x4d54e8); // Blue.  Desired sideband.
+    EVE_vertex2f(blueLow, 101);  // 246
+    EVE_vertex2f(blueLow + barWidth, 469);  // 266
     EVE_end();
   }
   if (bands.bands[ConfigData.currentBand].sideband == Sideband::UPPER and txcalibrater.calTypeFlag == 1)
   {
     EVE_begin(EVE_RECTS);
     EVE_color_a(100);        // Set transparency.
-    EVE_color_rgb(0xff0000); // Red
-    EVE_vertex2f(219, 101);
-    EVE_vertex2f(229, 469);
-    EVE_color_rgb(0x4d54e8); // Blue
-    EVE_vertex2f(246, 101);
-    EVE_vertex2f(266, 469);
+    EVE_color_rgb(0xff0000); // Red.  Undesired sideband.
+    EVE_vertex2f(redHigh, 101);
+    EVE_vertex2f(redHigh + barWidth, 469);
+    EVE_color_rgb(0x4d54e8); // Blue.  Desired sideband.
+    EVE_vertex2f(blueLow, 101);
+    EVE_vertex2f(blueLow + barWidth, 469);
     EVE_end();
   }
 
   // Carrier calibration.
+  if (ConfigData.CWOffset == 0)
+  {
+    redLow = 136 + fftOffset;
+    blueLow = 124 + fftOffset;
+    redHigh = 112 + fftOffset;
+    blueHigh = 124 + fftOffset;
+    barWidth = 8;
+  }
+  if (ConfigData.CWOffset == 1)
+  {
+    redLow = 138 + fftOffset;
+    blueLow = 124 + fftOffset;
+    redHigh = 110 + fftOffset;
+    blueHigh = 124 + fftOffset;
+    barWidth = 8;
+  }
+    if (ConfigData.CWOffset == 2)
+  {
+    redLow = 140 + fftOffset;
+    blueLow = 124 + fftOffset;
+    redHigh = 108 + fftOffset;
+    blueHigh = 124 + fftOffset;
+    barWidth = 8;
+  }
+    if (ConfigData.CWOffset == 3)
+  {
+    redLow = 142 + fftOffset;
+    blueLow = 124 + fftOffset;
+    redHigh = 106 + fftOffset;
+    blueHigh = 124 + fftOffset;
+    barWidth = 8;
+  }
   if (bands.bands[ConfigData.currentBand].sideband == Sideband::LOWER and txcalibrater.calTypeFlag == 2)
   {
     EVE_begin(EVE_RECTS);
     EVE_color_a(100);        // Set transparency.
-    EVE_color_rgb(0xff0000); // Red
-    EVE_vertex2f(267, 101);
-    EVE_vertex2f(279, 469);
-    EVE_color_rgb(0x4d54e8); // Blue
-    EVE_vertex2f(250, 101);
-    EVE_vertex2f(262, 469);
+    EVE_color_rgb(0xff0000); // Red.  Carrier.
+    EVE_vertex2f(redLow, 101);
+    EVE_vertex2f(redLow + barWidth, 469);
+    EVE_color_rgb(0x4d54e8); // Blue.  Desired sideband.
+    EVE_vertex2f(blueLow, 101);
+    EVE_vertex2f(blueLow + barWidth, 469);
     EVE_end();
   }
   if (bands.bands[ConfigData.currentBand].sideband == Sideband::UPPER and txcalibrater.calTypeFlag == 2)
   {
     EVE_begin(EVE_RECTS);
     EVE_color_a(100);        // Set transparency.
-    EVE_color_rgb(0xff0000); // Red
-    EVE_vertex2f(234, 101);
-    EVE_vertex2f(246, 469);
-    EVE_color_rgb(0x4d54e8); // Blue
-    EVE_vertex2f(250, 101);
-    EVE_vertex2f(262, 469);
+    EVE_color_rgb(0xff0000); // Red.  Carrier.
+    EVE_vertex2f(redHigh, 101);
+    EVE_vertex2f(redHigh + barWidth, 469);
+    EVE_color_rgb(0x4d54e8); // Blue.  Desired sideband.
+    EVE_vertex2f(blueHigh, 101);
+    EVE_vertex2f(blueHigh + barWidth, 469);
     EVE_end();
   }
 
@@ -1660,7 +1726,7 @@ void EVE_Display::drawTransmitterCalScreen(int16_t *fftArray)
     fftPlot = -fftArray[j] + txcalibrater.rawSpectrumPeak + 110;
     if (fftPlot > 469)
       fftPlot = 469;
-    EVE_vertex2f_burst(j + 128, fftPlot);
+    EVE_vertex2f_burst(j + fftOffset, fftPlot);
   }
   EVE_end_burst();
 

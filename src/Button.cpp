@@ -107,7 +107,6 @@ void ButtonISR()
       buttonADCOut = buttonADCPressed = filteredADCValue;  // Accept filtered value.
       buttonElapsed = 0;  // Reset debounce timer.
       buttonState = BUTTON_STATE_PRESSED;
- Serial.printf("bP ISR debounced add to sequencer buttonADCOut = %d\n", buttonADCOut);
     }
 
     break;

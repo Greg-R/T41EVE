@@ -1226,20 +1226,112 @@ void TxCalibrate::MakeFFTData()
 *****/
 void TxCalibrate::ShowSpectrum() // AFP 2-10-23
 {
-  int capture_bins = 6; // Sets the number of bins to scan for signal peak.
+  int capture_bins = 4; // Sets the number of bins to scan for signal peak.
   int cal_bins[3] = {0, 0, 0};
+  int carrierBin{0};
+  int carrierCenter{0};
+  int undesiredSideband{0};
 
-  if ((calTypeFlag == 1 || calTypeFlag == 2) && bands.bands[ConfigData.currentBand].sideband == Sideband::LOWER)
+  int redLow{0}, blueLow{0}, redHigh{0}, blueHigh{0}, barWidth{0}, fftOffset{0};
+  fftOffset = 0;
+  if (calTypeFlag == 1)
   {
-    cal_bins[0] = 257 - 127; // LSB
-    cal_bins[1] = 272 - 127; // Carrier
-    cal_bins[2] = 288 - 127; // Undesired sideband
+    if (ConfigData.CWOffset == 0) // 562.5Hz
+    {
+      redLow = 148 + fftOffset;
+      blueLow = 124 + fftOffset;
+      redHigh = 100 + fftOffset;
+      blueHigh = 124 + fftOffset;
+      barWidth = 8;
+    }
+    if (ConfigData.CWOffset == 1) // 656.6Hz
+    {
+      redLow = 152 + fftOffset;
+      blueLow = 124 + fftOffset;
+      redHigh = 96 + fftOffset;
+      blueHigh = 124 + fftOffset;
+      barWidth = 8;
+    }
+    if (ConfigData.CWOffset == 2) // 750.0Hz
+    {
+      redLow = 156 + fftOffset;
+      blueLow = 124 + fftOffset;
+      redHigh = 92 + fftOffset;
+      blueHigh = 124 + fftOffset;
+      barWidth = 8;
+    }
+    if (ConfigData.CWOffset == 3) // 843.8Hz
+    {
+      redLow = 160 + fftOffset;
+      blueLow = 124 + fftOffset;
+      redHigh = 88 + fftOffset;
+      blueHigh = 124 + fftOffset;
+      barWidth = 8;
+    }
+  }
+
+  if (calTypeFlag == 2) {
+      // Carrier calibration.
+  if (ConfigData.CWOffset == 0)
+  {
+    redLow = 136 + fftOffset;
+    blueLow = 124 + fftOffset;
+    redHigh = 112 + fftOffset;
+    blueHigh = 124 + fftOffset;
+    barWidth = 8;
+  }
+  if (ConfigData.CWOffset == 1)
+  {
+    redLow = 138 + fftOffset;
+    blueLow = 124 + fftOffset;
+    redHigh = 110 + fftOffset;
+    blueHigh = 124 + fftOffset;
+    barWidth = 8;
+  }
+    if (ConfigData.CWOffset == 2)
+  {
+    redLow = 140 + fftOffset;
+    blueLow = 124 + fftOffset;
+    redHigh = 108 + fftOffset;
+    blueHigh = 124 + fftOffset;
+    barWidth = 8;
+  }
+    if (ConfigData.CWOffset == 3)
+  {
+    redLow = 142 + fftOffset;
+    blueLow = 124 + fftOffset;
+    redHigh = 106 + fftOffset;
+    blueHigh = 124 + fftOffset;
+    barWidth = 8;
+  }
+  }
+
+  if ((calTypeFlag == 1) and bands.bands[ConfigData.currentBand].sideband == Sideband::LOWER)
+  {
+    cal_bins[0] = blueLow; // LSB 257
+    cal_bins[1] = 0;     // Carrier was 272 - 127
+    cal_bins[2] = redLow;  // Undesired sideband 288
   } // Sideband and Carrier calibration, LSB.  KF5N
-  if ((calTypeFlag == 1 || calTypeFlag == 2) && bands.bands[ConfigData.currentBand].sideband == Sideband::UPPER)
+
+  if ((calTypeFlag == 2) and bands.bands[ConfigData.currentBand].sideband == Sideband::LOWER)
   {
-    cal_bins[0] = 257 - 127; // USB
-    cal_bins[1] = 236 - 127; // Carrier
-    cal_bins[2] = 224 - 127; // Undesired sideband
+    cal_bins[0] = blueLow; // LSB 257
+    cal_bins[1] = redLow;     // Carrier was 272 - 127
+    cal_bins[2] = 0;  // Undesired sideband 288
+  } // Sideband and Carrier calibration, LSB.  KF5N
+
+  if ((calTypeFlag == 1) and bands.bands[ConfigData.currentBand].sideband == Sideband::UPPER)
+  {
+    cal_bins[0] = blueHigh; // USB  257
+    cal_bins[1] = 236;      // Carrier 236
+    cal_bins[2] = redHigh;  // Undesired sideband 224
+  } // Sideband and Carrier calibration, USB.  KF5N
+
+  if ((calTypeFlag == 2) and bands.bands[ConfigData.currentBand].sideband == Sideband::UPPER)
+  {
+    cal_bins[0] = blueHigh; // USB  257
+    cal_bins[1] = redHigh;      // Carrier 236
+    cal_bins[2] = 0;  // Undesired sideband 224
   } // Sideband and Carrier calibration, USB.  KF5N
 
   // Plot carrier during transmit cal, do not return a dB value:
@@ -1276,7 +1368,7 @@ void TxCalibrate::PlotCalSpectrum(int cal_bins[3], int capture_bins)
   TxCalibrate::MakeFFTData();
 
   // Find the maximums of the desired and undesired signals so that dB can be calculated.
-  // This is done on sub-arrays of the FFT bins for efficiency.
+  // Undesired sideband:
   if ((bands.bands[ConfigData.currentBand].sideband == Sideband::LOWER) && (calTypeFlag == 1))
   {
     arm_max_q15(&pixelnew[(cal_bins[0] - capture_bins)], capture_bins * 2, &refAmplitude, &index_of_max);
@@ -1288,6 +1380,7 @@ void TxCalibrate::PlotCalSpectrum(int cal_bins[3], int capture_bins)
     arm_max_q15(&pixelnew[(cal_bins[2] - capture_bins)], capture_bins * 2, &refAmplitude, &index_of_max);
   }
 
+  // Carrier:
   if ((bands.bands[ConfigData.currentBand].sideband == Sideband::LOWER) && (calTypeFlag == 2))
   {
     arm_max_q15(&pixelnew[(cal_bins[0] - capture_bins)], capture_bins * 2, &refAmplitude, &index_of_max);
@@ -1303,6 +1396,8 @@ void TxCalibrate::PlotCalSpectrum(int cal_bins[3], int capture_bins)
   if (bands.bands[ConfigData.currentBand].sideband == Sideband::UPPER && not(calTypeFlag == 0))
     adjdB = -adjdB; // Flip sign for USB only for TX cal.
 
+//    Serial.printf("adjdB = %d refAmplitude = %d adjAmplitude = %d\n", static_cast<int>(adjdB), refAmplitude, adjAmplitude);
+
 } // end PlotCalSpectrum(. . .)
 
 void TxCalibrate::computeAdjdB()
@@ -1311,6 +1406,7 @@ void TxCalibrate::computeAdjdB()
   float adjdB2{0.0};
   int equalCounter{0};
   int worseCounter{0};
+  int betterCounter{0};
   bool notComputed{true};
   float epsilon = 0.1;
 
@@ -1351,9 +1447,16 @@ void TxCalibrate::computeAdjdB()
         break;
       }
 
-      // adjdB2 < adjdB1.  Improvement.  Always re-measure.
+      // adjdB2 < adjdB1.  Improvement.
       if (adjdB2 - adjdB1 < 0.0)
       {
+        betterCounter = betterCounter + 1;
+       if (betterCounter == 2)
+        {
+          betterCounter = 0;
+          adjdBstate = computeAdjdB::computed;
+          break;
+        }
         adjdBstate = computeAdjdB::measureAdjdB2;
         adjdB1 = adjdB2;
         break;
