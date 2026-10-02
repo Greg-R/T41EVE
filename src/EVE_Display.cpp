@@ -1549,7 +1549,7 @@ FLASHMEM void EVE_Display::transmitterCalStatic_cmd_list()
 } // End of transmit/carrier calibration static.
 
 // Transmitter calibration screen (dynamic);
-void EVE_Display::drawTransmitterCalScreen(int16_t *fftArray)
+void EVE_Display::drawTransmitterCalScreen(int calMode, int16_t *fftArray)
 {
   std::string mode{""};
   std::string sideband{""};
@@ -1596,38 +1596,45 @@ void EVE_Display::drawTransmitterCalScreen(int16_t *fftArray)
   // Sideband calibration.
   int redLow{0}, blueLow{0}, redHigh{0}, blueHigh{0}, barWidth{0}, fftOffset{0};
   fftOffset = 127;
-  if (ConfigData.CWOffset == 0)  // 562.5Hz
+  barWidth = 8;
+  // Sideband calibration.
+  if (ConfigData.CWOffset == 0 and calMode == 0)  // 562.5Hz
   {
-    redLow = 148 + fftOffset;
-    blueLow = 124 + fftOffset;
-    redHigh = 100 + fftOffset;
-    blueHigh = 124 + fftOffset;
-    barWidth = 8;
+    redLow = 127 + 24 -3 + fftOffset;  // 12 bins offset
+    blueLow = 127 - 3 + fftOffset;
+    redHigh = 127 - 24 - 3 + fftOffset;
+    blueHigh = 127 - 3 + fftOffset;
   }
-  if (ConfigData.CWOffset == 1)  // 656.6Hz
+  if (ConfigData.CWOffset == 1 and calMode == 0)  // 656.6Hz
   {
     redLow = 152 + fftOffset;
     blueLow = 124 + fftOffset;
     redHigh = 96 + fftOffset;
     blueHigh = 124 + fftOffset;
-    barWidth = 8;
   }
-    if (ConfigData.CWOffset == 2)  // 750.0Hz
+    if (ConfigData.CWOffset == 2 and calMode == 0)  // 750.0Hz
   {
     redLow = 156 + fftOffset;
     blueLow = 124 + fftOffset;
     redHigh = 92 + fftOffset;
     blueHigh = 124 + fftOffset;
-    barWidth = 8;
   }
-    if (ConfigData.CWOffset == 3)  // 843.8Hz
+    if (ConfigData.CWOffset == 3 and calMode == 0)  // 843.8Hz
   {
     redLow = 160 + fftOffset;
     blueLow = 124 + fftOffset;
     redHigh = 88 + fftOffset;
     blueHigh = 124 + fftOffset;
-    barWidth = 8;
   }
+
+    if (calMode == 1)  // SSB transmit
+  {
+    redLow =   127 - 3 + 16 + fftOffset;
+    blueLow =  127 - 3 - 16 + fftOffset;
+    redHigh =  127 - 3 - 16 + fftOffset;
+    blueHigh = 127 - 3 + 16 + fftOffset;
+  }
+
   if (bands.bands[ConfigData.currentBand].sideband == Sideband::LOWER and txcalibrater.calTypeFlag == 1)
   {
     EVE_begin(EVE_RECTS);
@@ -1648,44 +1655,49 @@ void EVE_Display::drawTransmitterCalScreen(int16_t *fftArray)
     EVE_vertex2f(redHigh, 101);
     EVE_vertex2f(redHigh + barWidth, 469);
     EVE_color_rgb(0x4d54e8); // Blue.  Desired sideband.
-    EVE_vertex2f(blueLow, 101);
-    EVE_vertex2f(blueLow + barWidth, 469);
+    EVE_vertex2f(blueHigh, 101);
+    EVE_vertex2f(blueHigh + barWidth, 469);
     EVE_end();
   }
 
   // Carrier calibration.
-  if (ConfigData.CWOffset == 0)
+  if (ConfigData.CWOffset == 0 and calMode == 0)
   {
-    redLow = 136 + fftOffset;
-    blueLow = 124 + fftOffset;
-    redHigh = 112 + fftOffset;
-    blueHigh = 124 + fftOffset;
-    barWidth = 8;
+    redLow = 127 + 12 - 3 + fftOffset;
+    blueLow = 127 - 3 + fftOffset;
+    redHigh = 127 - 12 - 3 + fftOffset;
+    blueHigh = 127 - 3 + fftOffset;
   }
-  if (ConfigData.CWOffset == 1)
+  if (ConfigData.CWOffset == 1 and calMode == 0)
   {
     redLow = 138 + fftOffset;
     blueLow = 124 + fftOffset;
     redHigh = 110 + fftOffset;
     blueHigh = 124 + fftOffset;
-    barWidth = 8;
   }
-    if (ConfigData.CWOffset == 2)
+    if (ConfigData.CWOffset == 2 and calMode == 0)
   {
     redLow = 140 + fftOffset;
     blueLow = 124 + fftOffset;
     redHigh = 108 + fftOffset;
     blueHigh = 124 + fftOffset;
-    barWidth = 8;
   }
-    if (ConfigData.CWOffset == 3)
+    if (ConfigData.CWOffset == 3 and calMode == 0)
   {
     redLow = 142 + fftOffset;
     blueLow = 124 + fftOffset;
     redHigh = 106 + fftOffset;
     blueHigh = 124 + fftOffset;
-    barWidth = 8;
   }
+
+  if (calMode == 1)  // SSB carrier
+  {
+    redLow =   127 - 3 + fftOffset;
+    blueLow =  127 - 3 - 16 + fftOffset;
+    redHigh =  127 - 3 + fftOffset;
+    blueHigh = 127 - 3 + 16 + fftOffset;
+  }
+
   if (bands.bands[ConfigData.currentBand].sideband == Sideband::LOWER and txcalibrater.calTypeFlag == 2)
   {
     EVE_begin(EVE_RECTS);
@@ -1726,7 +1738,7 @@ void EVE_Display::drawTransmitterCalScreen(int16_t *fftArray)
     fftPlot = -fftArray[j] + txcalibrater.rawSpectrumPeak + 110;
     if (fftPlot > 469)
       fftPlot = 469;
-    EVE_vertex2f_burst(j + fftOffset, fftPlot);
+    EVE_vertex2f_burst(j + 127, fftPlot);
   }
   EVE_end_burst();
 

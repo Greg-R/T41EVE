@@ -154,6 +154,7 @@ void TxCalibrate::CalibratePreamble(int setZoom)
   if (mode == 1)
     radioState = RadioState::SSB_CALIBRATE_STATE;
   SetAudioOperatingState(radioState); // Do this last!  This turns the queues on.
+    SetFreq();
 }
 
 /*****
@@ -339,7 +340,6 @@ void TxCalibrate::DoXmitCalibrate(int calMode, bool radio, bool toEeprom)
   calTypeFlag = 1;                   // TX sideband
   int refinePass{0};
 
-  SetFreqCal(freqOffset);
   // Get current values into the amplitude and phase working variables.
   if (mode == 0)
   {
@@ -390,7 +390,7 @@ void TxCalibrate::DoXmitCalibrate(int calMode, bool radio, bool toEeprom)
   while (true)
   {
     computeAdjdB();
-    evedisplay.drawTransmitterCalScreen(pixelnew);
+    evedisplay.drawTransmitterCalScreen(calMode, pixelnew);
 
     // This function takes care of button presses and resultant control of the rest of the process.
     // The buttons are polled by the while loop.
@@ -673,8 +673,8 @@ void TxCalibrate::DoXmitCarrierCalibrate(int calMode, bool radio, bool toEeprom)
   TxCalibrate::CalibratePreamble(2); // Set zoom to 4X.  Note this is using 48ksps sample rate.
   int freqOffset = 0;                // Calibration tone same as regular modulation tone.
   calTypeFlag = 2;                   // Carrier calibration
-  radioState = RadioState::SSB_TRANSMIT_STATE;
-  SetFreqCal(freqOffset);
+  radioState = RadioState::SSB_TRANSMIT_STATE;  //// Need this???
+
   // Get current values into the iDCoffset and qDCoffset working variables.
   if (mode == 0)
   {
@@ -709,7 +709,7 @@ void TxCalibrate::DoXmitCarrierCalibrate(int calMode, bool radio, bool toEeprom)
   while (true)
   {
     computeAdjdB();
-    evedisplay.drawTransmitterCalScreen(pixelnew);
+    evedisplay.drawTransmitterCalScreen(calMode, pixelnew);
     TxCalibrate::buttonTasks(); // This takes care of manual calls to the initial or refinement calibrations.
     // Exit from manual calibration by button push.
     if (exitManual == true)
@@ -1226,112 +1226,121 @@ void TxCalibrate::MakeFFTData()
 *****/
 void TxCalibrate::ShowSpectrum() // AFP 2-10-23
 {
-  int capture_bins = 4; // Sets the number of bins to scan for signal peak.
+  int capture_bins = 3; // Sets the number of bins to scan for signal peak.  This is half of total width.
   int cal_bins[3] = {0, 0, 0};
-  int carrierBin{0};
-  int carrierCenter{0};
-  int undesiredSideband{0};
 
-  int redLow{0}, blueLow{0}, redHigh{0}, blueHigh{0}, barWidth{0}, fftOffset{0};
+  int redLow{0}, blueLow{0}, redHigh{0}, blueHigh{0}, fftOffset{0};
   fftOffset = 0;
-  if (calTypeFlag == 1)
+  if (calTypeFlag == 1)  // Sideband
   {
     if (ConfigData.CWOffset == 0) // 562.5Hz
     {
-      redLow = 148 + fftOffset;
-      blueLow = 124 + fftOffset;
-      redHigh = 100 + fftOffset;
-      blueHigh = 124 + fftOffset;
-      barWidth = 8;
+      redLow = 127 + 24;
+      blueLow = 127;
+      redHigh = 127 - 24;
+      blueHigh = 127;
     }
     if (ConfigData.CWOffset == 1) // 656.6Hz
     {
-      redLow = 152 + fftOffset;
-      blueLow = 124 + fftOffset;
-      redHigh = 96 + fftOffset;
-      blueHigh = 124 + fftOffset;
-      barWidth = 8;
+      redLow = 127 + 28;
+      blueLow = 127;
+      redHigh = 127 - 28;
+      blueHigh = 127;
     }
     if (ConfigData.CWOffset == 2) // 750.0Hz
     {
-      redLow = 156 + fftOffset;
-      blueLow = 124 + fftOffset;
-      redHigh = 92 + fftOffset;
-      blueHigh = 124 + fftOffset;
-      barWidth = 8;
+      redLow = 127 + 32;
+      blueLow = 127;
+      redHigh = 127 - 32;
+      blueHigh = 127;
     }
     if (ConfigData.CWOffset == 3) // 843.8Hz
     {
-      redLow = 160 + fftOffset;
-      blueLow = 124 + fftOffset;
-      redHigh = 88 + fftOffset;
-      blueHigh = 124 + fftOffset;
-      barWidth = 8;
+      redLow = 127 + 36;
+      blueLow = 127;
+      redHigh = 127 - 36;
+      blueHigh = 127;
     }
   }
 
-  if (calTypeFlag == 2) {
-      // Carrier calibration.
-  if (ConfigData.CWOffset == 0)
+  if (calTypeFlag == 2)  // Carrier
   {
-    redLow = 136 + fftOffset;
-    blueLow = 124 + fftOffset;
-    redHigh = 112 + fftOffset;
-    blueHigh = 124 + fftOffset;
-    barWidth = 8;
-  }
-  if (ConfigData.CWOffset == 1)
-  {
-    redLow = 138 + fftOffset;
-    blueLow = 124 + fftOffset;
-    redHigh = 110 + fftOffset;
-    blueHigh = 124 + fftOffset;
-    barWidth = 8;
-  }
+    // Carrier calibration.
+    if (ConfigData.CWOffset == 0)
+    {
+      redLow = 127 + 12 + fftOffset;
+      blueLow = 127 + fftOffset;
+      redHigh = 127 - 12 + fftOffset;
+      blueHigh = 127 + fftOffset;
+    }
+    if (ConfigData.CWOffset == 1)
+    {
+      redLow = 127 + 14 + fftOffset;
+      blueLow = 127 + fftOffset;
+      redHigh = 127 - 14 + fftOffset;
+      blueHigh = 127 + fftOffset;
+    }
     if (ConfigData.CWOffset == 2)
-  {
-    redLow = 140 + fftOffset;
-    blueLow = 124 + fftOffset;
-    redHigh = 108 + fftOffset;
-    blueHigh = 124 + fftOffset;
-    barWidth = 8;
-  }
+    {
+      redLow = 127 + 16 + fftOffset;
+      blueLow = 127 + fftOffset;
+      redHigh = 127 - 16 + fftOffset;
+      blueHigh = 127 + fftOffset;
+    }
     if (ConfigData.CWOffset == 3)
-  {
-    redLow = 142 + fftOffset;
-    blueLow = 124 + fftOffset;
-    redHigh = 106 + fftOffset;
-    blueHigh = 124 + fftOffset;
-    barWidth = 8;
-  }
+    {
+      redLow = 127 + 18 + fftOffset;
+      blueLow = 127 + fftOffset;
+      redHigh = 127 - 18 + fftOffset;
+      blueHigh = 127 + fftOffset;
+    }
   }
 
+  // Default for SSB cal is 750Hz.  Sideband.
+  // The numbers are the first element of the FFT array to be searched.
+  if (mode == 1 and calTypeFlag == 1)
+  {
+    redLow = 127 + 16;  // Undesired carrier on high side.
+    blueLow = 127 - 16;  // Desired carrier on low side.
+    redHigh = 127 - 16;
+    blueHigh = 127 + 16;
+  }
+
+  if (mode == 1 and calTypeFlag == 2) // SSB Carrier
+  {
+    redLow = 127;
+    blueLow = 127 - 16;
+    redHigh = 127;
+    blueHigh = 127 + 16;
+  }
+
+  // SSB
   if ((calTypeFlag == 1) and bands.bands[ConfigData.currentBand].sideband == Sideband::LOWER)
   {
     cal_bins[0] = blueLow; // LSB 257
-    cal_bins[1] = 0;     // Carrier was 272 - 127
+    cal_bins[1] = 0;       // Carrier was 272 - 127
     cal_bins[2] = redLow;  // Undesired sideband 288
   } // Sideband and Carrier calibration, LSB.  KF5N
 
   if ((calTypeFlag == 2) and bands.bands[ConfigData.currentBand].sideband == Sideband::LOWER)
   {
     cal_bins[0] = blueLow; // LSB 257
-    cal_bins[1] = redLow;     // Carrier was 272 - 127
-    cal_bins[2] = 0;  // Undesired sideband 288
+    cal_bins[1] = redLow;  // Carrier was 272 - 127
+    cal_bins[2] = 0;       // Undesired sideband 288
   } // Sideband and Carrier calibration, LSB.  KF5N
 
   if ((calTypeFlag == 1) and bands.bands[ConfigData.currentBand].sideband == Sideband::UPPER)
   {
     cal_bins[0] = blueHigh; // USB  257
-    cal_bins[1] = 236;      // Carrier 236
+    cal_bins[1] = 0;        // Carrier 236
     cal_bins[2] = redHigh;  // Undesired sideband 224
   } // Sideband and Carrier calibration, USB.  KF5N
 
   if ((calTypeFlag == 2) and bands.bands[ConfigData.currentBand].sideband == Sideband::UPPER)
   {
-    cal_bins[0] = blueHigh; // USB  257
-    cal_bins[1] = redHigh;      // Carrier 236
-    cal_bins[2] = 0;  // Undesired sideband 224
+    cal_bins[0] = blueHigh;  // USB  257
+    cal_bins[1] = redHigh; // Carrier 236
+    cal_bins[2] = 0;        // Undesired sideband 224
   } // Sideband and Carrier calibration, USB.  KF5N
 
   // Plot carrier during transmit cal, do not return a dB value:
@@ -1396,7 +1405,7 @@ void TxCalibrate::PlotCalSpectrum(int cal_bins[3], int capture_bins)
   if (bands.bands[ConfigData.currentBand].sideband == Sideband::UPPER && not(calTypeFlag == 0))
     adjdB = -adjdB; // Flip sign for USB only for TX cal.
 
-//    Serial.printf("adjdB = %d refAmplitude = %d adjAmplitude = %d\n", static_cast<int>(adjdB), refAmplitude, adjAmplitude);
+  //    Serial.printf("adjdB = %d refAmplitude = %d adjAmplitude = %d\n", static_cast<int>(adjdB), refAmplitude, adjAmplitude);
 
 } // end PlotCalSpectrum(. . .)
 
@@ -1451,7 +1460,7 @@ void TxCalibrate::computeAdjdB()
       if (adjdB2 - adjdB1 < 0.0)
       {
         betterCounter = betterCounter + 1;
-       if (betterCounter == 2)
+        if (betterCounter == 2)
         {
           betterCounter = 0;
           adjdBstate = computeAdjdB::computed;

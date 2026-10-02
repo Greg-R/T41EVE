@@ -94,7 +94,7 @@ void encoderEntryStatic_cmd_list();
 void drawTransmitterScreen();
 void transmitterStatic_cmd_list();
 
-void drawTransmitterCalScreen(int16_t *fftArray);
+void drawTransmitterCalScreen(int calMode, int16_t *fftArray);
 void transmitterCalStatic_cmd_list();
 
 void drawReceiverCalScreen(int16_t *fftArray);
