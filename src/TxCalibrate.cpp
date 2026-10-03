@@ -263,6 +263,7 @@ void TxCalibrate::buttonTasks()
 
 void TxCalibrate::writeToCalData(float ichannel, float qchannel)
 {
+  if(calTypeFlag == 1) {
   if (mode == 0)
   {
     if (bands.bands[ConfigData.currentBand].sideband == Sideband::LOWER)
@@ -307,7 +308,9 @@ void TxCalibrate::writeToCalData(float ichannel, float qchannel)
       cessb1.setIQCorrections(true, CalData.IQSSBAmpCorrectionFactorUSB[ConfigData.currentBandA], CalData.IQSSBPhaseCorrectionFactorUSB[ConfigData.currentBandA], 0.0);
   }
   AudioInterrupts();
+}
 
+if(calTypeFlag == 1) {
   // Record last measured adjdB.
   // Results for CW.
   if (bands.bands[ConfigData.currentBand].sideband == Sideband::LOWER) {
@@ -330,6 +333,7 @@ void TxCalibrate::writeToCalData(float ichannel, float qchannel)
     CalData.SSBCalResultSidebandUSB[ConfigData.currentBand] = adjdB;
   }
 }
+}
 
   // Carrier results.
   // Results for CW.
@@ -340,7 +344,6 @@ void TxCalibrate::writeToCalData(float ichannel, float qchannel)
   if(mode == 1 and calTypeFlag == 2) {
     CalData.SSBCalResultCarrier[ConfigData.currentBand] = adjdB;
   }
-
 
 } // End writeToCalData()
 
@@ -1038,6 +1041,7 @@ void TxCalibrate::DoXmitCarrierCalibrate(int calMode, bool radio, bool toEeprom)
       CalData.iDCoffsetSSB[ConfigData.currentBand] = iDCoffset;
       CalData.qDCoffsetSSB[ConfigData.currentBand] = qDCoffset;
     }
+    writeToCalData(amplitude, phase);
 
   } // end while
 } // End carrier calibration

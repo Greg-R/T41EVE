@@ -1126,6 +1126,15 @@ void MenuProc::SetToCalDefaults()
     CalData.qDCoffsetCW[x] = 0.0;
     CalData.iDCoffsetSSB[x] = 0.0;
     CalData.qDCoffsetSSB[x] = 0.0;
+
+    CalData.CWCalResultSidebandLSB[x] = 0.0;
+    CalData.SSBCalResultSidebandLSB[x] = 0.0;
+
+    CalData.CWCalResultSidebandUSB[x] = 0.0;
+    CalData.SSBCalResultSidebandUSB[x] = 0.0;
+
+    CalData.CWCalResultCarrier[x] = 0.0;
+    CalData.SSBCalResultCarrier[x] = 0.0;
   }
 
   CalData.CWradioCalComplete = false;
@@ -1134,7 +1143,7 @@ void MenuProc::SetToCalDefaults()
 
 void MenuProc::FactoryDiagnostics()
 {
-  MenuSelect menu;
+  MenuSelect menu = MenuSelect::BOGUS_PIN_READ;
 
   std::vector<std::string> Factory = {"Calibration Diagnostics", "Cancel"};
 
