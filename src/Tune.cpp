@@ -65,6 +65,7 @@ void SetFreqCal(int calFreqShift)
   si5351.output_enable(SI5351_CLK2, 1);
 }
 
+
 /*****
   Purpose: SetFrequency
 

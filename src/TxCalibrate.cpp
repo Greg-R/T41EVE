@@ -154,7 +154,7 @@ void TxCalibrate::CalibratePreamble(int setZoom)
   if (mode == 1)
     radioState = RadioState::SSB_CALIBRATE_STATE;
   SetAudioOperatingState(radioState); // Do this last!  This turns the queues on.
-    SetFreq();
+  SetFreq();
 }
 
 /*****
@@ -220,6 +220,7 @@ void TxCalibrate::buttonTasks()
     warmup = 0;
     index = 0;
     initialAutoTune = true;
+    zoomButton = true;
     state = State::warmup;
     break;
   // Automatic calibration starting from scratch.
@@ -319,7 +320,7 @@ void TxCalibrate::writeToCalData(float ichannel, float qchannel)
  *****/
 void TxCalibrate::DoXmitCalibrate(int calMode, bool radio, bool toEeprom)
 {
-  int freqOffset = 0; // Calibration tone same as regular modulation tone.
+  //  int freqOffset = 0; // Calibration tone same as regular modulation tone.
   float maxSweepAmp = 0.1;
   float maxSweepPhase = 0.05;
   float adjdB_old{0};
@@ -328,13 +329,15 @@ void TxCalibrate::DoXmitCalibrate(int calMode, bool radio, bool toEeprom)
   IQCalType = 0;        // Begin with IQ gain optimization.
   std::vector<float32_t> sweepVector(21);
   std::vector<float32_t> sweepVectorValue(21);
-  elapsedMillis fiveSeconds;
-  int startTimer = 0;
+  //  elapsedMillis fiveSeconds;
+  //  int startTimer = 0;
   TxCalibrate::autoCal = false;
   TxCalibrate::mode = calMode;          // CW or SSB.  This is an object state variable.
   TxCalibrate::radioCal = radio;        // Initial calibration of all bands.
   TxCalibrate::saveToEeprom = toEeprom; // Save to EEPROM
   initialAutoTune = true;
+  bool initialRun{false};
+  zoomButton = false;
   std::vector<float>::iterator result;
   TxCalibrate::CalibratePreamble(2); // Set zoom to 4X.  Sample rate 48ksps.
   calTypeFlag = 1;                   // TX sideband
@@ -416,19 +419,22 @@ void TxCalibrate::DoXmitCalibrate(int calMode, bool radio, bool toEeprom)
         state = State::warmup;
         if (warmup == 1)         // Was 16.
           state = State::state0; // Proceed with initial auto-calibration.
+        // Guard for pushing refine without initial tune done.
+        if (not initialRun and task == MenuSelect::FILTER)
+          state = State::exit;
 
-        if (not initialAutoTune)
+        if (not initialAutoTune or (initialRun and task == MenuSelect::FILTER))
         {
-          if (mode == 0 and CalData.CWradioCalComplete == true)
+          if (mode == 0 and ((CalData.CWradioCalComplete == true) or initialRun))
           {
-            amplitude = amplitude + 0.001;
+            iDCoffset = iDCoffset + 0.0005;
             adjdB_old = 0;
             refinePass = 0;
             state = State::refineAmpPlus;
           }
           if (mode == 1 and CalData.SSBradioCalComplete == true)
           {
-            amplitude = amplitude + 0.001;
+            iDCoffset = iDCoffset + 0.0005;
             adjdB_old = 0;
             refinePass = 0;
             state = State::refineAmpPlus;
@@ -607,35 +613,35 @@ void TxCalibrate::DoXmitCalibrate(int calMode, bool radio, bool toEeprom)
         // Write the optimal values to the data structure.
         writeToCalData(iOptimal, qOptimal);
         state = State::exit;
-        startTimer = static_cast<int>(milliTimer); // Start result view timer.
+        //        startTimer = static_cast<int>(milliTimer); // Start result view timer.
         break;
       case State::exit:
         // Delay exit if in radio calibration to show calibration results, and then exit.
         if (radioCal)
         {
-          if ((static_cast<int>(milliTimer) - startTimer) < 100)
-          { // Show calibration result at conclusion during Radio Cal.
-            state = State::exit;
-            break;
-          }
-          else
-          { // Clean up and return.
-            TxCalibrate::CalibrateEpilogue();
-            return;
-          }
-          //  Not in radioCal, but was in autoCal, and now need to return to manual cal.
+          TxCalibrate::CalibrateEpilogue();
+          return;
         }
+        //  Not in radioCal, but was in autoCal, and now need to return to manual cal.
         else
         {
           autoCal = false; // Don't enter switch, but remain in manual loop.
+          if (zoomButton)
+          {
+            zoomButton = false;
+            initialRun = true;
+          }
+          Serial.printf("initialRun = %d zoomButton = %d\n", static_cast<int>(initialRun), static_cast<int>(zoomButton));
         }
         break;
-      }
-    } // end automatic calibration state machine
+      default:
+        break;
 
-    task = MenuSelect::DEFAULT; // Reset task after it is used.
-                                //  Read encoder and update values.
-                                //    seq::run();
+      } // End switch() automatic calibration state machine
+
+      task = MenuSelect::DEFAULT; // Reset task after it is used.
+    }
+    //  Read encoder and update values.
     if (IQCalType == 0)
       amplitude = GetEncoderValueLive(-2.0, 2.0, amplitude, 0.001);
     if (IQCalType == 1)
@@ -668,12 +674,14 @@ void TxCalibrate::DoXmitCarrierCalibrate(int calMode, bool radio, bool toEeprom)
   std::vector<float32_t> sweepVector(41); // 0 + 450 * 2 / 5
   std::vector<float32_t> sweepVectorValue(41);
   std::vector<float>::iterator result;
-  int startTimer = 0;
+  //    int startTimer = 0;
   int refinePass{0};
-  TxCalibrate::CalibratePreamble(2); // Set zoom to 4X.  Note this is using 48ksps sample rate.
-  int freqOffset = 0;                // Calibration tone same as regular modulation tone.
-  calTypeFlag = 2;                   // Carrier calibration
-  radioState = RadioState::SSB_TRANSMIT_STATE;  //// Need this???
+  bool initialRun{false};
+  zoomButton = false;
+  TxCalibrate::CalibratePreamble(2);           // Set zoom to 4X.  Note this is using 48ksps sample rate.
+                                               //  int freqOffset = 0;                // Calibration tone same as regular modulation tone.
+  calTypeFlag = 2;                             // Carrier calibration
+  radioState = RadioState::SSB_TRANSMIT_STATE; //// Need this???
 
   // Get current values into the iDCoffset and qDCoffset working variables.
   if (mode == 0)
@@ -735,9 +743,14 @@ void TxCalibrate::DoXmitCarrierCalibrate(int calMode, bool radio, bool toEeprom)
         state = State::warmup;
         if (warmup == 1)
           state = State::state0;
-        if (not initialAutoTune)
+        //        Serial.printf("initialRun = %d\n", static_cast<int>(initialRun));
+        // Guard for pushing refine without initial tune done.
+        if (not initialRun and task == MenuSelect::FILTER)
+          state = State::exit;
+
+        if (not initialAutoTune or (initialRun and task == MenuSelect::FILTER))
         {
-          if (mode == 0 and CalData.CWradioCalComplete == true)
+          if (mode == 0 and ((CalData.CWradioCalComplete == true) or initialRun))
           {
             iDCoffset = iDCoffset + 0.0005;
             adjdB_old = 0;
@@ -950,31 +963,28 @@ void TxCalibrate::DoXmitCarrierCalibrate(int calMode, bool radio, bool toEeprom)
           CalData.qDCoffsetSSB[ConfigData.currentBand] = qDCoffset;
         }
         state = State::exit;
-        startTimer = static_cast<int>(milliTimer); // Start result view timer.
+        //        startTimer = static_cast<int>(milliTimer); // Start result view timer.
         break;
       case State::exit:
         // Delay exit if in radio calibration to show calibration results and then exit.
         if (radioCal)
         {
-          if ((static_cast<int>(milliTimer) - startTimer) < 100)
-          { // Show calibration result at conclusion during Radio Cal.
-            state = State::exit;
-            break;
-          }
-          else
-          {
-            TxCalibrate::CalibrateEpilogue();
-            return;
-          }
+          TxCalibrate::CalibrateEpilogue();
+          return;
         }
         else
         {
           autoCal = false; // Go back to manual mode.
+          if (zoomButton)
+          {
+            zoomButton = false;
+            initialRun = true;
+          }
         }
         break;
       default:
         break;
-      }
+      } // End switch()
     } // end automatic calibration state machine
 
     task = MenuSelect::DEFAULT; // Reset task after it is used.
@@ -1231,7 +1241,7 @@ void TxCalibrate::ShowSpectrum() // AFP 2-10-23
 
   int redLow{0}, blueLow{0}, redHigh{0}, blueHigh{0}, fftOffset{0};
   fftOffset = 0;
-  if (calTypeFlag == 1)  // Sideband
+  if (calTypeFlag == 1) // Sideband
   {
     if (ConfigData.CWOffset == 0) // 562.5Hz
     {
@@ -1263,7 +1273,7 @@ void TxCalibrate::ShowSpectrum() // AFP 2-10-23
     }
   }
 
-  if (calTypeFlag == 2)  // Carrier
+  if (calTypeFlag == 2) // Carrier
   {
     // Carrier calibration.
     if (ConfigData.CWOffset == 0)
@@ -1301,7 +1311,7 @@ void TxCalibrate::ShowSpectrum() // AFP 2-10-23
   if (mode == 1 and calTypeFlag == 1)
   {
     redLow = 127 + 16;  // Undesired carrier on high side.
-    blueLow = 127 - 16;  // Desired carrier on low side.
+    blueLow = 127 - 16; // Desired carrier on low side.
     redHigh = 127 - 16;
     blueHigh = 127 + 16;
   }
@@ -1338,8 +1348,8 @@ void TxCalibrate::ShowSpectrum() // AFP 2-10-23
 
   if ((calTypeFlag == 2) and bands.bands[ConfigData.currentBand].sideband == Sideband::UPPER)
   {
-    cal_bins[0] = blueHigh;  // USB  257
-    cal_bins[1] = redHigh; // Carrier 236
+    cal_bins[0] = blueHigh; // USB  257
+    cal_bins[1] = redHigh;  // Carrier 236
     cal_bins[2] = 0;        // Undesired sideband 224
   } // Sideband and Carrier calibration, USB.  KF5N
 
@@ -1445,7 +1455,7 @@ void TxCalibrate::computeAdjdB()
       if (fabs(adjdB2 - adjdB1) < epsilon)
       {
         equalCounter = equalCounter + 1;
-        if (equalCounter == 2)
+        if (equalCounter == 3)
         {
           equalCounter = 0;
           adjdBstate = computeAdjdB::computed;
@@ -1460,7 +1470,7 @@ void TxCalibrate::computeAdjdB()
       if (adjdB2 - adjdB1 < 0.0)
       {
         betterCounter = betterCounter + 1;
-        if (betterCounter == 2)
+        if (betterCounter == 3)
         {
           betterCounter = 0;
           adjdBstate = computeAdjdB::computed;
@@ -1475,7 +1485,7 @@ void TxCalibrate::computeAdjdB()
       if (adjdB2 - adjdB1 > 0.0)
       {
         worseCounter = worseCounter + 1;
-        if (worseCounter == 2)
+        if (worseCounter == 3)
         {
           worseCounter = 0;
           adjdBstate = computeAdjdB::computed;

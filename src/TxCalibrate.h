@@ -74,12 +74,13 @@ public:
   float qOptimal = 0.0;
   float32_t iDCoffset = 0.0;
   float32_t qDCoffset = 0.0;
-  elapsedMillis milliTimer;
+//  elapsedMillis milliTimer;
   int mode = 0;
   MenuSelect task = MenuSelect::DEFAULT;
   bool autoCal = false;
   bool radioCal = false;
   bool initialAutoTune{false};
+  bool zoomButton{false};
   bool saveToEeprom = false;
   bool fftSuccess = false; // A flag for debugging FFT inadequate data problems.
                            //  bool fftActive = true;   // This variable is used to deactive creation of the FFT result.
