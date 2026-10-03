@@ -59,4 +59,5 @@ public:
     void CalDataOptions();
     void SubmenuSelectString(std::vector<std::string> options);
     void SetToCalDefaults();
+    void FactoryDiagnostics();
 };

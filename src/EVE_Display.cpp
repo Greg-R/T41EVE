@@ -123,7 +123,7 @@ void EVE_Display::drawReceiverScreen(int16_t *fftArray, uint8_t *waterfall, int1
   // Show top menu.
   if (evemenucontrol.top)
   {
-    EVE_cmd_text_burst(200, 10, 29, 0, topMenus[mainMenuIndex].c_str());
+    EVE_cmd_text_burst(200, 10, 29, 0, button.topMenus[mainMenuIndex].c_str());
   }
 
   // Show sub-menu.
@@ -2291,7 +2291,7 @@ void EVE_Display::drawSwitchMatrixCalScreen(bool finished)
     ;
 }
 
-// Static items in receiver display.
+// Static items in transmitter display.
 FLASHMEM void EVE_Display::transmitterStatic_cmd_list()
 {
   EVE_cmd_newlist(80000);
@@ -2720,3 +2720,158 @@ void EVE_Display::Example2()
   while (EVE_busy())
     ;
 }
+
+
+void EVE_Display::drawCalDiagnosticsScreen() 
+{
+//  EVE_cmd_newlist(80000);
+//  EVE_vertex_format(0);
+//  EVE_line_width(16);
+
+  // T41-EP "brand"
+//  EVE_color_rgb(0xffffff);
+
+  EVE_cmd_dl(CMD_DLSTART);
+  EVE_cmd_dl(DL_CLEAR_COLOR_RGB | 0x000000);
+  EVE_cmd_dl(DL_CLEAR | CLR_COL | CLR_STN | CLR_TAG);
+
+  EVE_vertex_format(0);
+  EVE_line_width(16);
+  EVE_color_rgb(0xFFFFFF);
+
+  EVE_cmd_text(50, 5, 29, 0, "T41-3 CALIBRATION DIAGNOSTICS");
+
+  // RF spectrum display container.
+  EVE_color_rgb(0xff0000); // Red
+  EVE_line_width(16);
+  EVE_begin(EVE_LINE_STRIP);
+  EVE_vertex2f(0, 50);
+  EVE_vertex2f(799, 50);
+  EVE_vertex2f(799, 479);
+  EVE_vertex2f(0, 479);
+  EVE_vertex2f(0, 50);
+  EVE_end();
+
+  uint32_t line1y{311};
+
+  int x1{20};
+  int x2 = x1 + 60;
+  int x3 = x1 + 110;;
+  int x4 = x1 + 170;
+  int ystart{70};
+  // Information window static text.
+  EVE_color_rgb(0xffffff);
+  EVE_cmd_text(x1, 50, 27, 0, "CW Calibration Lower Sideband");
+  for(int i = 0; i < NUMBER_OF_BANDS; i = i + 1) {
+    // Band names
+  EVE_cmd_text(x1, (ystart + 15 * i), 27, 0, bandNames[i].c_str());
+  dtostrf(CalData.CWCalResultSidebandLSB[i], 4, 1, buffer);
+  // Calibration result in dB
+  EVE_cmd_text(x2, (ystart + 15 * i), 27, 0, buffer);
+  // Print IQ Gain and Phase
+  dtostrf(CalData.IQCWAmpCorrectionFactorLSB[i], 4, 3, buffer);
+  EVE_cmd_text(x3, (ystart + 15 * i), 27, 0, buffer);
+  dtostrf(CalData.IQCWPhaseCorrectionFactorLSB[i], 4, 3, buffer);
+  EVE_cmd_text(x4, (ystart + 15 * i), 27, 0, buffer);
+  }
+
+  ystart = 210;
+
+  EVE_cmd_text(x1, ystart - 20, 27, 0, "CW Calibration Upper Sideband");
+  for(int i = 0; i < NUMBER_OF_BANDS; i = i + 1) {
+    // Band names
+  EVE_cmd_text(x1, (ystart + 15 * i), 27, 0, bandNames[i].c_str());
+  dtostrf(CalData.CWCalResultSidebandUSB[i], 4, 1, buffer);
+  // Calibration result in dB
+  EVE_cmd_text(x2, (ystart + 15 * i), 27, 0, buffer);
+  // Print IQ Gain and Phase
+  dtostrf(CalData.IQCWAmpCorrectionFactorUSB[i], 4, 3, buffer);
+  EVE_cmd_text(x3, (ystart + 15 * i), 27, 0, buffer);
+  dtostrf(CalData.IQCWPhaseCorrectionFactorUSB[i], 4, 3, buffer);
+  EVE_cmd_text(x4, (ystart + 15 * i), 27, 0, buffer);
+  }
+
+    x1 = 300;
+  x2 = x1 + 60;
+  x3 = x1 + 110;;
+  x4 = x1 + 170;
+  ystart = 70;
+    EVE_cmd_text(x1, ystart - 20, 27, 0, "SSB Calibration Lower Sideband");
+  for(int i = 0; i < NUMBER_OF_BANDS; i = i + 1) {
+    // Band names
+  EVE_cmd_text(x1, (ystart + 15 * i), 27, 0, bandNames[i].c_str());
+  dtostrf(CalData.SSBCalResultSidebandLSB[i], 4, 1, buffer);
+  // Calibration result in dB
+  EVE_cmd_text(x2, (ystart + 15 * i), 27, 0, buffer);
+  // Print IQ Gain and Phase
+  dtostrf(CalData.IQSSBAmpCorrectionFactorLSB[i], 4, 3, buffer);
+  EVE_cmd_text(x3, (ystart + 15 * i), 27, 0, buffer);
+  dtostrf(CalData.IQSSBPhaseCorrectionFactorLSB[i], 4, 3, buffer);
+  EVE_cmd_text(x4, (ystart + 15 * i), 27, 0, buffer);
+  }
+
+  x1 = 300;
+  x2 = x1 + 60;
+  x3 = x1 + 110;;
+  x4 = x1 + 170;
+  ystart = 210;
+    EVE_cmd_text(x1, ystart - 20, 27, 0, "SSB Calibration Upper Sideband");
+  for(int i = 0; i < NUMBER_OF_BANDS; i = i + 1) {
+    // Band names
+  EVE_cmd_text(x1, (ystart + 15 * i), 27, 0, bandNames[i].c_str());
+  dtostrf(CalData.SSBCalResultSidebandUSB[i], 4, 1, buffer);
+  // Calibration result in dB
+  EVE_cmd_text(x2, (ystart + 15 * i), 27, 0, buffer);
+  // Print IQ Gain and Phase
+  dtostrf(CalData.IQSSBAmpCorrectionFactorUSB[i], 4, 3, buffer);
+  EVE_cmd_text(x3, (ystart + 15 * i), 27, 0, buffer);
+  dtostrf(CalData.IQSSBPhaseCorrectionFactorUSB[i], 4, 3, buffer);
+  EVE_cmd_text(x4, (ystart + 15 * i), 27, 0, buffer);
+  }
+
+// Carrier.  Does not have lower and upper sidebands.
+  x1 = 570;
+  x2 = x1 + 60;
+  x3 = x1 + 110;;
+  x4 = x1 + 170;
+  ystart = 70;
+    EVE_cmd_text(x1, ystart - 20, 27, 0, "CW Carrier Calibration");
+  for(int i = 0; i < NUMBER_OF_BANDS; i = i + 1) {
+    // Band names
+  EVE_cmd_text(x1, (ystart + 15 * i), 27, 0, bandNames[i].c_str());
+  dtostrf(CalData.CWCalResultCarrier[i], 4, 1, buffer);
+  // Calibration result in dB
+  EVE_cmd_text(x2, (ystart + 15 * i), 27, 0, buffer);
+  // Print DC offsets.
+  dtostrf(CalData.iDCoffsetCW[i], 4, 3, buffer);
+  EVE_cmd_text(x3, (ystart + 15 * i), 27, 0, buffer);
+  dtostrf(CalData.qDCoffsetCW[i], 4, 3, buffer);
+  EVE_cmd_text(x4, (ystart + 15 * i), 27, 0, buffer);
+  }
+
+  x2 = x1 + 60;
+  x3 = x1 + 110;;
+  x4 = x1 + 170;
+  ystart = 210;
+    EVE_cmd_text(x1, ystart - 20, 27, 0, "SSB Carrier Calibration");
+  for(int i = 0; i < NUMBER_OF_BANDS; i = i + 1) {
+    // Band names
+  EVE_cmd_text(x1, (ystart + 15 * i), 27, 0, bandNames[i].c_str());
+  dtostrf(CalData.SSBCalResultCarrier[i], 4, 1, buffer);
+  // Calibration result in dB
+  EVE_cmd_text(x2, (ystart + 15 * i), 27, 0, buffer);
+  // Print IQ Gain and Phase
+  dtostrf(CalData.iDCoffsetSSB[i], 4, 3, buffer);
+  EVE_cmd_text(x3, (ystart + 15 * i), 27, 0, buffer);
+  dtostrf(CalData.qDCoffsetSSB[i], 4, 3, buffer);
+  EVE_cmd_text(x4, (ystart + 15 * i), 27, 0, buffer);
+  }
+
+
+  EVE_cmd_dl(DL_DISPLAY); // put in the display list to mark its end
+  EVE_cmd_dl(CMD_SWAP); // tell EVE to use the new display list
+  while (EVE_busy())
+    ;
+
+//  EVE_cmd_endlist();
+} // End of transmitter static.

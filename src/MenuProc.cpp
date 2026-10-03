@@ -121,7 +121,7 @@ void MenuProc::CalibrateOptions()
   case 2:                                     // Manual CW IQ Receive calibration.
     evemenucontrol.runOptionFunction = false; // Deactivate function.
     evemenucontrol.runInDSP = false;
-    rxcalibrater.DoReceiveCalibrate(0, false, false);  // mode, autoCal, save to EEPROM
+    rxcalibrater.DoReceiveCalibrate(0, false, false); // mode, autoCal, save to EEPROM
     parameterAdjustFlag = false;                      // Save to EEPROM at conclusion of this function.
     subMenuChoice = 0;
     break;
@@ -134,7 +134,7 @@ void MenuProc::CalibrateOptions()
     subMenuChoice = 0;
     break;
 
-  case 4:  // CW Xmit Sideband calibration.
+  case 4:                                     // CW Xmit Sideband calibration.
     evemenucontrol.runOptionFunction = false; // Deactivate function.
     evemenucontrol.runInDSP = false;
     txcalibrater.DoXmitCalibrate(0, false, false); // This function was significantly revised.  KF5N August 16, 2023
@@ -207,11 +207,11 @@ void MenuProc::CalibrateOptions()
     subMenuChoice = 0;
     break;
 
-  case 11:                                   // dBm level cal.
-  Serial.printf("dBm level cal\n");
+  case 11: // dBm level cal.
+    Serial.printf("dBm level cal\n");
     evemenucontrol.runOptionFunction = true; // Runs in loop().
-//    evemenucontrol.runInDSP = true;
-    parameterAdjustFlag = true; // Prevents multiple EEPROM writes.
+                                             //    evemenucontrol.runInDSP = true;
+    parameterAdjustFlag = true;              // Prevents multiple EEPROM writes.
     CalData.dBm_calibration = GetEncoderValueLive(0, 100, CalData.dBm_calibration, 1);
     if (CalData.dBm_calibration != freqCorrectionFactorOld)
     {
@@ -261,12 +261,12 @@ void MenuProc::CalibrateOptions()
 
   case 14: // Reset to default calibration values.  Simple command.
 
-//    seq::clear();
-//    seq::active(false);
+    //    seq::clear();
+    //    seq::active(false);
     parameterAdjustFlag = true;
     evemenucontrol.runOptionFunction = true; // Runs in loop().
     evemenucontrol.runInDSP = true;
-    menu = MenuSelect::MENU_OPTION_SELECT;  // Don't need to read button here.
+    menu = MenuSelect::MENU_OPTION_SELECT; // Don't need to read button here.
     if (menu != MenuSelect::BOGUS_PIN_READ)
     {
       if (menu == MenuSelect::MENU_OPTION_SELECT)
@@ -278,7 +278,7 @@ void MenuProc::CalibrateOptions()
         evemenucontrol.runInDSP = false;
         subMenuChoice = 0;
         Serial.printf("Bail out from reset default cal values\n");
-//        seq::active(true);
+        //        seq::active(true);
       }
     }
 
@@ -1130,4 +1130,42 @@ void MenuProc::SetToCalDefaults()
 
   CalData.CWradioCalComplete = false;
   CalData.SSBradioCalComplete = false;
+}
+
+void MenuProc::FactoryDiagnostics()
+{
+  MenuSelect menu;
+
+  std::vector<std::string> Factory = {"Calibration Diagnostics", "Cancel"};
+
+  if (evemenucontrol.subMenuSelect)
+  {
+    SubmenuSelectString(Factory); // This sets subMenuSelect = false when it is done.
+    return;                       // Don't continue into the rest of the function until the sub menu is selected.
+  }
+
+  switch (subMenuChoice)
+  {
+  case 0: // Save current CalData struct to CalData non-volatile memory.
+
+    while (menu != MenuSelect::MENU_OPTION_SELECT)
+    {
+      menu = button.readButton(); // Use this to quit.
+      delay(20);
+      evedisplay.drawCalDiagnosticsScreen();
+      delay(20);
+    }
+
+    break;
+
+  case 1: // Cancel
+
+    break;
+
+  default:
+    break;
+  }
+  evemenucontrol.runOptionFunction = false;
+  parameterAdjustFlag = false;
+  subMenuChoice = 0;
 }

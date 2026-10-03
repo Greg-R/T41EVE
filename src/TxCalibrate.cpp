@@ -307,7 +307,42 @@ void TxCalibrate::writeToCalData(float ichannel, float qchannel)
       cessb1.setIQCorrections(true, CalData.IQSSBAmpCorrectionFactorUSB[ConfigData.currentBandA], CalData.IQSSBPhaseCorrectionFactorUSB[ConfigData.currentBandA], 0.0);
   }
   AudioInterrupts();
+
+  // Record last measured adjdB.
+  // Results for CW.
+  if (bands.bands[ConfigData.currentBand].sideband == Sideband::LOWER) {
+  if(mode == 0 and calTypeFlag == 1) {
+    CalData.CWCalResultSidebandLSB[ConfigData.currentBand] = adjdB;
+  }
+    // Results for SSB.
+  if(mode == 1 and calTypeFlag == 1) {
+    CalData.SSBCalResultSidebandLSB[ConfigData.currentBand] = adjdB;
+  }
 }
+
+  // Results for CW.
+  if (bands.bands[ConfigData.currentBand].sideband == Sideband::UPPER) {
+  if(mode == 0 and calTypeFlag == 1) {
+    CalData.CWCalResultSidebandUSB[ConfigData.currentBand] = adjdB;
+  }
+    // Results for SSB.
+  if(mode == 1 and calTypeFlag == 1) {
+    CalData.SSBCalResultSidebandUSB[ConfigData.currentBand] = adjdB;
+  }
+}
+
+  // Carrier results.
+  // Results for CW.
+    if(mode == 0 and calTypeFlag == 2) {
+    CalData.CWCalResultCarrier[ConfigData.currentBand] = adjdB;
+  }
+    // Results for SSB.
+  if(mode == 1 and calTypeFlag == 2) {
+    CalData.SSBCalResultCarrier[ConfigData.currentBand] = adjdB;
+  }
+
+
+} // End writeToCalData()
 
 /*****
   Purpose: Full duplex transmitter carrier nulling.

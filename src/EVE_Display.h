@@ -49,6 +49,7 @@ uint32_t centerLine{256};
   uint32_t tuneAlignmentLineX{0};
  std::string filter[4] = { "Off", "Kim", "Spec", "LMS" };
   std::string zoomOptions[5]{"1x ", "2x ", "4x ", "8x ", "16x"};
+   std::vector<std::string> bandNames{"80M", "40M", "20M", "17M", "15M", "12M", "10M"};
   enum class Screens {
 receiver,
 directEntry,
@@ -108,6 +109,8 @@ void drawSwitchMatrixCalScreen(bool finished);
 void switchMatrixCalStatic_cmd_list();
 
 void drawTransmitterAlarmScreen(std::string warningMessage);
+
+void drawCalDiagnosticsScreen();
 
 void Example1();
 void Example2();

@@ -484,6 +484,19 @@ struct calibration_t
 //  float32_t dacOffsetCW = 0.0;  // The offsets may no longer be necessary.
 //  float32_t dacOffsetSSB = 0.0; // Leaving for now until more experience with F32.
 
+// Calibration results
+float CWCalResultSidebandLSB[NUMBER_OF_BANDS]{0.0};
+float CWCalResultSidebandUSB[NUMBER_OF_BANDS]{0.0};
+float CWCalResultCarrier[NUMBER_OF_BANDS]{0.0};
+float SSBCalResultSidebandLSB[NUMBER_OF_BANDS]{0.0};
+float SSBCalResultSidebandUSB[NUMBER_OF_BANDS]{0.0};
+float SSBCalResultCarrier[NUMBER_OF_BANDS]{0.0};
+
+float RXCalResultCW[NUMBER_OF_BANDS]{0.0};
+
+float RXCalResultSSB[NUMBER_OF_BANDS]{0.0};
+
+
   bool CWradioCalComplete = false;
   bool SSBradioCalComplete = false;
   float32_t dBm_calibration = 50.0; // This parameter is adjusted in the calibration menu.
@@ -688,21 +701,6 @@ extern arm_fir_interpolate_instance_f32 FIR_int2_Q;
 extern arm_lms_norm_instance_f32 LMS_Norm_instance;
 extern elapsedMicros usec;
 
-typedef struct DEMOD_Descriptor
-{
-  const uint8_t DEMOD_n;
-  const char *const text;
-} DEMOD_Desc;
-extern const DEMOD_Descriptor DEMOD[];
-
-typedef struct Menu_Descriptor
-{
-  const uint8_t no;        // Menu ID
-  const char *const text1; // upper text
-  const char *text2;       // lower text
-} Menu_D;
-extern Menu_D Menus[];
-
 //============================= Global variables declarations ===============================================
 //=============== Some are not in alpha order because of forward references =================================
 
@@ -713,7 +711,7 @@ extern int16_t fftOffset;
 extern int16_t audioFFToffset;
 extern bool volumeChangeFlag;
 extern char keyboardBuffer[];
-extern const std::string topMenus[];
+// extern const std::string topMenus[];
 extern const char *zoomOptions[];
 extern bool keyPressedOn; // State changed by CW key isr()s.
 extern uint8_t NR_first_time;

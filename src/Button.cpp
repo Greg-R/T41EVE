@@ -294,7 +294,6 @@ void Button::ExecuteButtonPress(MenuSelect val)
 
   case MenuSelect::MAIN_MENU_DN: // 5
     ButtonMenuDecrease();
-    //    menuProc.ShowMenu(&topMenus[mainMenuIndex], PRIMARY_MENU);
     evemenucontrol.top = true;
     evemenucontrol.subMenuSelect = false;
     break;
@@ -469,7 +468,7 @@ void Button::ButtonFineFreqIncrement()
 void Button::ButtonMenuIncrease()
 {
   mainMenuIndex++;
-  if (mainMenuIndex == TOP_MENU_COUNT)
+  if (mainMenuIndex == static_cast<int32_t>(topMenus.size()))
   {                    // At last menu option, so...
     mainMenuIndex = 0; // ...wrap around to first menu option
   }
@@ -489,7 +488,7 @@ void Button::ButtonMenuDecrease()
   mainMenuIndex--;
   if (mainMenuIndex < 0)
   {                                     // At last menu option, so...
-    mainMenuIndex = TOP_MENU_COUNT - 1; // ...wrap around to first menu option
+    mainMenuIndex = topMenus.size() - 1; // ...wrap around to first menu option
   }
 }
 

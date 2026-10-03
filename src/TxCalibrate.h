@@ -48,7 +48,7 @@ public:
 
   // private:
 
-  int32_t IQCalType = 0;
+  int32_t IQCalType = 0;  // 0 for sideband, 1 for carrier.
   int val;
   float32_t xmitIncrement = 0.002;  // Increment for transmit calibration.
   float32_t carrIncrement = 0.0005; // Increment for carrier calibration.
