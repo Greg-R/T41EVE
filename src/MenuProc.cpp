@@ -277,14 +277,46 @@ void MenuProc::CalibrateOptions()
         evemenucontrol.runOptionFunction = false; // Deactivate function.
         evemenucontrol.runInDSP = false;
         subMenuChoice = 0;
-        Serial.printf("Bail out from reset default cal values\n");
-        //        seq::active(true);
       }
     }
 
     break;
 
-  case 15: // Cancelled choice
+  case 15: // Receiver Calibration Diagnostics
+
+    while (menu != MenuSelect::MENU_OPTION_SELECT)
+    {
+      menu = button.readButton(); // Use this to quit.
+      delay(100);
+      evedisplay.drawRxCalDiagnosticsScreen();
+      delay(100);
+    }
+    calibrateFlag = false;
+    parameterAdjustFlag = false;              // Save to EEPROM at conclusion of this function.
+    evemenucontrol.runOptionFunction = false; // Deactivate function.
+    evemenucontrol.runInDSP = false;
+    subMenuChoice = 0;
+
+    break;
+
+  case 16: // Transmitter Calibration Diagnostics
+
+    while (menu != MenuSelect::MENU_OPTION_SELECT)
+    {
+      menu = button.readButton(); // Use this to quit.
+      delay(100);
+      evedisplay.drawTxCalDiagnosticsScreen();
+      delay(100);
+    }
+    calibrateFlag = false;
+    parameterAdjustFlag = false;              // Save to EEPROM at conclusion of this function.
+    evemenucontrol.runOptionFunction = false; // Deactivate function.
+    evemenucontrol.runInDSP = false;
+    subMenuChoice = 0;
+
+    break;
+
+  case 17: // Cancelled choice
 
     calibrateFlag = false;
     parameterAdjustFlag = false;              // Save to EEPROM at conclusion of this function.
@@ -1135,6 +1167,11 @@ void MenuProc::SetToCalDefaults()
 
     CalData.CWCalResultCarrier[x] = 0.0;
     CalData.SSBCalResultCarrier[x] = 0.0;
+
+    CalData.RXCalResultCWLSB[x] = 0.0;
+    CalData.RXCalResultCWUSB[x] = 0.0;
+    CalData.RXCalResultSSBLSB[x] = 0.0;
+    CalData.RXCalResultSSBUSB[x] = 0.0;
   }
 
   CalData.CWradioCalComplete = false;
@@ -1145,7 +1182,7 @@ void MenuProc::FactoryDiagnostics()
 {
   MenuSelect menu = MenuSelect::BOGUS_PIN_READ;
 
-  std::vector<std::string> Factory = {"Calibration Diagnostics", "Cancel"};
+  std::vector<std::string> Factory = {"Rx Calibration Diagnostics", "Tx Calibration Diagnostics", "Cancel"};
 
   if (evemenucontrol.subMenuSelect)
   {
@@ -1161,13 +1198,25 @@ void MenuProc::FactoryDiagnostics()
     {
       menu = button.readButton(); // Use this to quit.
       delay(20);
-      evedisplay.drawCalDiagnosticsScreen();
+      evedisplay.drawRxCalDiagnosticsScreen();
       delay(20);
     }
 
     break;
 
-  case 1: // Cancel
+  case 1: // Save current CalData struct to CalData non-volatile memory.
+
+    while (menu != MenuSelect::MENU_OPTION_SELECT)
+    {
+      menu = button.readButton(); // Use this to quit.
+      delay(20);
+      evedisplay.drawTxCalDiagnosticsScreen();
+      delay(20);
+    }
+
+    break;
+
+  case 2: // Cancel
 
     break;
 

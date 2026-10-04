@@ -491,11 +491,10 @@ float CWCalResultCarrier[NUMBER_OF_BANDS]{0.0};
 float SSBCalResultSidebandLSB[NUMBER_OF_BANDS]{0.0};
 float SSBCalResultSidebandUSB[NUMBER_OF_BANDS]{0.0};
 float SSBCalResultCarrier[NUMBER_OF_BANDS]{0.0};
-
-float RXCalResultCW[NUMBER_OF_BANDS]{0.0};
-
-float RXCalResultSSB[NUMBER_OF_BANDS]{0.0};
-
+float RXCalResultCWLSB[NUMBER_OF_BANDS]{0.0};
+float RXCalResultCWUSB[NUMBER_OF_BANDS]{0.0};
+float RXCalResultSSBLSB[NUMBER_OF_BANDS]{0.0};
+float RXCalResultSSBUSB[NUMBER_OF_BANDS]{0.0};
 
   bool CWradioCalComplete = false;
   bool SSBradioCalComplete = false;

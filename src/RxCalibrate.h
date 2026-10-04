@@ -55,7 +55,7 @@ public:
   int userScale, userZoomIndex, userxmtMode;
   int transmitPowerLevelTemp, cwFreqOffsetTemp, calFreqTemp;
   uint16_t base_y = 460; // 247
-  int calTypeFlag = 0;
+//  int calTypeFlag = 0;
   float adjdB{0.0};
   float adjdB_avg = 0.0;
   uint32_t adjdBMinIndex;

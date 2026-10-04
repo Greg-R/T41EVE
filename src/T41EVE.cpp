@@ -117,9 +117,7 @@ void (*functionPtr[])() = {[]()
                            []()
                            { menuProc.EqualizerRecOptions(); },
                            []()
-                           { menuProc.CalibrateOptions(); },
-                          []()
-                           { menuProc.FactoryDiagnostics(); }
+                           { menuProc.CalibrateOptions(); }
                           }; // &BearingMaps temporarily removed.
 
 Rotary volumeEncoder = Rotary(VOLUME_ENCODER_A, VOLUME_ENCODER_B);       // ( 2,  3)

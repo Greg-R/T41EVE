@@ -44,7 +44,8 @@ public:
 
     std::vector<std::string> IQOptions{"Freq Cal", "CW PA Cal", "CW Rec Cal", "CW Carrier Cal", "CW Xmit Cal", "SSB PA Cal",
                                        "SSB Rec Cal", "SSB Carrier Cal", "SSB Transmit Cal", "CW Radio Cal", "SSB Radio Cal",
-                                       "dBm Level Cal", "Switch Matrix Cal", "Button Repeat", "Cal Defaults", "Cancel"};
+                                       "dBm Level Cal", "Switch Matrix Cal", "Button Repeat", "Cal Defaults",
+                                      "Rx Cal Diagnostics", "Tx Cal Diagnostics", "Cancel"};
 
     void CalibrateOptions();
     void CWOptions();

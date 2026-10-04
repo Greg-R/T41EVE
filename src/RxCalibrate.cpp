@@ -227,14 +227,14 @@ void RxCalibrate::buttonTasks()
     {
       IQCalType = 1;
       // Turn off red indication of active setting.
-      if (calTypeFlag == 1)
+//      if (calTypeFlag == 1)
         GetEncoderValueLive(-1.0, 1.0, amplitude, increment);
     }
     else
     {
       IQCalType = 0;
       // Turn off red indication of active setting.
-      if (calTypeFlag == 1)
+//      if (calTypeFlag == 1)
         GetEncoderValueLive(-1.0, 1.0, phase, increment);
     }
     break;
@@ -284,7 +284,31 @@ void RxCalibrate::writeToCalData(float ichannel, float qchannel)
       CalData.IQSSBRXPhaseCorrectionFactorUSB[ConfigData.currentBand] = phase;
     }
   }
+
+  // Record last measured adjdB.
+  // Results for CW.
+  if(bands.bands[ConfigData.currentBand].sideband == Sideband::LOWER) {
+  if(mode == 0) {
+    CalData.RXCalResultCWLSB[ConfigData.currentBand] = adjdB;
+  }
+    // Results for SSB.
+  if(mode == 1) {
+    CalData.RXCalResultSSBLSB[ConfigData.currentBand] = adjdB;
+  }
 }
+
+  // Results for CW.
+  if (bands.bands[ConfigData.currentBand].sideband == Sideband::UPPER) {
+  if(mode == 0) {
+    CalData.RXCalResultCWUSB[ConfigData.currentBand] = adjdB;
+  }
+    // Results for SSB.
+  if(mode == 1) {
+    CalData.RXCalResultSSBUSB[ConfigData.currentBand] = adjdB;
+  }
+}
+
+}  // End of writeToCalData().
 
 /*****
   Purpose: Combined input/output for the purpose of calibrating the receiver IQ.
@@ -304,9 +328,9 @@ void RxCalibrate::DoReceiveCalibrate(int calMode, bool fullRadioCal, bool toEepr
 
   loadCalToneBuffers(750.0);
   CalibratePreamble(0);     // Set zoom to 1X.
-  int calFreqShift = 96000; // Transmit frequency to 2 times IF, the image.
+//  int calFreqShift = 96000; // Transmit frequency to 2 times IF, the image.
 
-  SetFreqCal(calFreqShift);
+  SetFreq();
   IQCalType = 0;               // Start with IG Gain calibration.
   warmUpCal();                 // Finds the peak of the FFT to adjust in display.
   RxCalibrate::state = State::warmup; // Start calibration state machine in warmup state.

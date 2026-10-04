@@ -110,7 +110,8 @@ void switchMatrixCalStatic_cmd_list();
 
 void drawTransmitterAlarmScreen(std::string warningMessage);
 
-void drawCalDiagnosticsScreen();
+void drawTxCalDiagnosticsScreen();
+void drawRxCalDiagnosticsScreen();
 
 void Example1();
 void Example2();
