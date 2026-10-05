@@ -27,6 +27,8 @@ You should have received a copy of the GNU General Public License along with T41
 
 #include "SDT.h"
 
+using namespace Sequencer;
+
 /*****
   Purpose: This function replaces the arm_max_float32() function that finds the maximum element in an array.
            The histograms are "fuzzy" in the sense that dits and dahs "cluster" around a maximum value rather
@@ -353,6 +355,7 @@ FLASHMEM void CWProcessing::SetKeyPowerUp()
 void CWProcessing::SetSideToneVolume(bool speaker)
 {
   int sidetoneDisplay;
+  int counter{0};
   bool keyDown;
   MenuSelect menu;
   RadioState temp = radioState;
@@ -369,8 +372,13 @@ void CWProcessing::SetSideToneVolume(bool speaker)
   // This is going to run the CW transmitter, however, the power amplifier is not enabled.
   while (true)
   {
-
-    evedisplay.drawEncoderEntryScreen(false); // Write an integer.
+    if (counter == 200)
+    {
+      evedisplay.drawEncoderEntryScreen(false); // Write an integer.
+      counter = 0;
+    }
+    counter = counter + 1;
+    Serial.printf("counter = %d\n", counter);
 
     // Run the CW exciter a few times to fill the queues.
     // This keeps the audio going while the display refreshes.
@@ -398,6 +406,7 @@ void CWProcessing::SetSideToneVolume(bool speaker)
       }
     }
 
+    seq::run();
     if (filterEncoderMove != 0)
     {
       sidetoneDisplay = sidetoneDisplay + filterEncoderMove; // * 0.001;  // ConfigData.sidetoneVolume range is 0.0 to 1.0 in 0.001 steps.  KF5N August 29, 2023

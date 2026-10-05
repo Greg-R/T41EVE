@@ -384,13 +384,13 @@ void MenuProc::CWOptions() // new option for Sidetone and Delay JJP 9/1/22
 
     break;
 
-  case 4: // Sidetone volume for speaker.  This has it's own while loop by necessity.
+  case 4: // Sidetone volume for speaker.  This has its own while loop by necessity.
 
     cwprocess.SetSideToneVolume(true);
 
     break;
 
-  case 5: // Sidetone volume for headphone.  This has it's own while loop by necessity.
+  case 5: // Sidetone volume for headphone.  This has its own while loop by necessity.
 
     cwprocess.SetSideToneVolume(false);
 
