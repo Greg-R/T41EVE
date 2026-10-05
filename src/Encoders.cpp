@@ -108,7 +108,6 @@ void FilterSetSSB()
 *****/
 void EncoderCenterTune()
 {
-  //  Serial.printf("EncoderCentertune\n");
   uint32_t centerTuneResult{0};
   int32_t tuneChange{0};
 
@@ -165,7 +164,6 @@ void EncoderCenterTune()
 *****/
 void EncoderVolume() // AFP 10-22-22  Begin new
 {
-  //  Serial.printf("EncoderVolume\n");
   char result;
 
   result = volumeEncoder.process(); // Read the encoder
@@ -247,7 +245,6 @@ task<callable_holder> task_volume(EncoderVolume, 10);
 void EncoderVolumeISR()
 {
   seq::add(task_volume);
-  // Serial.printf("EncoderVolumeISR\n");
 }
 
 task<callable_holder> task_center_tune(EncoderCenterTune, 20);
@@ -255,7 +252,6 @@ task<callable_holder> task_center_tune(EncoderCenterTune, 20);
 void EncoderCenterTuneISR()
 {
   seq::add(task_center_tune);
-  // Serial.printf("EncoderVolumeISR\n");
 }
 
 /*****
@@ -518,5 +514,5 @@ void EncoderFilterISR()
 {
   seq::add(task_filter_tune);
 
-if(calOnFlag)  EncoderFilter();
+if(calOnFlag)  EncoderFilter();  // This is required because polling is slow in calibration.
 }

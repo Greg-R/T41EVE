@@ -230,7 +230,6 @@ const char *tune_text = "Fast Tune";
 int16_t fftOffset = 0;
 int16_t audioFFToffset = 100;
 int filterWidth{0};
-int h = 135; // SPECTRUM_HEIGHT + 3;
 uint8_t auto_codec_gain = 1;
 bool keyPressedOn = false;
 bool keyerFirstDit = false;
@@ -348,16 +347,6 @@ uint32_t TxRxFreq; // = ConfigData.centerFreq + NCOFreq  NCOFreq from FreqShift2
 float help;
 float s_hotT_ROOM; /*!< The value of s_hotTemp minus room temperature(25¡æ).*/
 
-//====== SAM stuff AFP 11-02-22
-float32_t a[3 * SAM_PLL_HILBERT_STAGES + 3];
-float32_t b[3 * SAM_PLL_HILBERT_STAGES + 3];
-float32_t c[3 * SAM_PLL_HILBERT_STAGES + 3]; // Filter c variables
-
-float32_t c1[SAM_PLL_HILBERT_STAGES];
-float32_t d[3 * SAM_PLL_HILBERT_STAGES + 3];
-
-float32_t audio;
-
 float32_t mid = 0.0;
 float32_t bin_BW = 1.0 / (DF * FFT_length) * SR[SampleRate].rate;
 float32_t bin = 2000.0 / bin_BW;
@@ -420,7 +409,6 @@ float32_t DMAMEM NR_FFT_buffer[512] __attribute__((aligned(4)));
 float32_t DMAMEM NR_output_audio_buffer[NR_FFT_L];
 float32_t DMAMEM NR_last_iFFT_result[NR_FFT_L / 2];
 float32_t DMAMEM NR_last_sample_buffer_L[NR_FFT_L / 2];
-// float32_t DMAMEM NR_last_sample_buffer_R[NR_FFT_L / 2];
 float32_t DMAMEM NR_X[NR_FFT_L / 2][3];
 float32_t DMAMEM NR_E[NR_FFT_L / 2][15];
 float32_t DMAMEM NR_M[NR_FFT_L / 2];
@@ -899,30 +887,7 @@ void enableTransmitter(bool transmitOn)
   keyPressedOn = false; // Reset isr().
 }
 
-/*
-bool displayUpdate{false};
-void DisplayRefresh()
-{
-//  Serial.printf("DisplayRefresh\n");
-  displayUpdate = true;
-*/
-
 using namespace Sequencer;
-
-using callable_holder = std::function<void()>;
-using task_seq = Sequencer::task<callable_holder>;
-using seq = Sequencer::sequencer<task_seq>;
-
-/*
-task<callable_holder> display_refresh(DisplayRefresh, 100);
-
-void DisplayRefreshISR()
-{
-  seq::add(display_refresh);
-}
-
-IntervalTimer displayRefresh;
-*/
 
 void buttonPush()
 {
@@ -944,12 +909,6 @@ void buttonPush()
         button.ExecuteButtonPress(menu);
     }
   }
-  // This handles functions selected from the second level of menus.
-  // This should only be relevant for functions not runInDSP!
-  //    if (evemenucontrol.runOptionFunction == true)
-  //    {
-  //      functionPtr[mainMenuIndex](); // The top menu item to run.  mainMenuIndex is a global.
-  //    }
 }
 
 bool powerUp = false;
@@ -1018,9 +977,6 @@ FLASHMEM void setup()
   // Configure Audio Adapter
   sgtl5000_1.enable();
   sgtl5000_1.setAddress(LOW); // This sets to one of two possible I2C addresses, controlled by a jumper on the Audio Adapter.
-  //  Don't use the audio pre-processor.  This causes a spurious signal in the SSB transmit output.
-  //  sgtl5000_1.audioPreProcessorEnable();  // Need to use one of the equalizers.
-
   sgtl5000_1.inputSelect(AUDIO_INPUT_MIC);
   sgtl5000_1.volume(0.8); // Set headphone volume.
   sgtl5000_1.micGain(0);
@@ -1052,7 +1008,7 @@ FLASHMEM void setup()
 
   //  Entry graphics.
   evedisplay.drawSplash();
-  delay(500);
+  delay(5000);
 
   // Switch matrix debug code.
   // Push and hold a button at power up to activate switch matrix calibration.
@@ -1282,7 +1238,6 @@ void loop()
   // Transition to new state if required and only if the radio state has changed.
   if (lastState != radioState)
   {
-    Serial.printf("State update\n");
     // Avoid changing the audio system if possible.
     // If moving from one receive state to another, audio system update is not required.  Demodulation selection is done in ReceiverDSP.
     // So updating the audio system is only required when moving from receive to transmit, or vice versa.
@@ -1694,10 +1649,6 @@ void loop()
     Serial.printf("AudioProcessorUsageMax() = %d\n", static_cast<uint32_t>(AudioProcessorUsageMax()));
     AudioProcessorUsageMaxReset();
     Serial.printf("ConfigData.sdCardPresent = %d\n", ConfigData.sdCardPresent);
-    //        Serial.printf("evenmenucontrol.top = %d\n", evemenucontrol.top);
-    //        Serial.printf("evenmenucontrol.runOptionFunction = %d\n", evemenucontrol.runOptionFunction);
-    //        Serial.printf("evenmenucontrol.subMenuSelect = %d\n", evemenucontrol.subMenuSelect);
-    //        Serial.printf("evenmenucontrol.subMenuChoice = %d\n", menuProc.subMenuChoice);
   }
   usec1Old = usec1;
 #endif

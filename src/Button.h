@@ -44,8 +44,8 @@ public:
   bool save_last_frequency = false; // Make this the default behavior.  Greg KF5N October 16, 2024.
   std::vector<std::string> topMenus = {"CW Options", "RF Options", "VFO Select",
                                 "Config EEPROM", "Cal EEPROM", "AGC",
-                                "SSB/FT8 Options", "EQ Tx Set",
-                                "EQ Rec Set", "Calibrate"};
+                                "SSB/FT8 Options", "Transmitter Equalizer",
+                                "Receiver Equalizer", "Calibrate"};
 
   // Initialize the object with user selected tuning increments specified by the user in MyConfigurationFile.h.
   Button(std::vector<uint32_t> &fineTuneArray, std::vector<uint32_t> &centerTuneArray)

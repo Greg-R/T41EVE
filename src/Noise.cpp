@@ -41,7 +41,7 @@ int lidx;
 int LMS_nr_strength;
 uint32_t NR_X_pointer = 0;
 uint32_t NR_E_pointer = 0;
-float32_t c0[SAM_PLL_HILBERT_STAGES];
+//float32_t c0[SAM_PLL_HILBERT_STAGES];
 float32_t ANR_den_mult = 6.25e-10;
 float32_t ANR_gamma = 0.1;
 float32_t ANR_lidx = 120.0;

@@ -188,8 +188,7 @@ void RxCalibrate::CalibrateEpilogue(bool radioCal, bool saveToEeprom)
   if (saveToEeprom)
     eeprom.CalDataWrite(); // Save calibration numbers and configuration.  KF5N August 12, 2023
   calOnFlag = false;
-  fftOffset = 0; // Some reboots may be caused by large fftOffset values when Auto-Spectrum is on.
-//  ResetFlipFlops();
+  fftOffset = 0;                                               // Some reboots may be caused by large fftOffset values when Auto-Spectrum is on.
   bands.bands[ConfigData.currentBand].sideband = tempSideband; // Restore the sideband.
   radioState = tempState;
   lastState = RadioState::NOSTATE; // This is required due to the function deactivating the receiver.  This forces a pass through the receiver set-up code.  KF5N October 16, 2023
@@ -198,7 +197,6 @@ void RxCalibrate::CalibrateEpilogue(bool radioCal, bool saveToEeprom)
   button.ButtonZoom(); // Restore the user's zoom setting.
   powerUp = true;      // Clip off transient.
 }
-
 
 void RxCalibrate::buttonTasks()
 {
@@ -211,6 +209,7 @@ void RxCalibrate::buttonTasks()
     warmup = 0;
     index = 0;
     initialAutoTune = true;
+    zoomButton = true;
     RxCalibrate::state = State::warmup;
     break;
   // Automatic calibration starting from scratch.
@@ -227,15 +226,13 @@ void RxCalibrate::buttonTasks()
     {
       IQCalType = 1;
       // Turn off red indication of active setting.
-//      if (calTypeFlag == 1)
-        GetEncoderValueLive(-1.0, 1.0, amplitude, increment);
+      GetEncoderValueLive(-1.0, 1.0, amplitude, increment);
     }
     else
     {
       IQCalType = 0;
       // Turn off red indication of active setting.
-//      if (calTypeFlag == 1)
-        GetEncoderValueLive(-1.0, 1.0, phase, increment);
+      GetEncoderValueLive(-1.0, 1.0, phase, increment);
     }
     break;
 
@@ -287,28 +284,34 @@ void RxCalibrate::writeToCalData(float ichannel, float qchannel)
 
   // Record last measured adjdB.
   // Results for CW.
-  if(bands.bands[ConfigData.currentBand].sideband == Sideband::LOWER) {
-  if(mode == 0) {
-    CalData.RXCalResultCWLSB[ConfigData.currentBand] = adjdB;
-  }
+  if (bands.bands[ConfigData.currentBand].sideband == Sideband::LOWER)
+  {
+    if (mode == 0)
+    {
+      CalData.RXCalResultCWLSB[ConfigData.currentBand] = adjdB;
+    }
     // Results for SSB.
-  if(mode == 1) {
-    CalData.RXCalResultSSBLSB[ConfigData.currentBand] = adjdB;
+    if (mode == 1)
+    {
+      CalData.RXCalResultSSBLSB[ConfigData.currentBand] = adjdB;
+    }
   }
-}
 
   // Results for CW.
-  if (bands.bands[ConfigData.currentBand].sideband == Sideband::UPPER) {
-  if(mode == 0) {
-    CalData.RXCalResultCWUSB[ConfigData.currentBand] = adjdB;
-  }
+  if (bands.bands[ConfigData.currentBand].sideband == Sideband::UPPER)
+  {
+    if (mode == 0)
+    {
+      CalData.RXCalResultCWUSB[ConfigData.currentBand] = adjdB;
+    }
     // Results for SSB.
-  if(mode == 1) {
-    CalData.RXCalResultSSBUSB[ConfigData.currentBand] = adjdB;
+    if (mode == 1)
+    {
+      CalData.RXCalResultSSBUSB[ConfigData.currentBand] = adjdB;
+    }
   }
-}
 
-}  // End of writeToCalData().
+} // End of writeToCalData().
 
 /*****
   Purpose: Combined input/output for the purpose of calibrating the receiver IQ.
@@ -322,29 +325,27 @@ void RxCalibrate::writeToCalData(float ichannel, float qchannel)
 void RxCalibrate::DoReceiveCalibrate(int calMode, bool fullRadioCal, bool toEeprom)
 {
   RxCalibrate::mode = calMode;          // CW or SSB.  0 for CW, 1 for SSB.
-  RxCalibrate::radioCal = fullRadioCal;      // Run automatic calibration programmatically.
+  RxCalibrate::radioCal = fullRadioCal; // Run automatic calibration programmatically.
   RxCalibrate::saveToEeprom = toEeprom; // Save to EEPROM
   initialAutoTune = true;
 
   loadCalToneBuffers(750.0);
-  CalibratePreamble(0);     // Set zoom to 1X.
-//  int calFreqShift = 96000; // Transmit frequency to 2 times IF, the image.
-
+  CalibratePreamble(0); // Set zoom to 1X.
   SetFreq();
-  IQCalType = 0;               // Start with IG Gain calibration.
-  warmUpCal();                 // Finds the peak of the FFT to adjust in display.
+  IQCalType = 0;                      // Start with IG Gain calibration.
+  warmUpCal();                        // Finds the peak of the FFT to adjust in display.
   RxCalibrate::state = State::warmup; // Start calibration state machine in warmup state.
   float maxSweepAmp = 0.1;
   float maxSweepPhase = 0.1;
   increment = 0.001; // 0.01 used in initial sweeps.
   int refinePass{0};
+  bool initialRun{false};
   float iOptimal = 1.0;
   float qOptimal = 0.0;
   float adjdB_min{0};
   float adjdB_old{0};
   std::vector<float32_t> sweepVector(21);
   std::vector<float32_t> sweepVectorValue(21);
-  int startTimer = 0; // Used to time display of results.
   std::vector<float>::iterator result;
 
   // Get current values for amplitude and phase.
@@ -381,8 +382,10 @@ void RxCalibrate::DoReceiveCalibrate(int calMode, bool fullRadioCal, bool toEepr
   if (radioCal)
   {
     autoCal = true;
-    if (mode == 0 and CalData.CWradioCalComplete == true) initialAutoTune = false;
-    if (mode == 1 and CalData.SSBradioCalComplete == true) initialAutoTune = false;
+    if (mode == 0 and CalData.CWradioCalComplete == true)
+      initialAutoTune = false;
+    if (mode == 1 and CalData.SSBradioCalComplete == true)
+      initialAutoTune = false;
     warmup = 0;
     index = 1;
     IQCalType = 0;
@@ -431,11 +434,11 @@ void RxCalibrate::DoReceiveCalibrate(int calMode, bool fullRadioCal, bool toEepr
         }
         state = State::warmup;
         if (warmup == 1)
-          state = State::state0;  // Proceed with initial auto calibration.
+          state = State::state0; // Proceed with initial auto calibration.
 
-        if (not initialAutoTune)  // Run refine calibration only.
+        if (not initialAutoTune or (initialRun and task == MenuSelect::FILTER))
         {
-          if (mode == 0 and CalData.CWradioCalComplete == true)
+          if (mode == 0 and ((CalData.CWradioCalComplete == true) or initialRun))
           {
             amplitude = amplitude + 0.001;
             adjdB_old = 0;
@@ -454,7 +457,6 @@ void RxCalibrate::DoReceiveCalibrate(int calMode, bool fullRadioCal, bool toEepr
         break;
 
       case State::state0:
-        Serial.printf("state0\n");
         // Starting values for sweeps.  First sweep is amplitude (gain).
         phase = 0.0;
         amplitude = 1.0 - maxSweepAmp;                    // Begin sweep at low end and move upwards.
@@ -623,26 +625,22 @@ void RxCalibrate::DoReceiveCalibrate(int calMode, bool fullRadioCal, bool toEepr
       case State::setOptimal:
         writeToCalData(amplitude, phase);
         state = State::exit;
-        startTimer = static_cast<int>(milliTimer); // Start result view timer.
         break;
       case State::exit:
         // Delay exit if in radio calibration to show calibration results for 5 seconds.
         if (radioCal)
         {
-          if ((static_cast<int>(milliTimer) - startTimer) < 100)
-          { // Show calibration result for 5 seconds at conclusion during Radio Cal.
-            state = State::exit;
-            break;
-          }
-          else
-          {
-            RxCalibrate::CalibrateEpilogue(radioCal, saveToEeprom);
-            return;
-          }
+          RxCalibrate::CalibrateEpilogue(radioCal, saveToEeprom);
+          return;
         }
         else
         {
           autoCal = false; // Don't enter switch, but remain in manual loop.
+                    if (zoomButton)
+          {
+            zoomButton = false;
+            initialRun = true;
+          }
         }
         break;
       }
@@ -802,7 +800,7 @@ void RxCalibrate::MakeFFTData()
   } // End of receive code
   else
   {
-    Serial.printf("FFT failed!\n");
+//    Serial.printf("FFT failed!\n");
   }
 } // end MakeFFTData()
 
@@ -852,10 +850,10 @@ void RxCalibrate::PlotCalSpectrum(int cal_bins[3], int capture_bins)
   int16_t adjAmplitude{0}; // Was float; cast to float in dB calculation.  KF5N
   int16_t refAmplitude{0}; // Was float; cast to float in dB calculation.  KF5N
 
-  uint32_t index_of_max{0}; // This variable is not currently used, but it is required by the ARM max function.  KF5N
-                         // Set flag at revised beginning.  KF5N
-    updateDisplayFlag = true;   // This flag is used in ZoomFFTExe().
-    RxCalibrate::MakeFFTData(); // Compute FFT and draw it on the display.
+  uint32_t index_of_max{0};   // This variable is not currently used, but it is required by the ARM max function.  KF5N
+                              // Set flag at revised beginning.  KF5N
+  updateDisplayFlag = true;   // This flag is used in ZoomFFTExe().
+  RxCalibrate::MakeFFTData(); // Compute FFT and draw it on the display.
 
   // Find the maximums of the desired and undesired signals.
 

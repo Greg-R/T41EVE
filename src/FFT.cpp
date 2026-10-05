@@ -136,9 +136,6 @@ void ZoomFFTExe(int fftWidth, uint32_t blockSize)
   static float32_t FFT_ring_buffer_x[1024];
   static float32_t FFT_ring_buffer_y[1024];
 
-//  static float32_t FFT_ring_buffer_x[1024];
-//  static float32_t FFT_ring_buffer_y[1024];
-
   int sample_no = 256;
   // sample_no is 256, in high magnify modes it is smaller!
   // but it must never be > 256

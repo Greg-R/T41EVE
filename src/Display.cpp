@@ -113,7 +113,6 @@ void Display::DisplaydbM()
 *****/
 void Display::ShowTempAndLoad()
 {
-  //  char buff[10];
   double block_time;
 
   elapsed_micros_mean = elapsed_micros_sum / elapsed_micros_idx_t;

@@ -71,13 +71,6 @@ bool ReceiveDSP::ProcessIQData()
     ADC_RX_Q.freeBuffer();
   } // end for loop
 
-  // Set frequency here only to minimize interruption to signal stream during tuning.
-  // This code was unnecessary in the revised tuning scheme.  KF5N July 22, 2023
-  ////    if (centerTuneFlag == 1) {  //  This flag is set by EncoderFineTune() and also by Direct Freq Entry.
-  ////      display.DrawBandWidthIndicatorBar();
-  ////      display.ShowFrequency();
-  ////    }                    //AFP 10-04-22
-  ////    centerTuneFlag = 0;  //AFP 10-04-22
   if (resetTuningFlag == 1)
   {
     ResetTuning();
@@ -530,20 +523,12 @@ bool ReceiveDSP::ProcessIQData()
   // Scale by 8 to compensate for interpolation.
   arm_scale_f32(float_buffer_L, 8.0, float_buffer_L, BUFFER_SIZE * N_BLOCKS);
 
-  /**********************************************************************************  AFP 12-31-20
-    CONVERT TO INTEGER AND PLAY AUDIO
-  **********************************************************************************/
-  ////    q15_t q15_buffer_LTemp[2048];  //KF5N
-  ////    arm_float_to_q15(float_buffer_L, q15_buffer_LTemp, 2048);
-  ////    Q_out_L.play(q15_buffer_LTemp, 2048);
   audioOutQueue.play(float_buffer_L, 2048);
 
   elapsed_micros_sum = elapsed_micros_sum + usec;
   elapsed_micros_idx_t++;
 
   return true; // Audio blocks were processed.
-  //  }               // end of if(audio blocks available)
-  //  return false;   // Audio blocks were NOT processed!
 }
 
 /*****
@@ -582,64 +567,6 @@ void ReceiveDSP::StreamAudioMakeSpectrums()
     else
       updateDisplayFlag = false;
     ProcessIQData();
-
-  /* 1X zoom.
-  if (ConfigData.spectrum_zoom == 0)
-  {
-    if (displayRefreshFlag)
-      updateDisplayFlag = true; // Run FFT.
-    else
-      updateDisplayFlag = false;
-    ProcessIQData();
-  }
-  // 2X zoom.
-  if (ConfigData.spectrum_zoom == 1)
-  {
-    if (displayRefreshFlag)
-      updateDisplayFlag = true; // Run FFT.
-    else
-      updateDisplayFlag = false;
-    ProcessIQData();
-  }
-  // 4X zoom.
-  if (ConfigData.spectrum_zoom == 2)
-  {
-    if (displayRefreshFlag)
-      updateDisplayFlag = true; // Run FFT.
-    else
-      updateDisplayFlag = false;
-    ProcessIQData();
-  }
-  // 8X zoom.
-  if (ConfigData.spectrum_zoom == 3)
-  {
-//    ProcessIQData();
-//    ProcessIQData();
-//    ProcessIQData();
-    if (displayRefreshFlag)
-      updateDisplayFlag = true; // Run FFT.
-    else
-      updateDisplayFlag = false;
-    ProcessIQData();
-    zoomCount = zoomCount + 1;
-  }
-  // 16X zoom.
-  if (ConfigData.spectrum_zoom == 4)
-  {
-    ProcessIQData();
-    ProcessIQData();
-    ProcessIQData();
-    ProcessIQData();
-    ProcessIQData();
-    ProcessIQData();
-    ProcessIQData();
-    if (displayRefreshFlag)
-      updateDisplayFlag = true; // Run FFT.
-    else
-      updateDisplayFlag = false;
-    ProcessIQData();
-  }
-    */
 
   if (startRxFlag)
     updateDisplayFlag = false; // Don't process data the first time after coming out of transmit mode.

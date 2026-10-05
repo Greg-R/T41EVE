@@ -16,10 +16,10 @@ You should have received a copy of the GNU General Public License along with T41
   "TEENSY CONVOLUTION SDR" substantially modified by Jack Purdum, W8TEE, and Al Peter, AC8GY
 
   This software is made available under the GNU GPLv3 license agreement. If commercial use of this
-  software is planned, we would appreciate it if the interested parties contact Jack Purdum, W8TEE, 
+  software is planned, we would appreciate it if the interested parties contact Jack Purdum, W8TEE,
   and Al Peter, AC8GY.
 
-  Any and all other uses, written or implied, by the GPLv3 license are forbidden without written 
+  Any and all other uses, written or implied, by the GPLv3 license are forbidden without written
   permission from from Jack Purdum, W8TEE, and Al Peter, AC8GY.
 */
 
@@ -27,7 +27,7 @@ You should have received a copy of the GNU General Public License along with T41
 
 #include "SDT.h"
 
-//using namespace Sequencer;
+// using namespace Sequencer;
 
 /*
 The button interrupt routine implements a first-order recursive filter, or "leaky integrator,"
@@ -60,15 +60,8 @@ const uint32_t BUTTON_DEBOUNCE_DELAY = 5000;     // uSec
 const uint32_t BUTTON_STATE_UP = 0;
 const uint32_t BUTTON_STATE_DEBOUNCE = 1;
 const uint32_t BUTTON_STATE_PRESSED = 2;
-const float32_t BUTTON_USEC_PER_ISR = (1000000 / BUTTON_FILTER_SAMPLERATE);  // 100
-const uint32_t BUTTON_OUTPUT_UP = 1023; // Value to be output when in the UP state
-
-//task<callable_holder> task_button_press(buttonPush, 15);
-
-//void EncoderFilterISR()
-//{
-//  seq::add(task_button_press);
-//}
+const float32_t BUTTON_USEC_PER_ISR = (1000000 / BUTTON_FILTER_SAMPLERATE); // 100
+const uint32_t BUTTON_OUTPUT_UP = 1023;                                     // Value to be output when in the UP state
 
 /*****
   Purpose: ISR to read button ADC and detect button presses.
@@ -89,29 +82,29 @@ void ButtonISR()
 
   switch (buttonState)
   {
-  case BUTTON_STATE_UP:  // State 0.
-    if (filteredADCValue <= CalData.buttonThresholdPressed)  // Button likely to have been pressed.
+  case BUTTON_STATE_UP:                                     // State 0.
+    if (filteredADCValue <= CalData.buttonThresholdPressed) // Button likely to have been pressed.
     {
-      buttonElapsed = 0;  // Start debounce "timer".
-      buttonState = BUTTON_STATE_DEBOUNCE;  // Proceed to next step; we need to debounce.
+      buttonElapsed = 0;                   // Start debounce "timer".
+      buttonState = BUTTON_STATE_DEBOUNCE; // Proceed to next step; we need to debounce.
     }
 
     break;
-  case BUTTON_STATE_DEBOUNCE:  // State 1.
+  case BUTTON_STATE_DEBOUNCE: // State 1.
     if (buttonElapsed < BUTTON_DEBOUNCE_DELAY)
     {
-      buttonElapsed += BUTTON_USEC_PER_ISR;  // Add time of 100usec.  State does not change.
+      buttonElapsed += BUTTON_USEC_PER_ISR; // Add time of 100usec.  State does not change.
     }
     else
     {
-      buttonADCOut = buttonADCPressed = filteredADCValue;  // Accept filtered value.
-      buttonElapsed = 0;  // Reset debounce timer.
+      buttonADCOut = buttonADCPressed = filteredADCValue; // Accept filtered value.
+      buttonElapsed = 0;                                  // Reset debounce timer.
       buttonState = BUTTON_STATE_PRESSED;
     }
 
     break;
-  case BUTTON_STATE_PRESSED:  // State 2.
-    if (filteredADCValue >= CalData.buttonThresholdReleased)  // Button not actually pressed.
+  case BUTTON_STATE_PRESSED:                                 // State 2.
+    if (filteredADCValue >= CalData.buttonThresholdReleased) // Button not actually pressed.
     {
       buttonState = BUTTON_STATE_UP;
     }
@@ -123,8 +116,8 @@ void ButtonISR()
       }
       else
       {
-        buttonADCOut = buttonADCPressed;  // Done.
-        buttonElapsed = 0;                // Reset debounce for next button push.
+        buttonADCOut = buttonADCPressed; // Done.
+        buttonElapsed = 0;               // Reset debounce for next button push.
       }
     }
 
@@ -162,7 +155,7 @@ void Button::EnableButtonInterrupts()
   buttonState = BUTTON_STATE_UP;
   buttonADCPressed = BUTTON_STATE_UP;
   buttonElapsed = 0;
-  buttonInterrupts.begin(ButtonISR, 1000000 / BUTTON_FILTER_SAMPLERATE);  // Every 100 usec.
+  buttonInterrupts.begin(ButtonISR, 1000000 / BUTTON_FILTER_SAMPLERATE); // Every 100 usec.
   buttonInterruptsEnabled = true;
 }
 
@@ -429,7 +422,6 @@ void Button::ButtonCenterFreqIncrement()
     index = 0;
   }
   ConfigData.centerTuneStep = centerTuneArray[index];
-  //  display.DisplayIncrementField();
 }
 
 /*****
@@ -453,7 +445,6 @@ void Button::ButtonFineFreqIncrement()
     index = 0;
   }
   ConfigData.fineTuneStep = fineTuneArray[index];
-  //  display.DisplayIncrementField();
 }
 
 /*****
@@ -487,7 +478,7 @@ void Button::ButtonMenuDecrease()
 {
   mainMenuIndex--;
   if (mainMenuIndex < 0)
-  {                                     // At last menu option, so...
+  {                                      // At last menu option, so...
     mainMenuIndex = topMenus.size() - 1; // ...wrap around to first menu option
   }
 }
@@ -503,41 +494,9 @@ void Button::ButtonMenuDecrease()
 *****/
 void Button::ButtonBandIncrease()
 {
-  //  int tempIndex;
-  //  tempIndex = ConfigData.currentBandA;
-  //  if (ConfigData.currentBand == NUMBER_OF_BANDS)
-  //  {                             // Incremented too far?
-  //    ConfigData.currentBand = 0; // Yep. Roll to list front.
-  //  }
-
   switch (ConfigData.activeVFO)
   {
   case VFO_A:
-    /*
-      tempIndex = ConfigData.currentBandA;
-      if (save_last_frequency == 1)
-      {
-        ConfigData.lastFrequencies[tempIndex][VFO_A] = TxRxFreq;
-      }
-      else
-      {
-        if (save_last_frequency == 0)
-        {
-          if (directFreqFlag == 1)
-          {
-            ConfigData.lastFrequencies[tempIndex][VFO_A] = TxRxFreqOld;
-          }
-          else
-          {
-            if (directFreqFlag == 0)
-            {
-              ConfigData.lastFrequencies[tempIndex][VFO_A] = TxRxFreq;
-            }
-          }
-          TxRxFreqOld = TxRxFreq;
-        }
-      }
-        */
     ConfigData.currentBandA++;
     if (ConfigData.currentBandA == NUMBER_OF_BANDS)
     {                              // Incremented too far?
@@ -548,31 +507,6 @@ void Button::ButtonBandIncrease()
     break;
 
   case VFO_B:
-    /*
-      tempIndex = ConfigData.currentBandB;
-      if (save_last_frequency == 1)
-      {
-        ConfigData.lastFrequencies[tempIndex][VFO_B] = TxRxFreq;
-      }
-      else
-      {
-        if (save_last_frequency == 0)
-        {
-          if (directFreqFlag == 1)
-          {
-            ConfigData.lastFrequencies[tempIndex][VFO_B] = TxRxFreqOld;
-          }
-          else
-          {
-            if (directFreqFlag == 0)
-            {
-              ConfigData.lastFrequencies[tempIndex][VFO_B] = TxRxFreq;
-            }
-          }
-          TxRxFreqOld = TxRxFreq;
-        }
-      }
-        */
     ConfigData.currentBandB++;
     if (ConfigData.currentBandB == NUMBER_OF_BANDS)
     {                              // Incremented too far?
@@ -601,42 +535,10 @@ void Button::ButtonBandIncrease()
 *****/
 void Button::ButtonBandDecrease()
 {
-  //  int tempIndex = ConfigData.currentBand;
-  // ConfigData.currentBand--; // decrement band index
-
-  //  if (ConfigData.currentBand < 0)
-  //  {                                               // decremented too far?
-  //    ConfigData.currentBand = NUMBER_OF_BANDS - 1; // Yep. Roll to list end.
-  //  }
-
   // Save current frequency to lastFrequencies array.
   switch (ConfigData.activeVFO)
   {
   case VFO_A:
-    /*
-      if (save_last_frequency == 1)
-      {
-        ConfigData.lastFrequencies[tempIndex][VFO_A] = TxRxFreq;
-      }
-      else
-      {
-        if (save_last_frequency == 0)
-        {
-          if (directFreqFlag == 1)
-          {
-            ConfigData.lastFrequencies[tempIndex][VFO_A] = TxRxFreqOld;
-          }
-          else
-          {
-            if (directFreqFlag == 0)
-            {
-              ConfigData.lastFrequencies[tempIndex][VFO_A] = TxRxFreq;
-            }
-          }
-          TxRxFreqOld = TxRxFreq;
-        }
-      }
-        */
     // Decrement current band.
     ConfigData.currentBandA--;
     if (ConfigData.currentBandA == NUMBER_OF_BANDS)
@@ -653,30 +555,6 @@ void Button::ButtonBandDecrease()
     break;
 
   case VFO_B:
-    /*
-      if (save_last_frequency == 1)
-      {
-        ConfigData.lastFrequencies[tempIndex][VFO_B] = TxRxFreq;
-      }
-      else
-      {
-        if (save_last_frequency == 0)
-        {
-          if (directFreqFlag == 1)
-          {
-            ConfigData.lastFrequencies[tempIndex][VFO_B] = TxRxFreqOld;
-          }
-          else
-          {
-            if (directFreqFlag == 0)
-            {
-              ConfigData.lastFrequencies[tempIndex][VFO_B] = TxRxFreq;
-            }
-          }
-          TxRxFreqOld = TxRxFreq;
-        }
-      }
-        */
     ConfigData.currentBandB--;
     if (ConfigData.currentBandB == NUMBER_OF_BANDS)
     {                              // Incremented too far?
@@ -695,7 +573,6 @@ void Button::ButtonBandDecrease()
     //      DoSplitVFO();
     //      break;
   }
-  //  directFreqFlag = 0;
   ExecuteModeChange();
 }
 
@@ -711,41 +588,10 @@ void Button::ButtonBandDecrease()
 *****/
 void Button::BandSet(int band)
 {
-  //  int tempIndex;
-  //  tempIndex = ConfigData.currentBandA;
-  //  if (ConfigData.currentBand == NUMBER_OF_BANDS)
-  //  {                             // Incremented too far?
-  //    ConfigData.currentBand = 0; // Yep. Roll to list front.
-  //  }
   NCOFreq = 0;
   switch (ConfigData.activeVFO)
   {
   case VFO_A:
-    /*
-      tempIndex = ConfigData.currentBandA;
-      if (save_last_frequency == 1)
-      {
-        ConfigData.lastFrequencies[tempIndex][VFO_A] = TxRxFreq;
-      }
-      else
-      {
-        if (save_last_frequency == 0)
-        {
-          if (directFreqFlag == 1)
-          {
-            ConfigData.lastFrequencies[tempIndex][VFO_A] = TxRxFreqOld;
-          }
-          else
-          {
-            if (directFreqFlag == 0)
-            {
-              ConfigData.lastFrequencies[tempIndex][VFO_A] = TxRxFreq;
-            }
-          }
-          TxRxFreqOld = TxRxFreq;
-        }
-      }
-        */
     ConfigData.currentBandA = band;
     if (ConfigData.currentBandA == NUMBER_OF_BANDS)
     {                              // Incremented too far?
@@ -756,31 +602,6 @@ void Button::BandSet(int band)
     break;
 
   case VFO_B:
-    /*
-      tempIndex = ConfigData.currentBandB;
-      if (save_last_frequency == 1)
-      {
-        ConfigData.lastFrequencies[tempIndex][VFO_B] = TxRxFreq;
-      }
-      else
-      {
-        if (save_last_frequency == 0)
-        {
-          if (directFreqFlag == 1)
-          {
-            ConfigData.lastFrequencies[tempIndex][VFO_B] = TxRxFreqOld;
-          }
-          else
-          {
-            if (directFreqFlag == 0)
-            {
-              ConfigData.lastFrequencies[tempIndex][VFO_B] = TxRxFreq;
-            }
-          }
-          TxRxFreqOld = TxRxFreq;
-        }
-      }
-        */
     ConfigData.currentBandB = band;
     if (ConfigData.currentBandB == NUMBER_OF_BANDS)
     {                              // Incremented too far?
@@ -790,7 +611,6 @@ void Button::BandSet(int band)
     ConfigData.centerFreq = TxRxFreq = ConfigData.currentFreqB = ConfigData.lastFrequencies[ConfigData.currentBandB][VFO_B]; // + NCOFreq;
     break;
   }
-  //  directFreqFlag = 0;
 }
 
 /*****
@@ -822,8 +642,8 @@ void Button::ButtonZoom()
 void Button::ButtonFilter()
 {
   switchFilterSideband = not switchFilterSideband;
-  filterEncoderMove = 0;  // Set to zero so the delimiter lines are not moved by simply pushing Filter button.
-  FilterSetSSB(); // Call this so the delimiter is set to the correct color.
+  filterEncoderMove = 0; // Set to zero so the delimiter lines are not moved by simply pushing Filter button.
+  FilterSetSSB();        // Call this so the delimiter is set to the correct color.
 }
 
 /*****
@@ -866,7 +686,7 @@ void Button::ButtonSelectSideband()
   }
   SetFreq();
   FilterSetSSB();
-//  encoderFilterFlag = true;
+  //  encoderFilterFlag = true;
   //  display.BandInformation();
 }
 
@@ -1124,20 +944,11 @@ void Button::ButtonFrequencyEntry()
     ConfigData.currentFreqA = TxRxFreq;
   if (ConfigData.activeVFO == VFO_B)
     ConfigData.currentFreqB = TxRxFreq;
-////  centerTuneFlag = 1; // Put back in so tuning bar is refreshed.  KF5N July 31, 2023
-                      //  SetFreq();           // Used here instead of centerTuneFlag.  KF5N July 22, 2023
   // This determines if the entered frequency is permanent or temporary.
   if (save_last_frequency == true and valid_frequency == true)
   {
     ConfigData.lastFrequencies[ConfigData.currentBand][ConfigData.activeVFO] = enteredF; // Permanent.
   }
-  //  else
-  //  {
-  //    if (save_last_frequency == false)
-  //    {
-  //      ConfigData.lastFrequencies[ConfigData.currentBand][ConfigData.activeVFO] = TxRxFreqOld; // Revert to original.
-  //    }
-  //  }
   SetFreq();
 }
 
@@ -1180,46 +991,46 @@ void Button::InputParameterButton(const std::string parameterName, std::vector<s
   buttonReturnValue = parameter; // Used as an index of selectionList, so start with current value.
   MenuSelect menu = MenuSelect::DEFAULT;
 
-  while(notDone) {
-  buttonParameterName = parameterName;                // Show parameter name in screen.
-  buttonSelection = selectionList[buttonReturnValue]; // Show current value in screen.
-  evedisplay.drawButtonEntryScreen();
+  while (notDone)
+  {
+    buttonParameterName = parameterName;                // Show parameter name in screen.
+    buttonSelection = selectionList[buttonReturnValue]; // Show current value in screen.
+    evedisplay.drawButtonEntryScreen();
 
-  menu = readButton(); // Read the button push.
-  if (menu != MenuSelect::BOGUS_PIN_READ)
-  { // Valid choice?
-    switch (menu)
-    {
-    case MenuSelect::MENU_OPTION_SELECT: // They made a choice
-      notDone = false;
+    menu = readButton(); // Read the button push.
+    if (menu != MenuSelect::BOGUS_PIN_READ)
+    { // Valid choice?
+      switch (menu)
+      {
+      case MenuSelect::MENU_OPTION_SELECT: // They made a choice
+        notDone = false;
+        parameter = buttonReturnValue;
+        evemenucontrol.runOptionFunction = false;
+        evedisplay.screenSelect = EVE_Display::Screens::receiver;
+        parameterAdjustFlag = false;
+        menuProc.subMenuChoice = 0;
+        audioFFToffset = 100; // This a re-initialization since the receiver screen was not used.
+        break;
+
+      case MenuSelect::MAIN_MENU_UP:
+        buttonReturnValue++;
+        if (buttonReturnValue >= static_cast<int32_t>(selectionList.size()))
+          buttonReturnValue = 0;
+        break;
+
+      case MenuSelect::MAIN_MENU_DN:
+        buttonReturnValue--;
+        if (buttonReturnValue < 0)
+          buttonReturnValue = selectionList.size() - 1;
+        break;
+
+      default:
+        //  Do nothing if other buttons were pushed.
+        break;
+      } // End switch
       parameter = buttonReturnValue;
-      evemenucontrol.runOptionFunction = false;
-      evedisplay.screenSelect = EVE_Display::Screens::receiver;
-      parameterAdjustFlag = false;
-      menuProc.subMenuChoice = 0;
-      audioFFToffset = 100; // This a re-initialization since the receiver screen was not used.
-      break;
-
-    case MenuSelect::MAIN_MENU_UP:
-      buttonReturnValue++;
-      if (buttonReturnValue >= static_cast<int32_t>(selectionList.size()))
-        buttonReturnValue = 0;
-      break;
-
-    case MenuSelect::MAIN_MENU_DN:
-      buttonReturnValue--;
-      if (buttonReturnValue < 0)
-        buttonReturnValue = selectionList.size() - 1;
-      break;
-
-    default:
-      //  Do nothing if other buttons were pushed.
-      break;
-    } // End switch
-    parameter = buttonReturnValue;
-  } // End if
-} // End while
-
+    } // End if
+  } // End while
 }
 
 /*****
@@ -1332,18 +1143,18 @@ void Button::InputCommandButton(const std::string parameterName, std::vector<std
         buttonReturnValue = -1; // An error selection
         break;
       }
-      if (buttonReturnValue != -1)
-      {
-        //        tft.setTextColor(RA8875_WHITE, RA8875_BLACK);
-        //        tft.setCursor(WATERFALL_LEFT_X + 5, SPECTRUM_TOP_Y + 50);
-        //        tft.print(parameterName.c_str());
-        //        tft.setTextColor(RA8875_RED, RA8875_BLACK);
-        // Erase the old value before printing the new value.
-        //        tft.setCursor(WATERFALL_LEFT_X + 5 + tft.getFontWidth() * (parameterName.length() + 1), SPECTRUM_TOP_Y + 50);
-        //        tft.print(eraserString.c_str());
-        //        tft.setCursor(WATERFALL_LEFT_X + 5 + tft.getFontWidth() * (parameterName.length() + 1), SPECTRUM_TOP_Y + 50);
-        //        tft.print(selectionList[buttonReturnValue].c_str());
-      }
+      //      if (buttonReturnValue != -1)
+      //      {
+      //        tft.setTextColor(RA8875_WHITE, RA8875_BLACK);
+      //        tft.setCursor(WATERFALL_LEFT_X + 5, SPECTRUM_TOP_Y + 50);
+      //        tft.print(parameterName.c_str());
+      //        tft.setTextColor(RA8875_RED, RA8875_BLACK);
+      // Erase the old value before printing the new value.
+      //        tft.setCursor(WATERFALL_LEFT_X + 5 + tft.getFontWidth() * (parameterName.length() + 1), SPECTRUM_TOP_Y + 50);
+      //        tft.print(eraserString.c_str());
+      //        tft.setCursor(WATERFALL_LEFT_X + 5 + tft.getFontWidth() * (parameterName.length() + 1), SPECTRUM_TOP_Y + 50);
+      //        tft.print(selectionList[buttonReturnValue].c_str());
+      //      }
     }
   } // End while.
 }
@@ -1436,18 +1247,6 @@ void Button::InputParameterEncoderNoWhile(int32_t minValue, int32_t maxValue, in
   MenuSelect menu = MenuSelect::DEFAULT;
 
   evedisplay.screenSelect = EVE_Display::Screens::encoderEntry;
-  /*
-    if (filterEncoderMove != 0)
-    {
-      encoderAdjustInt += filterEncoderMove * increment; // Bump up or down...
-      if (encoderAdjustInt < minValue)
-        encoderAdjustInt = minValue;
-      else if (encoderAdjustInt > maxValue)
-        encoderAdjustInt = maxValue;
-
-      filterEncoderMove = 0;
-    }
-  */
 
   if (filterEncoderMove != 0)
   {
@@ -1469,7 +1268,6 @@ void Button::InputParameterEncoderNoWhile(int32_t minValue, int32_t maxValue, in
     evedisplay.screenSelect = EVE_Display::Screens::receiver;
     parameterAdjustFlag = false;
     menuProc.subMenuChoice = 0;
-//    displayUpdateCounter = 0;
     audioFFToffset = 100; // This a re-initialization since the receiver screen was not used.
   }
 }

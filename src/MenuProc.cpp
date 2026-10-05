@@ -23,21 +23,6 @@ You should have received a copy of the GNU General Public License along with T41
   permission from from Jack Purdum, W8TEE, and Al Peter, AC8GY.
 */
 
-// User menus and associated graphics drivers.
-
-// CalibrateOptions
-// CWOptions
-// AGC Options
-// Receive Equalizer Options
-// SSB Options
-// RF Options
-// DoPaddleFlip
-// VFO Select
-// ConfigDataOptions
-// CalDataOptions
-// SubmenuSelect
-// SubmenuSelectString
-
 #include "SDT.h"
 
 using namespace Sequencer;
@@ -207,8 +192,7 @@ void MenuProc::CalibrateOptions()
     subMenuChoice = 0;
     break;
 
-  case 11: // dBm level cal.
-    Serial.printf("dBm level cal\n");
+  case 11:                                   // dBm level cal.
     evemenucontrol.runOptionFunction = true; // Runs in loop().
                                              //    evemenucontrol.runInDSP = true;
     parameterAdjustFlag = true;              // Prevents multiple EEPROM writes.
@@ -525,6 +509,7 @@ void MenuProc::ProcessEqualizerChoices(int EQType)
 {
   columnIndex = 0; // Get ready to set values for columns
   MenuSelect menu = MenuSelect::DEFAULT;
+  uint32_t counter{0};
 
   // Nested while loops for adjusting equalizer values.  This is the outer loop.
   while (columnIndex < EQUALIZER_CELL_COUNT)
@@ -532,6 +517,7 @@ void MenuProc::ProcessEqualizerChoices(int EQType)
     // User adjusts the value of the bar in the inner loop.
     while (true)
     {
+      seq::run();
       if (filterEncoderMove != 0)
       {
         if (EQType == 0)
@@ -548,8 +534,12 @@ void MenuProc::ProcessEqualizerChoices(int EQType)
         columnIndex++;
         break; // Leave inner loop.
       }
-      evedisplay.drawEqualizerAdjustScreen(EQType);
-      delay(17);
+      if (counter == 50000)
+      {
+        evedisplay.drawEqualizerAdjustScreen(EQType);
+        counter = 0;
+      }
+      counter = counter + 1;
     } // end inner while
     evedisplay.drawEqualizerAdjustScreen(EQType);
     delay(20);
@@ -571,7 +561,7 @@ void MenuProc::ProcessEqualizerChoices(int EQType)
 *****/
 void MenuProc::EqualizerRecOptions()
 {
-  std::vector<std::string> RecEQChoices = {"RX EQ On", "RX EQ Off", "RX EQSet", "Cancel"}; // Add code practice oscillator
+  std::vector<std::string> RecEQChoices = {"Receiver Equalizer On", "Receiver Equalizer Off", "Receiver Equalizer Set", "Cancel"}; // Add code practice oscillator
 
   if (evemenucontrol.subMenuSelect)
   {
@@ -611,7 +601,7 @@ void MenuProc::EqualizerRecOptions()
 *****/
 void MenuProc::EqualizerXmtOptions()
 {
-  std::vector<std::string> XmtEQChoices = {"TX EQ On", "TX EQ Off", "TX EQSet", "Cancel"}; // Add code practice oscillator
+  std::vector<std::string> XmtEQChoices = {"Transmitter Equalizer On", "Transmitter Equalizer Off", "Transmitter Equalizer Set", "Cancel"}; // Add code practice oscillator
 
   if (evemenucontrol.subMenuSelect)
   {
@@ -827,8 +817,6 @@ void MenuProc::RFOptions()
       }
     }
 
-    // Can this run inside the transmitter loop???
-    //    button.InputParameterEncoderNoWhile(1, 20, 1, "TX Power", ConfigData.transmitPowerLevel);
     // When the transmit power level is set, this means ALL of the power coefficients must be revised!
     // powerOutCW and powerOutSSB must be updated.
 
@@ -1124,7 +1112,7 @@ void MenuProc::SubmenuSelectString(std::vector<std::string> options)
       subMenuChoice = -1; // An error selection
       break;
     }
-    Serial.printf("subMenuChoice = %d mainMenuIndex = %d\n", subMenuChoice, mainMenuIndex);
+    //    Serial.printf("subMenuChoice = %d mainMenuIndex = %d\n", subMenuChoice, mainMenuIndex);
   }
 
   subMenuString = options[subMenuChoice]; // This is used by EVE to display the choice.

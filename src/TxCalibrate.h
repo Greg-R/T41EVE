@@ -74,7 +74,6 @@ public:
   float qOptimal = 0.0;
   float32_t iDCoffset = 0.0;
   float32_t qDCoffset = 0.0;
-//  elapsedMillis milliTimer;
   int mode = 0;
   MenuSelect task = MenuSelect::DEFAULT;
   bool autoCal = false;

@@ -50,12 +50,12 @@ public:
   bool autoCal{false};
   bool radioCal{false};
   bool initialAutoTune{false};
+  bool zoomButton{false};
   bool saveToEeprom = false;
   int val;
   int userScale, userZoomIndex, userxmtMode;
   int transmitPowerLevelTemp, cwFreqOffsetTemp, calFreqTemp;
   uint16_t base_y = 460; // 247
-//  int calTypeFlag = 0;
   float adjdB{0.0};
   float adjdB_avg = 0.0;
   uint32_t adjdBMinIndex;
@@ -67,9 +67,8 @@ public:
   float32_t increment{0};
   bool exitManual = false;
   bool corrChange = false;
-  //  bool fftActive = false;
   bool print{false};
-  elapsedMillis milliTimer;
+//  elapsedMillis milliTimer;
   elapsedMillis displayTimer;
   int lastDisplayTime{0};
   int mode;

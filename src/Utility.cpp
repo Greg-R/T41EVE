@@ -507,15 +507,6 @@ bool buttonFinished[18] = {false}; // This is extern in SDT.h.
 uint32_t buttonCounter{0};
 void SaveAnalogSwitchValues()
 {
-  /*
-  const char *labels[] = { "Select", "Menu Up", "Band Up",
-                           "Zoom", "Menu Dn", "Band Dn",
-                           "Filter", "DeMod", "Mode",
-                           "NR", "Notch", "Noise Floor",
-                           "Coarse Incr", "Decoder", "Fine Increment",
-                           "Reset Tuning", "Frequ Entry", "User 2" };
-                           */
-  //  int index{ 1 };
   int minVal{0};
   int value{0};
   int origRepeatDelay{0};
@@ -529,8 +520,6 @@ void SaveAnalogSwitchValues()
 
   for (uint32_t index = 0; index < NUMBER_OF_SWITCHES;)
   {
-
-    //    Serial.printf("index = %d\n", index);
 
     if (button.buttonInterruptsEnabled)
     {
@@ -630,8 +619,6 @@ FLASHMEM void initUserDefinedStuff()
   initPowerCoefficients();
   cwprocess.SetKeyPowerUp();
   cwprocess.ResetHistograms(); // KF5N February 20, 2024
-  //  zoomIndex = ConfigData.spectrum_zoom - 1;  // ButtonZoom() increments zoomIndex, so this cancels it so the read from EEPROM is accurately restored.  KF5N August 3, 2023
-  //  button.ButtonZoom();                       // Restore zoom settings.  KF5N August 3, 2023
 }
 
 /*****

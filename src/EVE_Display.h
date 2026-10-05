@@ -113,7 +113,4 @@ void drawTransmitterAlarmScreen(std::string warningMessage);
 void drawTxCalDiagnosticsScreen();
 void drawRxCalDiagnosticsScreen();
 
-void Example1();
-void Example2();
-
 };

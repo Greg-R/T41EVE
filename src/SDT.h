@@ -16,10 +16,10 @@ You should have received a copy of the GNU General Public License along with T41
   "TEENSY CONVOLUTION SDR" substantially modified by Jack Purdum, W8TEE, and Al Peter, AC8GY
 
   This software is made available under the GNU GPLv3 license agreement. If commercial use of this
-  software is planned, we would appreciate it if the interested parties contact Jack Purdum, W8TEE, 
+  software is planned, we would appreciate it if the interested parties contact Jack Purdum, W8TEE,
   and Al Peter, AC8GY.
 
-  Any and all other uses, written or implied, by the GPLv3 license are forbidden without written 
+  Any and all other uses, written or implied, by the GPLv3 license are forbidden without written
   permission from from Jack Purdum, W8TEE, and Al Peter, AC8GY.
 */
 
@@ -138,7 +138,7 @@ constexpr int WATERFALL_BOTTOM = (FIRST_WATERFALL_LINE + MAX_WATERFALL_ROWS); //
 #define DECODER_Y WATERFALL_TOP_Y + 190  // 255 + 190 = 345
 #define WPM_X WATERFALL_RIGHT_X + 58
 #define WPM_Y WATERFALL_TOP_Y + 170
-#define SAM_PLL_HILBERT_STAGES 7 // AFP 11-02-22
+//#define SAM_PLL_HILBERT_STAGES 7 // AFP 11-02-22
 
 #define LOWEST_ATOM_TIME 20                                  // 60WPM has an atom of 20ms
 #define ADAPTIVE_SCALE_FACTOR 0.8                            // The amount of old histogram values are presesrved
@@ -153,28 +153,10 @@ const int FFT_LENGTH = 512;
 #define MAX_WPM 60
 #define MAX_ZOOM_ENTRIES 5
 
-//============== GPIO Pin Assignments
-//============== Display pins
-//const int TFT_DC = 9;
-//const int TFT_CS = 10;
-//const int TFT_MOSI = 11;
-//const int TFT_SCLK = 13;
-//const int TFT_RST = 255;
-//============== Encoder pins  Jack Purdum W8TEE September 25, 2023
-/*
-const int VOLUME_ENCODER_A = 2;
-const int VOLUME_ENCODER_B = 3;
-const int FILTER_ENCODER_A = 15;
-const int FILTER_ENCODER_B = 14;
-const int FINETUNE_ENCODER_A = 4;
-const int FINETUNE_ENCODER_B = 5;
-const int TUNE_ENCODER_A = 16;
-const int TUNE_ENCODER_B = 17;
-*/
 const int VOLUME_ENCODER_A = 16;
 const int VOLUME_ENCODER_B = 17;
-const int FILTER_ENCODER_A =  5;
-const int FILTER_ENCODER_B =  4;
+const int FILTER_ENCODER_A = 5;
+const int FILTER_ENCODER_B = 4;
 const int FINETUNE_ENCODER_A = 14;
 const int FINETUNE_ENCODER_B = 15;
 const int TUNE_ENCODER_A = 2;
@@ -356,24 +338,24 @@ struct config_t
   int32_t rfGain[NUMBER_OF_BANDS]{0};
   bool ANR_notch{false}; // Automatic notch filter.
   bool autoSpectrum = true;
-  uint32_t centerTuneStep = CENTER_TUNE_DEFAULT;      // JJP 7-3-23
-  uint32_t fineTuneStep = FINE_TUNE_DEFAULT;          // JJP 7-3-23
+  uint32_t centerTuneStep = CENTER_TUNE_DEFAULT;    // JJP 7-3-23
+  uint32_t fineTuneStep = FINE_TUNE_DEFAULT;        // JJP 7-3-23
   int32_t transmitPowerLevel = DEFAULT_POWER_LEVEL; // Changed from int to float; Greg KF5N February 12, 2024
-  int nrOptionSelect = 0;                             // 1 byte
+  int nrOptionSelect = 0;                           // 1 byte
   int currentScale = 1;
   long spectrum_zoom = SPECTRUM_ZOOM_2;
   int32_t CWFilterIndex = 5; // Off
   int paddleDit = KEYER_DIT_INPUT_TIP;
   int paddleDah = KEYER_DAH_INPUT_RING;
-  int decoderFlag = false;                    // JJP 7-3-23
-  uint32_t morseDecodeSensitivity = 3000;     // Greg KF5N February 19, 2025
+  int decoderFlag = false;                   // JJP 7-3-23
+  uint32_t morseDecodeSensitivity = 3000;    // Greg KF5N February 19, 2025
   int32_t keyType = STRAIGHT_KEY_OR_PADDLES; // Straight key = 0, keyer = 1.  JJP 7-3-23
-  int32_t currentWPM = DEFAULT_KEYER_WPM;     // 4 bytes default = 15 JJP 7-3-23
+  int32_t currentWPM = DEFAULT_KEYER_WPM;    // 4 bytes default = 15 JJP 7-3-23
   int32_t CWOffset = 2;                      // Default is 750 Hz.
   int32_t sidetoneSpeaker = 40;              // 4 bytes
   int32_t sidetoneHeadphone = 40;
   int32_t cwTransmitDelay = 1000;
-  int32_t activeVFO = 0;               // 2 bytes
+  int32_t activeVFO = 0;           // 2 bytes
   int currentBand = STARTUP_BAND;  // 4 bytes   JJP 7-3-23
   int currentBandA = STARTUP_BAND; // 4 bytes   JJP 7-3-23
   int currentBandB = STARTUP_BAND; // 4 bytes   JJP 7-3-23
@@ -390,11 +372,11 @@ struct config_t
 
   int equalizerRec[EQUALIZER_CELL_COUNT] = {100, 100, 100, 100, 100, 100, 100, 100, 100, 100, 100, 100, 100, 100};
   int equalizerXmt[EQUALIZER_CELL_COUNT] = {-50, -50, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}; // Provide equalizer optimized for SSB voice based on Neville's tests.  KF5N November 2, 2023
-  int32_t micThreshold = -15.0;                                                              // 4 bytes       AFP 09-22-22
+  int32_t micThreshold = -15.0;                                                            // 4 bytes       AFP 09-22-22
   int32_t micCompRatio = 5.0;
   //  float currentMicAttack = 0.1;
   //  float currentMicRelease = 0.1;
-  int32_t micGain = 0.0;                                                                   // Open Audio gain element.  Gain is in dB.
+  int32_t micGain = 0.0;                                                                 // Open Audio gain element.  Gain is in dB.
   float LPFcoeff = 0.0;                                                                  // 4 bytes
   float NR_PSI = 0.0;                                                                    // 4 bytes
   float NR_alpha = 0.95;                                                                 // 4 bytes
@@ -420,7 +402,7 @@ struct config_t
   char myTimeZone[10] = MY_TIMEZONE;
   int spareInt{0};
   int32_t paddleFlip = PADDLE_FLIP; // 0 = right paddle = DAH, 1 = DIT
-  int sdCardPresent = 0;        //   JJP  7/18/23
+  int sdCardPresent = 0;            //   JJP  7/18/23
   float myLong = MY_LON;
   float myLat = MY_LAT;
   bool compressorFlag = false;
@@ -481,20 +463,18 @@ struct calibration_t
   float32_t qDCoffsetCW[NUMBER_OF_BANDS] = {0, 0, 0, 0, 0, 0, 0};
   float32_t iDCoffsetSSB[NUMBER_OF_BANDS] = {0, 0, 0, 0, 0, 0, 0};
   float32_t qDCoffsetSSB[NUMBER_OF_BANDS] = {0, 0, 0, 0, 0, 0, 0};
-//  float32_t dacOffsetCW = 0.0;  // The offsets may no longer be necessary.
-//  float32_t dacOffsetSSB = 0.0; // Leaving for now until more experience with F32.
 
-// Calibration results
-float CWCalResultSidebandLSB[NUMBER_OF_BANDS]{0.0};
-float CWCalResultSidebandUSB[NUMBER_OF_BANDS]{0.0};
-float CWCalResultCarrier[NUMBER_OF_BANDS]{0.0};
-float SSBCalResultSidebandLSB[NUMBER_OF_BANDS]{0.0};
-float SSBCalResultSidebandUSB[NUMBER_OF_BANDS]{0.0};
-float SSBCalResultCarrier[NUMBER_OF_BANDS]{0.0};
-float RXCalResultCWLSB[NUMBER_OF_BANDS]{0.0};
-float RXCalResultCWUSB[NUMBER_OF_BANDS]{0.0};
-float RXCalResultSSBLSB[NUMBER_OF_BANDS]{0.0};
-float RXCalResultSSBUSB[NUMBER_OF_BANDS]{0.0};
+  // Calibration results
+  float CWCalResultSidebandLSB[NUMBER_OF_BANDS]{0.0};
+  float CWCalResultSidebandUSB[NUMBER_OF_BANDS]{0.0};
+  float CWCalResultCarrier[NUMBER_OF_BANDS]{0.0};
+  float SSBCalResultSidebandLSB[NUMBER_OF_BANDS]{0.0};
+  float SSBCalResultSidebandUSB[NUMBER_OF_BANDS]{0.0};
+  float SSBCalResultCarrier[NUMBER_OF_BANDS]{0.0};
+  float RXCalResultCWLSB[NUMBER_OF_BANDS]{0.0};
+  float RXCalResultCWUSB[NUMBER_OF_BANDS]{0.0};
+  float RXCalResultSSBLSB[NUMBER_OF_BANDS]{0.0};
+  float RXCalResultSSBUSB[NUMBER_OF_BANDS]{0.0};
 
   bool CWradioCalComplete = false;
   bool SSBradioCalComplete = false;
@@ -654,16 +634,8 @@ extern EVE_Display evedisplay;   // EVE Display.
 
 // Hardware modules.
 extern Si5351 si5351; // RF PLL object.
-//extern RA8875 tft;    // RA8875 display controller plus graphics object.
 
 //====================== Global structure declarations ===============================
-
-struct secondaryMenuConfiguration
-{
-  byte whichType;      // 0 = no options, 1 = list, 2 = encoder value
-  int numberOfOptions; // Number of submenu topions
-};
-
 // SD file names:
 extern const char *configFilename;
 extern const char *calFilename;
@@ -710,7 +682,6 @@ extern int16_t fftOffset;
 extern int16_t audioFFToffset;
 extern bool volumeChangeFlag;
 extern char keyboardBuffer[];
-// extern const std::string topMenus[];
 extern const char *zoomOptions[];
 extern bool keyPressedOn; // State changed by CW key isr()s.
 extern uint8_t NR_first_time;
@@ -718,9 +689,6 @@ extern uint8_t NR_Kim;
 extern uint32_t SampleRate;
 extern uint32_t zoom_display;
 extern int16_t pixelnew[];
-//extern bool encoderFilterFlag;   // Set by EncoderFilter() isr.
-//extern bool audioCompensateFlag; // Set by FilterSetSSB().
-// extern bool audioGraphicsFlag;
 extern bool ft8EnableFlag;
 extern bool startRxFlag;
 extern uint32_t displayUpdateCounter;
@@ -785,17 +753,17 @@ extern long lastFrequencies[][2];
 extern long int n_clear;
 
 float ApproxAtan(float z);
-//float ApproxAtan2(float y, float x);
+// float ApproxAtan2(float y, float x);
 
 extern float s_hotT_ROOM; /*!< The value of s_hotTemp minus room temperature(25¡æ).*/
 
 //====== SAM stuff AFP 11-02-22
-extern float32_t a[3 * SAM_PLL_HILBERT_STAGES + 3];
-extern float32_t b[3 * SAM_PLL_HILBERT_STAGES + 3];
-extern float32_t c[3 * SAM_PLL_HILBERT_STAGES + 3]; // Filter c variables
-extern float32_t c0[SAM_PLL_HILBERT_STAGES];
-extern float32_t c1[SAM_PLL_HILBERT_STAGES];
-extern float32_t d[3 * SAM_PLL_HILBERT_STAGES + 3];
+//extern float32_t a[3 * SAM_PLL_HILBERT_STAGES + 3];
+//extern float32_t b[3 * SAM_PLL_HILBERT_STAGES + 3];
+//extern float32_t c[3 * SAM_PLL_HILBERT_STAGES + 3]; // Filter c variables
+//extern float32_t c0[SAM_PLL_HILBERT_STAGES];
+//extern float32_t c1[SAM_PLL_HILBERT_STAGES];
+//extern float32_t d[3 * SAM_PLL_HILBERT_STAGES + 3];
 extern float32_t a[];
 extern float32_t pll_fmax;
 extern float32_t audio;
@@ -806,7 +774,6 @@ extern float32_t bin;
 extern float32_t biquad_lowpass1_state[];
 extern float32_t biquad_lowpass1_coeffs[];
 extern float32_t /*DMAMEM*/ buffer_spec_FFT[];
-//extern bool centerTune;
 extern uint32_t centerTuneResult;
 extern float32_t c[];
 extern float32_t c1[];
@@ -998,7 +965,6 @@ float MSinc(int m, float fc);
 void printFile(const char *filename);
 void playTransmitData(); // KF5N February 23, 2024
 void ProcessEqualizerChoices(int EQType, char *title);
-//MenuSelect readButton(MenuSelect lastUsedTask);
 MenuSelect readButton();
 void ResetFlipFlops();
 void ResetTuning(); // AFP 10-11-22
