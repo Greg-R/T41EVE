@@ -642,6 +642,7 @@ void MenuProc::EqualizerXmtOptions()
 void MenuProc::SSBOptions()
 {
   float imdAmplitude = 1.0;
+  int counter{0};
 
   bool cancel = false;
   MenuSelect menu = MenuSelect::BOGUS_PIN_READ; // Used in IMD test.
@@ -726,7 +727,12 @@ void MenuProc::SSBOptions()
     while (menu != MenuSelect::MENU_OPTION_SELECT)
     {
       menu = button.readButton(); // Use this to quit.
+      seq::run();
+      counter = counter + 1;
+      if(counter == 200) {
       evedisplay.drawTransmitterScreen();
+      counter = 0;
+      }
       // Return IMD amplitude in dB.
       imdAmplitudedB = GetEncoderValueLive(0.0, 100.0, imdAmplitudedB, 1.0);
       imdAmplitude = volumeLog[static_cast<int>(imdAmplitudedB)];
