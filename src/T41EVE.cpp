@@ -972,7 +972,7 @@ FLASHMEM void setup()
 
   // Set Teensy and Open Audio Library blocks.
   AudioMemory(240);
-  AudioMemory_F32(80);
+  AudioMemory_F32(110);
 
   // Configure Audio Adapter
   sgtl5000_1.enable();
@@ -1216,10 +1216,14 @@ void loop()
   if (bands.bands[ConfigData.currentBand].mode == RadioMode::SSB_MODE and digitalRead(PTT) == LOW)
     radioState = RadioState::SSB_TRANSMIT_STATE;
 
-  if (bands.bands[ConfigData.currentBand].mode == RadioMode::FT8_MODE and SerialUSB1.rts() == LOW)
+  if (bands.bands[ConfigData.currentBand].mode == RadioMode::FT8_MODE and SerialUSB1.rts() == LOW) {
     radioState = RadioState::FT8_RECEIVE_STATE;
-  if (bands.bands[ConfigData.currentBand].mode == RadioMode::FT8_MODE and SerialUSB1.rts() == HIGH and ft8EnableFlag)
+Serial.printf("FT8 receive state\n");
+  }
+  if (bands.bands[ConfigData.currentBand].mode == RadioMode::FT8_MODE and SerialUSB1.rts() == HIGH and ft8EnableFlag) {
     radioState = RadioState::FT8_TRANSMIT_STATE;
+Serial.printf("FT8 transmit state\n");
+  }
 
   if (bands.bands[ConfigData.currentBand].mode == RadioMode::CW_MODE and ConfigData.keyType == 1 and (digitalRead(ConfigData.paddleDit) == HIGH) and (digitalRead(ConfigData.paddleDah) == HIGH))
     radioState = RadioState::CW_RECEIVE_STATE;

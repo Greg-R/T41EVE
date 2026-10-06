@@ -729,7 +729,7 @@ void MenuProc::SSBOptions()
       menu = button.readButton(); // Use this to quit.
       seq::run();
       counter = counter + 1;
-      if(counter == 200) {
+      if(counter == 50000) {
       evedisplay.drawTransmitterScreen();
       counter = 0;
       }

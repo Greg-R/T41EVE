@@ -521,13 +521,14 @@ void SetAudioOperatingState(RadioState operatingState)
     mixer1_tx.gain(1, 0);      // testTone 1 off.
     mixer1_tx.gain(2, 0);      // testTone 2 off.
     mixer1_tx.gain(3, 1);      // CW tone path.  Mic gain is also in this path.  Set micGain to 0dB.
+    micGain.setGain_dB(0.0);  // Set the microphone gain.
     mixer_rxtx_I.gain(0, 1.0); // Connect transmitter back-end to Audio Adapter.
     mixer_rxtx_Q.gain(0, 1.0);
     mixer_rxtx_I.gain(1, 0.0); // Disconnect headphone path to Audio Adapter.
     mixer_rxtx_Q.gain(1, 0.0);
 
     // Bypass equalizer and compressor in CW mode!
-    switch3_tx.setChannel(1); // Bypass equalizer.  Must bypass for FT8.
+    switch3_tx.setChannel(1); // Bypass equalizer.
     mixer2_tx.gain(0, 0.0);
     mixer2_tx.gain(1, 1.0);
 
