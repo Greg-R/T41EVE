@@ -284,7 +284,6 @@ struct EVEMenuControl
   bool subMenuSelect{false};
   bool runOptionFunction{false};
   bool runButtonFunction{false};
-  bool runInDSP{false};
 };
 
 extern EVEMenuControl evemenucontrol;
@@ -757,13 +756,6 @@ float ApproxAtan(float z);
 
 extern float s_hotT_ROOM; /*!< The value of s_hotTemp minus room temperature(25¡æ).*/
 
-//====== SAM stuff AFP 11-02-22
-//extern float32_t a[3 * SAM_PLL_HILBERT_STAGES + 3];
-//extern float32_t b[3 * SAM_PLL_HILBERT_STAGES + 3];
-//extern float32_t c[3 * SAM_PLL_HILBERT_STAGES + 3]; // Filter c variables
-//extern float32_t c0[SAM_PLL_HILBERT_STAGES];
-//extern float32_t c1[SAM_PLL_HILBERT_STAGES];
-//extern float32_t d[3 * SAM_PLL_HILBERT_STAGES + 3];
 extern float32_t a[];
 extern float32_t pll_fmax;
 extern float32_t audio;

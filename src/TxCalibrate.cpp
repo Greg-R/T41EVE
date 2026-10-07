@@ -1066,11 +1066,10 @@ void TxCalibrate::RadioCal(int mode)
       txcalibrater.DoXmitCalibrate(mode, true, false);
     }
 
-    if (band < 2 and mode == 1) // SSB calibrated USB (for FT8).
+    if (band < 2 and mode == 0) // CW calibrated USB (for FT8).  FT8 is in CW band.
     {
       bands.bands[ConfigData.currentBand].sideband = Sideband::UPPER; // Calibrate upper sideband for 80M and 40M.
       rxcalibrater.DoReceiveCalibrate(mode, true, false);
-      //      txcalibrater.DoXmitCarrierCalibrate(mode, true, false);
       txcalibrater.DoXmitCalibrate(mode, true, false);
     }
 
@@ -1078,8 +1077,8 @@ void TxCalibrate::RadioCal(int mode)
     {
       bands.bands[ConfigData.currentBand].sideband = Sideband::UPPER;
       rxcalibrater.DoReceiveCalibrate(mode, true, false); // Include 80M and 40M due to FT8.
-      txcalibrater.DoXmitCalibrate(mode, true, false);
       txcalibrater.DoXmitCarrierCalibrate(mode, true, false);
+      txcalibrater.DoXmitCalibrate(mode, true, false);
     }
   }
 

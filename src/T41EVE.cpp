@@ -892,9 +892,10 @@ using namespace Sequencer;
 void buttonPush()
 {
   if (evemenucontrol.runOptionFunction == true)
-    return; // Bypass if we are using the menus.
+    return; // Bypass if we are using the menus.  The menus have their own button code.
+
   MenuSelect menu{MenuSelect::BOGUS_PIN_READ};
-  if ((radioState != RadioState::SSB_TRANSMIT_STATE) and (radioState != RadioState::FT8_TRANSMIT_STATE) and (calibrateFlag == false) and (evemenucontrol.runOptionFunction == false) and (evemenucontrol.subMenuSelect == false))
+  if ((radioState != RadioState::SSB_TRANSMIT_STATE) and (radioState != RadioState::FT8_TRANSMIT_STATE) and (calibrateFlag == false) and (evemenucontrol.subMenuSelect == false))
   {
     menu = button.readButton();
     // Restrict allowed button selections if in top menu.
@@ -1129,49 +1130,10 @@ void loop()
   buttonPush();
 
   // This handles functions selected from the second level of menus.
-  // This should only be relevant for functions not runInDSP!
   if (evemenucontrol.runOptionFunction == true)
   {
     functionPtr[mainMenuIndex](); // The top menu item to run.  mainMenuIndex is a global.
   }
-  // This handles functions selected from the second level of menus.
-  //  if (evemenucontrol.runInDSP == true)
-  //  {                               // This is required for Morse decode sensitivity adjustment with receiver active.
-  //    functionPtr[mainMenuIndex](); // The top menu item to run.
-  //  }
-
-  // Top menu button read.
-  // SSB and FT8 transmit operate via the main loop().  CW modes operate within independent while loops.
-  // Don't stop in SSB and FT8 transmit modes to read the buttons.
-  // Also skip if top menu and sub menu operations are in progress.
-  //  if (menuCounter > 20000)
-  /*  {
-      if ((radioState != RadioState::SSB_TRANSMIT_STATE) and (radioState != RadioState::FT8_TRANSMIT_STATE) and (calibrateFlag == false) and (evemenucontrol.runOptionFunction == false) and (evemenucontrol.subMenuSelect == false))
-      {
-        menu = button.readButton();
-        // Restrict allowed button selections if in top menu.
-        if (evemenucontrol.top == true)
-        {
-          if ((menu != MenuSelect::BOGUS_PIN_READ) and (menu == MenuSelect::MAIN_MENU_UP or menu == MenuSelect::MAIN_MENU_DN or menu == MenuSelect::MENU_OPTION_SELECT))
-            button.ExecuteButtonPress(menu);
-        }
-        else
-        {
-          if (menu != MenuSelect::BOGUS_PIN_READ)
-            button.ExecuteButtonPress(menu);
-        }
-      }
-      // This handles functions selected from the second level of menus.
-      // This should only be relevant for functions not runInDSP!
-      if (evemenucontrol.runOptionFunction == true)
-      {
-        functionPtr[mainMenuIndex](); // The top menu item to run.  mainMenuIndex is a global.
-      }
-  //    menuCounter = 0;
-  //  }
-  //  else
-      menuCounter = menuCounter + 1;
-      */
 
   // Screen selector.
   switch (evedisplay.screenSelect)
